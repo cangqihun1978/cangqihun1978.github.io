@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>藏器魂 · 记忆演示</title>
+    <style>
+        body { font-family: system-ui; max-width: 600px; margin: 50px auto; padding: 20px; background: #f9f9f9; }
+        input, button { padding: 8px; margin: 5px 0; width: 100%; box-sizing: border-box; }
+        .image-box { margin-top: 20px; padding: 20px; background: #fff; border: 1px solid #ddd; text-align: center; min-height: 200px; }
+        .history { background: #e7f3ff; padding: 10px; border-radius: 4px; }
+        img { max-width: 100%; max-height: 300px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h2>🎨 AI生图演示 · 带记忆</h2>
+    <p>第一次访问：输入偏好，生成模拟图片</p>
+    <p>第二次访问：自动记住上次偏好</p>
+    
+    <input type="text" id="prompt" placeholder="描述您想要的图片风格（如：暖色调贺卡）">
+    <button onclick="generateImage()">生成图片</button>
+    
+    <div id="history" class="history"></div>
+    <div class="image-box" id="imageDisplay">
+        <p>您的图片将显示在这里</p>
+    </div>
+
+    <script>
+        // 模拟藏器魂SDK（简化版）
+        const LingxiSDK = {
+            init: function(userId) {
+                this.userId = userId;
+                const saved = localStorage.getItem('lingxi_' + userId);
+                return saved ? JSON.parse(saved) : null;
+            },
+            saveState: function(state) {
+                if (this.userId) {
+                    localStorage.setItem('lingxi_' + this.userId, JSON.stringify(state));
+                }
+            }
+        };
+
+        // 初始化（模拟固定用户ID）
+        const ctx = LingxiSDK.init('demo_user');
+        const historyDiv = document.getElementById('history');
+        const promptInput = document.getElementById('prompt');
+
+        if (ctx && ctx.lastPrompt) {
+            historyDiv.innerHTML = `👋 欢迎回来！上次您喜欢：“${ctx.lastPrompt}”`;
+            promptInput.value = ctx.lastPrompt;
+        } else {
+            historyDiv.innerHTML = '👋 第一次访问，请输入您的偏好。';
+        }
+
+        function generateImage() {
+            const prompt = promptInput.value.trim();
+            if (!prompt) return;
+
+            // 保存偏好
+            LingxiSDK.saveState({ lastPrompt: prompt });
+
+            // 模拟生成图片（使用颜色块模拟）
+            let hash = 0;
+            for (let i = 0; i < prompt.length; i++) {
+                hash = prompt.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const color = '#' + ((hash & 0x00FFFFFF) >>> 0).toString(16).padStart(6, '0');
+            
+            const imageDisplay = document.getElementById('imageDisplay');
+            imageDisplay.innerHTML = `
+                <div style="background: ${color}; width: 100%; height: 200px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; border-radius: 8px;">
+                    🖼️ 模拟图片<br>风格：${prompt}
+                </div>
+                <p style="font-size:12px; color:#999;">（演示效果，实际会调用真实生图API）</p>
+            `;
+
+            historyDiv.innerHTML = `✅ 偏好已保存！关闭页面再打开，会自动记住。`;
+        }
+    </script>
+</body>
+</html>
