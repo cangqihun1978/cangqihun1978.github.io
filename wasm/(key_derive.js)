@@ -1,0 +1,27 @@
+
+```javascript
+// 真实WASM模块加载器
+let Module = {};
+let wasmReady = false;
+
+fetch('wasm/key_derive.wasm')
+    .then(response => response.arrayBuffer())
+    .then(bytes => WebAssembly.instantiate(bytes, {
+        env: {
+            memory: new WebAssembly.Memory({ initial: 1 }),
+            consoleLog: function(ptr, len) {
+                const str = new TextDecoder().decode(new Uint8Array(Module.memory.buffer, ptr, len));
+                console.log('[WASM]', str);
+            }
+        }
+    }))
+    .then(results => {
+        Module = results.instance.exports;
+        wasmReady = true;
+        if (window.onWasmReady) window.onWasmReady();
+    });
+
+// 导出给index.html使用
+window.Module = Module;
+window.wasmReady = wasmReady;
+```
