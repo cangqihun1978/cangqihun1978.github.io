@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>藏器魂 · 终极修复版</title>
+    <style>
+        body { font-family: system-ui; max-width: 400px; margin: 50px auto; padding: 20px; background: #f0f0f0; }
+        input, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; font-size: 16px; }
+        #status { margin-top: 20px; padding: 12px; border-radius: 6px; font-weight: bold; }
+        .success { background: #d1e7dd; color: #0a3622; border: 1px solid #a3cfbb; }
+        .error { background: #f8d7da; color: #58151c; border: 1px solid #f1aeb5; }
+        #debug { font-size: 12px; color: #666; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h2>⚡ 如律令 · 终极修复版</h2>
+    <p>请输入文化密钥（13字之一）</p>
+    <input type="text" id="keyInput" placeholder="输入密钥字" autofocus>
+    <button onclick="unlock()">解锁</button>
+    <div id="status"></div>
+    <div id="debug"></div>
+
+    <script>
+        // 强制页面以最高权限加载，确保输入法正常
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('keyInput').focus();
+            setTimeout(() => {
+                document.getElementById('keyInput').focus();
+            }, 100);
+        });
+
+        // ==================== 反调试 ====================
+        (function() {
+            document.addEventListener('keydown', function(e) {
+                const activeElement = document.activeElement;
+                const isInput = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA');
+                
+                if (e.key === 'F12') {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                if (e.ctrlKey && e.key === 'U') {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                if (e.key === 'Backspace') {
+                    if (!isInput || (isInput && e.target.value === '')) {
+                        e.preventDefault();
+                        return false;
+                    }
+                }
+                
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+
+            document.addEventListener('contextmenu', e => e.preventDefault());
+
+            setInterval(() => {
+                const start = performance.now();
+                debugger;
+                const end = performance.now();
+                if (end - start > 100) {
+                    document.body.innerHTML = '<h2>?? 检测到调试工具，系统已保护</h2>';
+                }
+            }, 3000);
+        })();
+
+        // ==================== 设备指纹 ====================
+        function getDeviceFingerprint() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 200;
+            canvas.height = 50;
+            const ctx = canvas.getContext('2d');
+            ctx.textBaseline = 'top';
+            ctx.font = '14px Arial';
+            ctx.fillStyle = '#f60';
+            ctx.fillRect(10, 10, 100, 20);
+            ctx.fillStyle = '#069';
+            ctx.fillText('藏器魂', 20, 15);
+            const canvasFp = canvas.toDataURL();
+
+            const components = [
+                navigator.userAgent,
+                navigator.language,
+                screen.width + 'x' + screen.height,
+                canvasFp,
+                navigator.hardwareConcurrency || 'unknown'
+            ];
+            
+            const str = components.join('||');
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = ((hash << 5) - hash) + str.charCodeAt(i);
+                hash |= 0;
+            }
+            return Math.abs(hash).toString(16);
+        }
+
+        // ==================== 文化密钥映射表 ====================
+        const KEY_MAP = {
+            '卷': 18, '坐': 99, '主': 818, '人': 634, '身': 11,
+            '作': 37, '客': 411, '不': 19, '劫': 78, '浮': 20,
+            '生': 14, '思': 918, '魂': 825
+        };
+
+        // ==================== 加密存储 ====================
+        function saveData(key, data) {
+            const str = JSON.stringify(data);
+            localStorage.setItem('cangqihun_' + key, btoa(str));
+        }
+
+        function loadData(key) {
+            const item = localStorage.getItem('cangqihun_' + key);
+            if (!item) return null;
+            try {
+                return JSON.parse(atob(item));
+            } catch {
+                return null;
+            }
+        }
+
+        // ==================== 密钥派生 ====================
+        function deriveKey(keyChar, deviceFp, date) {
+            const index = KEY_MAP[keyChar];
+            const seed = index + '|' + deviceFp + '|' + date;
+            let hash = 0;
+            for (let i = 0; i < seed.length; i++) {
+                hash = ((hash << 5) - hash) + seed.charCodeAt(i);
+                hash |= 0;
+            }
+            return Math.abs(hash).toString(16);
+        }
+
+        // ==================== 解锁主流程 ====================
+        let failedAttempts = 0;
+
+        function unlock() {
+            const input = document.getElementById('keyInput').value.trim();
+            const statusDiv = document.getElementById('status');
+            const debugDiv = document.getElementById('debug');
+
+            if (!input) {
+                statusDiv.className = 'error';
+                statusDiv.innerText = '请输入密钥字';
+                return;
+            }
+
+            if (!KEY_MAP[input]) {
+                failedAttempts++;
+                statusDiv.className = 'error';
+                statusDiv.innerText = '无效的密钥字';
+                
+                if (failedAttempts === 3) {
+                    localStorage.setItem('_fake_data', '假数据已投喂');
+                    debugDiv.innerText = '?? 假数据模式已激活';
+                }
+                if (failedAttempts >= 5) {
+                    localStorage.clear();
+                    document.body.innerHTML = '<h2>?? 系统已自毁</h2>';
+                }
+                return;
+            }
+
+            failedAttempts = 0;
+            const deviceFp = getDeviceFingerprint();
+            const today = new Date().toISOString().slice(0,10).replace(/-/g,'');
+            const key = deriveKey(input, deviceFp, today);
+
+            let userData = loadData(key);
+            if (!userData) {
+                userData = { firstUse: new Date().toISOString(), count: 0 };
+            }
+            userData.count++;
+            userData.lastUse = new Date().toISOString();
+            saveData(key, userData);
+
+            statusDiv.className = 'success';
+            statusDiv.innerText = `✅ 解锁成功！您是第${userData.count}次使用本设备`;
+            debugDiv.innerText = '设备已绑定，可安全使用';
+
+            // 跳转修复：使用 replace 替代 href，兼容手机浏览器
+            setTimeout(() => {
+                try {
+                    window.location.replace('demo.html');
+                } catch (e) {
+                    // 降级方案
+                    window.location.href = 'demo.html';
+                }
+            }, 1500);
+        }
+    </script>
+</body>
+</html>
