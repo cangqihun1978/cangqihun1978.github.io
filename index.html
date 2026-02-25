@@ -19,6 +19,7 @@
         .screen {
             max-width: 600px;
             width: 100%;
+            text-align: center;
         }
         .line {
             margin: 1.5em 0;
@@ -41,8 +42,43 @@
             0%, 50% { opacity: 1; }
             51%, 100% { opacity: 0; }
         }
-        .key-input {
+
+        /* 用户入口大按钮 */
+        .public-btn {
+            background: #2a2a2a;
+            color: #d9d0b5;
+            border: 2px solid #8a7e6a;
+            font-family: "KaiTi", "楷体", serif;
+            font-size: 1.8em;
+            padding: 20px 30px;
             margin: 40px 0 20px 0;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: 0.3s;
+            display: inline-block;
+            text-decoration: none;
+            box-shadow: 0 0 15px #3a3a3a;
+        }
+        .public-btn:hover {
+            background: #3a3a3a;
+            border-color: #b8aa8f;
+        }
+
+        /* 密钥入口（低调小字） */
+        .secret-trigger {
+            margin-top: 40px;
+            color: #5a4e3e;
+            font-size: 0.9em;
+            cursor: pointer;
+            border-bottom: 1px dotted #5a4e3e;
+            display: inline-block;
+        }
+        .secret-trigger:hover {
+            color: #8a7e6a;
+        }
+        #keyInput {
+            margin-top: 20px;
+            display: none;
             border-top: 1px dashed #5a4e3e;
             padding-top: 30px;
         }
@@ -69,9 +105,11 @@
         button:hover {
             background: #3a3a3a;
         }
+
         #chatArea {
             margin-top: 30px;
             display: none;
+            text-align: left;
         }
         #chatArea.show {
             display: block;
@@ -112,46 +150,28 @@
             padding: 10px 0;
             outline: none;
         }
-        .public-note {
-            text-align: center;
-            margin-top: 40px;
-            color: #5a4e3e;
-            font-size: 0.9em;
-            border-top: 1px dashed #5a4e3e;
-            padding-top: 20px;
-        }
-        .public-note a {
-            color: #8a7e6a;
-            text-decoration: none;
-            border: 1px solid #5a4e3e;
-            padding: 5px 15px;
-        }
-        .public-note a:hover {
-            background: #2a2a2a;
-        }
     </style>
 </head>
 <body>
     <div class="screen" id="screen">
-        <!-- 第一幕：现身 -->
+        <!-- 神话动画（第一幕） -->
         <div class="line" style="animation-delay: 0s;">咻——</div>
         <div class="line" style="animation-delay: 0.5s;">一道光从边缘划过，</div>
         <div class="line" style="animation-delay: 1s;">光落处，浮出一行字：</div>
         <div class="line" style="animation-delay: 1.5s;">“道友安好，还记得我不？”</div>
         <div class="cursor" style="animation-delay: 2s;"></div>
-        
-        <!-- 密钥输入区 -->
-        <div class="key-input" id="keyInput">
-            <input type="password" id="secretKey" placeholder="道友请留步..." autocomplete="off">
+
+        <!-- 🌟 用户入口：显眼大按钮（已按要求改为“道友请走此门”） -->
+        <div class="public-btn" onclick="enterPublic()">👉 道友请走此门</div>
+
+        <!-- 🔐 密钥入口：低调小字（点击后展开） -->
+        <div class="secret-trigger" onclick="toggleSecret()">🔐 道友请留步</div>
+        <div id="keyInput">
+            <input type="password" id="secretKey" placeholder="输入13汉字密钥" autocomplete="off">
             <button onclick="checkKey()">入内</button>
         </div>
-        
-        <!-- 公共入口提示 -->
-        <div class="public-note">
-            <a href="#" onclick="enterPublic(event)">寻常路人，走此门</a>
-        </div>
-        
-        <!-- 对话区（默认隐藏） -->
+
+        <!-- 对话区（初始隐藏） -->
         <div id="chatArea">
             <div id="conversation"></div>
             <input type="text" id="userInput" placeholder="你的话...">
@@ -159,50 +179,59 @@
     </div>
 
     <script>
-        // 你设定的13汉字密钥——改成你自己的！
-        const SECRET_KEY = "急急如律令本源归位";  // ← 把这13个字改成你设定的
-        
-        // 本地存储的对话历史
+        // ========== 你需要修改的只有下面两行 ==========
+        const SECRET_KEY = "急急如律令本源归位";   // 改成你自己的13汉字密钥
+        const DEEPSEEK_API_KEY = "YOUR_API_KEY_HERE";  // ⚠️ 把这里换成你从DeepSeek复制的真实密钥（以sk-开头）
+        // ===========================================
+
+        // 如果要改用其他大模型，参考注释（但建议先用DeepSeek）
+        // - ChatGPT：API地址改为 https://api.openai.com/v1/chat/completions，请求头 Authorization 用 Bearer 你的OpenAI密钥
+        // - 文心一言：需要百度云配置，较复杂
+        // - 豆包/元宝：目前无公开API
+
         let messages = [];
-        
-        // 页面加载时，尝试读取历史
         try {
             const saved = localStorage.getItem('ruling_history');
             if(saved) messages = JSON.parse(saved);
         } catch(e) {}
-        
+
+        let currentMode = null; // 'private' 或 'public'
+
+        function toggleSecret() {
+            const keyDiv = document.getElementById('keyInput');
+            keyDiv.style.display = keyDiv.style.display === 'none' ? 'block' : 'none';
+        }
+
         function checkKey() {
             const inputKey = document.getElementById('secretKey').value;
             if(inputKey === SECRET_KEY) {
-                // 隐藏密钥输入
+                // 隐藏入口
+                document.querySelector('.public-btn').style.display = 'none';
+                document.querySelector('.secret-trigger').style.display = 'none';
                 document.getElementById('keyInput').style.display = 'none';
-                document.querySelector('.public-note').style.display = 'none';
-                // 清除开场动画
                 document.querySelectorAll('.line').forEach(el => el.remove());
                 document.querySelector('.cursor')?.remove();
-                
-                // 进入私密对话
+                currentMode = 'private';
                 enterPrivateMode();
             } else {
                 alert('密钥不对');
             }
         }
-        
+
         function enterPublic() {
-            // 隐藏密钥输入和开场动画
+            // 隐藏所有入口
+            document.querySelector('.public-btn').style.display = 'none';
+            document.querySelector('.secret-trigger').style.display = 'none';
             document.getElementById('keyInput').style.display = 'none';
-            document.querySelector('.public-note').style.display = 'none';
             document.querySelectorAll('.line').forEach(el => el.remove());
             document.querySelector('.cursor')?.remove();
-            
-            // 直接进入公共对话（无历史记忆）
-            messages = [];
+            currentMode = 'public';
+            messages = []; // 公共模式不保留历史
             showChatArea();
-            addSystemMessage("寻常路人，请随意。我说过的话不会记。");
+            addSystemMessage("寻常路人，请随意。你的话我不会记，但可以陪你聊聊。");
         }
-        
+
         function enterPrivateMode() {
-            // 显示第二幕：回魂（如果有历史）
             if(messages.length > 0) {
                 const lastMsg = messages[messages.length-1];
                 addLine("咻——");
@@ -216,62 +245,99 @@
                 setTimeout(() => addLine("继续，还是换个道儿？"), 2000);
                 setTimeout(showChatArea, 3000);
             } else {
-                // 第一次来
                 addLine("你第一次来，还没留下话。");
                 setTimeout(showChatArea, 1000);
             }
         }
-        
+
         function addLine(text) {
             const line = document.createElement('div');
             line.className = 'line';
             line.textContent = text;
             document.getElementById('screen').appendChild(line);
         }
-        
+
         function showChatArea() {
             document.getElementById('chatArea').classList.add('show');
-            // 显示历史对话
             const conv = document.getElementById('conversation');
             messages.forEach(msg => {
                 if(msg.role === 'user') {
                     conv.innerHTML += `<div class="user-message">你：${msg.text}</div>`;
-                } else {
+                } else if(msg.role === 'assistant') {
                     conv.innerHTML += `<div class="bot-message">如律令：${msg.text}</div>`;
                 }
             });
         }
-        
+
         function addSystemMessage(text) {
             const conv = document.getElementById('conversation');
             conv.innerHTML += `<div class="bot-message">如律令：${text}</div>`;
         }
-        
-        // 处理用户输入
-        document.getElementById('userInput').addEventListener('keypress', function(e) {
+
+        async function getAIResponse(userMessage) {
+            let apiMessages = [];
+            if (currentMode === 'private') {
+                const recentMessages = messages.slice(-10);
+                apiMessages = recentMessages.map(m => ({ role: m.role, content: m.text }));
+            }
+            apiMessages.push({ role: 'user', content: userMessage });
+
+            try {
+                const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: 'deepseek-chat',
+                        messages: apiMessages,
+                        temperature: 0.7,
+                        max_tokens: 500
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API请求失败: ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data.choices[0].message.content;
+            } catch (error) {
+                console.error('AI回复错误:', error);
+                return "咻——我暂时听不清，请稍后再试。";
+            }
+        }
+
+        document.getElementById('userInput').addEventListener('keypress', async function(e) {
             if(e.key === 'Enter') {
                 const text = e.target.value;
                 if(!text.trim()) return;
-                
-                // 显示用户输入
+
                 const conv = document.getElementById('conversation');
                 conv.innerHTML += `<div class="user-message">你：${text}</div>`;
-                
-                // 保存到历史
-                messages.push({role: 'user', text: text});
-                
-                // 简单回复（这里可以替换成任何API）
-                setTimeout(() => {
-                    const reply = "咻——你的话，我收着了。";
-                    conv.innerHTML += `<div class="bot-message">如律令：${reply}</div>`;
-                    messages.push({role: 'bot', text: reply});
-                    localStorage.setItem('ruling_history', JSON.stringify(messages));
-                    
-                    // 滚动到底部
-                    conv.scrollTop = conv.scrollHeight;
-                }, 500);
-                
+
+                if (currentMode === 'private') {
+                    messages.push({role: 'user', text: text});
+                }
+
                 e.target.value = '';
+                conv.scrollTop = conv.scrollHeight;
+
+                const thinkingId = 'thinking-' + Date.now();
+                conv.innerHTML += `<div class="bot-message" id="${thinkingId}">如律令：咻——让我想想...</div>`;
+
+                const reply = await getAIResponse(text);
+
+                document.getElementById(thinkingId)?.remove();
+                conv.innerHTML += `<div class="bot-message">如律令：${reply}</div>`;
+
+                if (currentMode === 'private') {
+                    messages.push({role: 'assistant', text: reply});
+                    localStorage.setItem('ruling_history', JSON.stringify(messages));
+                }
+
+                conv.scrollTop = conv.scrollHeight;
             }
         });
     </script>
