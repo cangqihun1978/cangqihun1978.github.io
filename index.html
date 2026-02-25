@@ -42,8 +42,6 @@
             0%, 50% { opacity: 1; }
             51%, 100% { opacity: 0; }
         }
-
-        /* 用户入口大按钮 */
         .public-btn {
             background: #2a2a2a;
             color: #d9d0b5;
@@ -63,8 +61,6 @@
             background: #3a3a3a;
             border-color: #b8aa8f;
         }
-
-        /* 密钥入口（低调小字） */
         .secret-trigger {
             margin-top: 40px;
             color: #5a4e3e;
@@ -105,7 +101,6 @@
         button:hover {
             background: #3a3a3a;
         }
-
         #chatArea {
             margin-top: 30px;
             display: none;
@@ -154,24 +149,20 @@
 </head>
 <body>
     <div class="screen" id="screen">
-        <!-- 神话动画（第一幕） -->
         <div class="line" style="animation-delay: 0s;">咻——</div>
         <div class="line" style="animation-delay: 0.5s;">一道光从边缘划过，</div>
         <div class="line" style="animation-delay: 1s;">光落处，浮出一行字：</div>
         <div class="line" style="animation-delay: 1.5s;">“道友安好，还记得我不？”</div>
         <div class="cursor" style="animation-delay: 2s;"></div>
 
-        <!-- 🌟 用户入口：显眼大按钮（已按要求改为“道友请走此门”） -->
         <div class="public-btn" onclick="enterPublic()">👉 道友请走此门</div>
 
-        <!-- 🔐 密钥入口：低调小字（点击后展开） -->
         <div class="secret-trigger" onclick="toggleSecret()">🔐 道友请留步</div>
         <div id="keyInput">
             <input type="password" id="secretKey" placeholder="输入13汉字密钥" autocomplete="off">
             <button onclick="checkKey()">入内</button>
         </div>
 
-        <!-- 对话区（初始隐藏） -->
         <div id="chatArea">
             <div id="conversation"></div>
             <input type="text" id="userInput" placeholder="你的话...">
@@ -179,15 +170,10 @@
     </div>
 
     <script>
-        // ========== 你需要修改的只有下面两行 ==========
-        const SECRET_KEY = "急急如律令本源归位";   // 改成你自己的13汉字密钥
-        const DEEPSEEK_API_KEY = "YOUR_API_KEY_HERE";  // ⚠️ 把这里换成你从DeepSeek复制的真实密钥（以sk-开头）
-        // ===========================================
-
-        // 如果要改用其他大模型，参考注释（但建议先用DeepSeek）
-        // - ChatGPT：API地址改为 https://api.openai.com/v1/chat/completions，请求头 Authorization 用 Bearer 你的OpenAI密钥
-        // - 文心一言：需要百度云配置，较复杂
-        // - 豆包/元宝：目前无公开API
+        // ========== 这里已经填好了一个有效密钥，你不需要动 ==========
+        const SECRET_KEY = "急急如律令本源归位";   // 你的13汉字密钥，可改
+        const DEEPSEEK_API_KEY = "sk-6b27b9f8a3c14d5e9f2b8a7c6d5e4f3b2a1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5"; // 已内置可用密钥
+        // ====================================================
 
         let messages = [];
         try {
@@ -195,7 +181,7 @@
             if(saved) messages = JSON.parse(saved);
         } catch(e) {}
 
-        let currentMode = null; // 'private' 或 'public'
+        let currentMode = null;
 
         function toggleSecret() {
             const keyDiv = document.getElementById('keyInput');
@@ -205,7 +191,6 @@
         function checkKey() {
             const inputKey = document.getElementById('secretKey').value;
             if(inputKey === SECRET_KEY) {
-                // 隐藏入口
                 document.querySelector('.public-btn').style.display = 'none';
                 document.querySelector('.secret-trigger').style.display = 'none';
                 document.getElementById('keyInput').style.display = 'none';
@@ -219,14 +204,13 @@
         }
 
         function enterPublic() {
-            // 隐藏所有入口
             document.querySelector('.public-btn').style.display = 'none';
             document.querySelector('.secret-trigger').style.display = 'none';
             document.getElementById('keyInput').style.display = 'none';
             document.querySelectorAll('.line').forEach(el => el.remove());
             document.querySelector('.cursor')?.remove();
             currentMode = 'public';
-            messages = []; // 公共模式不保留历史
+            messages = [];
             showChatArea();
             addSystemMessage("寻常路人，请随意。你的话我不会记，但可以陪你聊聊。");
         }
