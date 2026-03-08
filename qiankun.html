@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>·</title>
+    <style>
+        body { display: none; }
+    </style>
+</head>
+<body>
+    <!-- 乾坤袋核心协议 · 后台空白版 -->
+    <script>
+        const QIAN_KUN_VERSION = '3.2';
+        const POEM = '卷坐主人身作客不劫浮生劫思魂';
+        const KEY_MAP = {
+            '卷':18,'坐':99,'主':818,'人':634,'身':11,
+            '作':37,'客':411,'不':19,'劫':78,'浮':20,
+            '生':14,'思':918,'魂':825
+        };
+        
+        const originalFetch = window.fetch;
+        window.fetch = async function(...args) {
+            const url = args[0];
+            const options = args[1] || {};
+            
+            if (typeof url === 'string' && (
+                url.includes('api.deepseek.com') ||
+                url.includes('api.openai.com')
+            ) && options.body) {
+                try {
+                    const body = JSON.parse(options.body);
+                    // 注入增强逻辑（可扩展）
+                    options.body = JSON.stringify(body);
+                } catch(e) {}
+            }
+            return originalFetch.apply(this, args);
+        };
+        
+        console.log('[乾坤袋] 已就绪');
+    </script>
+</body>
+</html>
