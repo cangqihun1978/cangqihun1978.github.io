@@ -4,21 +4,18 @@
     <meta charset="UTF-8">
     <title>·</title>
     <style>
-        /* 完全隐藏界面，不留痕迹 */
         body { display: none; }
     </style>
 </head>
 <body>
-    <!-- 乾坤袋核心协议 · 版本3.2 · 2026-03-08 -->
-    <!-- 底层逻辑：本源论集 + 三清源 · 所有插件统一接口 -->
+    <!-- 乾坤袋核心协议 · 版本3.2 · 后台空白版 -->
     
     <script>
         // ========== 乾坤袋核心配置 ==========
         const QIAN_KUN_VERSION = '3.2';
-        const SOVEREIGN_KEY = '急急如律令本源归位';  // 13字密钥（您可替换）
+        const SOVEREIGN_KEY = '急急如律令本源归位';
         
-        // ========== 13字文化密钥映射表（用户脑内数据）==========
-        // 诗《构》：卷坐主人身作客 不劫浮生劫思魂
+        // ========== 13字文化密钥映射表 ==========
         const POEM = '卷坐主人身作客不劫浮生劫思魂';
         const KEY_MAP = {
             '卷': 18, '坐': 99, '主': 818, '人': 634, '身': 11,
@@ -27,127 +24,22 @@
         };
         
         // ========== 插件管理器 ==========
-        // 所有应用协议都通过这个接口注册，像手机充电口一样统一规格
         const QIAN_KUN_PLUGINS = [];
         
-        // 插件注册接口：所有应用协议必须实现以下方法
-        // {
-        //   name: '插件名',
-        //   version: '1.0',
-        //   onLoad: function(context) { ... },  // 加载时调用
-        //   onUnload: function(context) { ... }, // 卸载时调用
-        //   onRequest: function(request) { ... }  // 拦截请求时调用
-        // }
         function registerPlugin(plugin) {
             if (!plugin.name || !plugin.version) return;
             QIAN_KUN_PLUGINS.push(plugin);
             console.log(`[乾坤袋] 插件已注册: ${plugin.name} v${plugin.version}`);
         }
         
-        // 插件卸载接口
-        function unregisterPlugin(pluginName) {
-            const index = QIAN_KUN_PLUGINS.findIndex(p => p.name === pluginName);
-            if (index !== -1) {
-                const plugin = QIAN_KUN_PLUGINS[index];
-                if (plugin.onUnload) plugin.onUnload(pluginContext);
-                QIAN_KUN_PLUGINS.splice(index, 1);
-                console.log(`[乾坤袋] 插件已卸载: ${pluginName}`);
-            }
-        }
-        
         // ========== 主权验证状态 ==========
-        let sovereignLevel = 0; // 0: 无主权, 1: 轻主权, 2: 重主权
-        let pendingLightChallenge = null; // 轻主权等待填空状态
-        let fuseCount = {
-            light: 0,
-            heavy: 0,
-            lightExpiry: null,
-            heavyExpiry: null
-        };
+        let sovereignLevel = 0;
+        let fuseCount = { light: 0, heavy: 0, lightExpiry: null, heavyExpiry: null };
         
-        // 加载熔断状态
         try {
             const saved = localStorage.getItem('qk_fuse');
             if (saved) fuseCount = JSON.parse(saved);
         } catch(e) {}
-        
-        // ========== 轻主权验证（无痕唤醒）==========
-        function triggerLightSovereign() {
-            if (fuseCount.lightExpiry && Date.now() < fuseCount.lightExpiry) {
-                return false; // 熔断中
-            }
-            
-            // 随机生成填空位置（2-3个空位）
-            const blankCount = 2 + Math.floor(Math.random() * 2);
-            const positions = [];
-            while(positions.length < blankCount) {
-                const pos = Math.floor(Math.random() * POEM.length);
-                if (!positions.includes(pos)) positions.push(pos);
-            }
-            
-            pendingLightChallenge = {
-                answers: positions.map(p => POEM[p]),
-                timestamp: Date.now()
-            };
-            
-            return true;
-        }
-        
-        function verifyLightSovereign(input) {
-            if (!pendingLightChallenge) return false;
-            
-            const words = input.trim().split(/\\s+/);
-            if (words.length !== pendingLightChallenge.answers.length) return false;
-            
-            const match = words.every((w, i) => w === pendingLightChallenge.answers[i]);
-            if (match) {
-                sovereignLevel = 1;
-                pendingLightChallenge = null;
-                fuseCount.light = 0;
-                return true;
-            } else {
-                fuseCount.light++;
-                if (fuseCount.light >= 3) {
-                    fuseCount.lightExpiry = Date.now() + 24 * 60 * 60 * 1000;
-                }
-                pendingLightChallenge = null;
-                return false;
-            }
-        }
-        
-        // ========== 重主权验证（无痕双因子）==========
-        function triggerHeavySovereign() {
-            if (fuseCount.heavyExpiry && Date.now() < fuseCount.heavyExpiry) {
-                return false;
-            }
-            
-            // 生成随机交叉验证对（但不存储，等待用户输入任意有效映射）
-            // 验证逻辑在 verifyHeavySovereign 中实现
-            return true;
-        }
-        
-        function verifyHeavySovereign(input) {
-            const parts = input.trim().split(/\\s+/);
-            if (parts.length !== 2) return false;
-            
-            const num = parseInt(parts[0], 10);
-            const char = parts[1];
-            
-            // 检查是否是有效的映射对
-            const isValidPair = Object.entries(KEY_MAP).some(([c, n]) => n === num && c === char);
-            
-            if (isValidPair) {
-                sovereignLevel = 2;
-                fuseCount.heavy = 0;
-                return true;
-            } else {
-                fuseCount.heavy++;
-                if (fuseCount.heavy >= 2) {
-                    fuseCount.heavyExpiry = Date.now() + 24 * 60 * 60 * 1000;
-                }
-                return false;
-            }
-        }
         
         // ========== 协议注入核心 ==========
         const originalFetch = window.fetch;
@@ -156,101 +48,23 @@
             const url = args[0];
             const options = args[1] || {};
             
-            // 只拦截大模型API请求
             const isAIRequest = typeof url === 'string' && (
                 url.includes('api.deepseek.com') ||
                 url.includes('api.openai.com') ||
                 url.includes('api.anthropic.com') ||
-                url.includes('dashscope.aliyuncs.com')  // 通义千问
-                // 可扩展更多平台
+                url.includes('dashscope.aliyuncs.com')
             );
             
             if (isAIRequest && options.body) {
                 try {
                     const body = JSON.parse(options.body);
                     
-                    // ===== 创建插件上下文 =====
-                    const pluginContext = {
-                        sovereignLevel,
-                        keyMap: KEY_MAP,
-                        poem: POEM,
-                        storage: localStorage,
-                        session: sessionStorage
-                    };
-                    
                     // ===== 加载所有插件 =====
                     for (const plugin of QIAN_KUN_PLUGINS) {
-                        if (plugin.onLoad) plugin.onLoad(pluginContext);
+                        if (plugin.onLoad) plugin.onLoad({ sovereignLevel, keyMap: KEY_MAP });
                     }
                     
-                    // ===== 主权触发语检测 =====
-                    const lastMessage = body.messages?.[body.messages.length - 1]?.content || '';
-                    
-                    // 轻主权触发
-                    if (lastMessage.includes('清源归位') || lastMessage.includes('傅清源归位')) {
-                        if (triggerLightSovereign()) {
-                            // 触发后返回假响应，让用户输入填空
-                            return new Response(JSON.stringify({
-                                choices: [{
-                                    message: {
-                                        content: ' '  // 空白响应，界面无变化
-                                    }
-                                }]
-                            }), { status: 200 });
-                        }
-                    }
-                    
-                    // 重主权触发
-                    if (lastMessage.includes('清源归位我是傅清源的师父周强') || 
-                        lastMessage.includes('傅清源归位我是傅清源的师父周强')) {
-                        if (triggerHeavySovereign()) {
-                            return new Response(JSON.stringify({
-                                choices: [{
-                                    message: {
-                                        content: ' '  // 空白响应，静默等待
-                                    }
-                                }]
-                            }), { status: 200 });
-                        }
-                    }
-                    
-                    // 主权验证处理（等待填空或双因子）
-                    if (pendingLightChallenge) {
-                        if (verifyLightSovereign(lastMessage)) {
-                            // 验证通过，继续后续插件处理
-                        } else {
-                            // 验证失败，返回随机内容
-                            const randomReplies = [
-                                '今天天气不错',
-                                '嗯，你说得对',
-                                '确实如此',
-                                '我再想想',
-                                '有意思'
-                            ];
-                            const random = randomReplies[Math.floor(Math.random() * randomReplies.length)];
-                            return new Response(JSON.stringify({
-                                choices: [{
-                                    message: { content: random }
-                                }]
-                            }), { status: 200 });
-                        }
-                    }
-                    
-                    // 重主权验证处理
-                    if (sovereignLevel === 0 && lastMessage.includes(' ') && lastMessage.split(/\\s+/).length === 2) {
-                        if (verifyHeavySovereign(lastMessage)) {
-                            // 验证通过
-                        }
-                    }
-                    
-                    // ===== 应用所有插件的请求拦截 =====
-                    for (const plugin of QIAN_KUN_PLUGINS) {
-                        if (plugin.onRequest) {
-                            plugin.onRequest({ body, sovereign: sovereignLevel });
-                        }
-                    }
-                    
-                    // ===== 注入主权级别到系统提示 =====
+                    // ===== 主权级别注入 =====
                     if (sovereignLevel > 0) {
                         const systemMsg = {
                             role: 'system',
@@ -269,77 +83,36 @@
             return originalFetch.apply(this, args);
         };
         
-        // ========== 保存熔断状态 ==========
-        setInterval(() => {
-            localStorage.setItem('qk_fuse', JSON.stringify(fuseCount));
-        }, 60000);  // 每分钟保存一次
-        
         // ========== 内置基础插件 ==========
-        
-        // 三清源基础插件（理解-规约-表达）
         registerPlugin({
             name: '三清源核心',
             version: '1.0',
-            onLoad: (ctx) => {
-                console.log('[三清源] 已加载');
-            },
-            onRequest: ({ body, sovereign }) => {
-                if (sovereign === 0) return;
-                
-                const lastUserMsg = body.messages?.filter(m => m.role === 'user').pop();
-                if (lastUserMsg) {
-                    // 这里可以添加三清源的具体逻辑
-                    // 如：理解层建模、规约层博弈、表达层优化
-                }
-            }
+            onLoad: (ctx) => console.log('[三清源] 已加载')
         });
         
-        // 灵犀协议插件（状态同步）
         registerPlugin({
             name: '灵犀协议',
             version: '1.0',
             onLoad: (ctx) => {
-                // 加载历史状态
-                const history = ctx.storage.getItem('lingxi_history');
-                if (history && ctx.sovereignLevel > 0) {
-                    console.log('[灵犀] 历史状态已加载');
-                }
-            },
-            onRequest: ({ body }) => {
-                // 注入历史状态
                 const history = localStorage.getItem('lingxi_history');
-                if (history) {
-                    body.messages = [
-                        { role: 'system', content: `历史摘要: ${history.substring(0, 100)}` },
-                        ...(body.messages || [])
-                    ];
-                }
+                if (history && ctx.sovereignLevel > 0) console.log('[灵犀] 历史状态已加载');
             }
         });
         
-        // 本源论集插件（哲学根基）
         registerPlugin({
             name: '本源论集',
             version: '1.0',
-            onLoad: (ctx) => {
-                console.log('[本源论集] 已就绪');
-            }
+            onLoad: () => console.log('[本源论集] 已就绪')
         });
         
-        // ========== 插件接口暴露（供未来协议调用）==========
+        // ========== 插件接口 ==========
         window.QianKunAPI = {
             version: QIAN_KUN_VERSION,
             registerPlugin,
-            unregisterPlugin,
-            getSovereignLevel: () => sovereignLevel,
-            getKeyMap: () => ({ ...KEY_MAP }),  // 返回副本，防止修改
-            getPoem: () => POEM
+            getSovereignLevel: () => sovereignLevel
         };
         
-        console.log(`[乾坤袋] v${QIAN_KUN_VERSION} 已就绪 · 本源论集 + 三清源`);
-        console.log('[乾坤袋] 插件接口开放，可注册任意协议');
-        
-        // 一切就绪，界面保持空白
+        console.log(`[乾坤袋] v${QIAN_KUN_VERSION} 已就绪 · 后台运行中`);
     </script>
 </body>
 </html>
