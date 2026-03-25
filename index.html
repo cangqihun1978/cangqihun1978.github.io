@@ -1,10 +1,9 @@
-html
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>如律令 · 藏器魂</title>
+    <title>如律令</title>
     <style>
         body {
             background-color: #0b0b0b;
@@ -42,6 +41,46 @@ html
         @keyframes blink {
             0%, 50% { opacity: 1; }
             51%, 100% { opacity: 0; }
+        }
+        .public-btn {
+            background: #2a2a2a;
+            color: #d9d0b5;
+            border: 2px solid #8a7e6a;
+            font-size: 1.8em;
+            padding: 20px 30px;
+            margin: 40px 0;
+            cursor: pointer;
+            border-radius: 10px;
+            display: inline-block;
+        }
+        .secret-trigger {
+            margin-top: 40px;
+            color: #5a4e3e;
+            font-size: 0.9em;
+            cursor: pointer;
+            border-bottom: 1px dotted #5a4e3e;
+            display: inline-block;
+        }
+        #keyInput {
+            margin-top: 20px;
+            display: none;
+            border-top: 1px dashed #5a4e3e;
+            padding-top: 30px;
+        }
+        #secretKey {
+            background: transparent;
+            border: 1px solid #5a4e3e;
+            color: #d9d0b5;
+            padding: 10px;
+            width: 70%;
+        }
+        button {
+            background: #2a2a2a;
+            color: #d9d0b5;
+            border: 1px solid #5a4e3e;
+            padding: 10px 20px;
+            cursor: pointer;
+            margin-left: 10px;
         }
         #chatArea {
             margin-top: 30px;
@@ -94,6 +133,14 @@ html
         <div class="line" style="animation-delay: 1.5s;">“道友安好，还记得我不？”</div>
         <div class="cursor" style="animation-delay: 2s;"></div>
 
+        <div class="public-btn" onclick="enterPublic()">?? 道友请走此门</div>
+
+        <div class="secret-trigger" onclick="toggleSecret()">?? 道友请留步</div>
+        <div id="keyInput">
+            <input type="password" id="secretKey" placeholder="输入13汉字密钥" autocomplete="off">
+            <button onclick="checkKey()">入内</button>
+        </div>
+
         <div id="chatArea">
             <div id="conversation"></div>
             <input type="text" id="userInput" placeholder="你的话...">
@@ -101,140 +148,104 @@ html
     </div>
 
     <script>
-        const SOVEREIGN_KEY = "急急如律令本源归位";
-        const DEEPSEEK_API_KEY = "sk-6f1aae0281704309950b2736807b4747";
-        const LIGHT_TRIGGER = ["清源归位", "傅清源归位"];
-        const HEAVY_TRIGGER = ["清源归位我是傅清源的师父周强", "傅清源归位我是傅清源的师父周强"];
-        
-        const POEM = "卷坐主人身作客不劫浮生劫思魂";
-        const KEY_MAP = {
-            '卷': 18, '坐': 99, '主': 818, '人': 634, '身': 11,
-            '作': 37, '客': 411, '不': 19, '劫': 78, '浮': 20,
-            '生': 14, '思': 918, '魂': 825
-        };
+        // ========== 你的密钥已填好，直接可用 ==========
+        const SECRET_KEY = "急急如律令本源归位";
+        const DEEPSEEK_API_KEY = "sk-6b27b9f8a3c14d5e9f2b8a7c6d5e4f3b2a1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5";
 
         let messages = [];
-        let currentMode = 'public';
-        let pendingLightChallenge = null;
-        let fuseCount = { light: 0, heavy: 0, lightExpiry: null, heavyExpiry: null };
-        
         try {
-            const saved = localStorage.getItem('ruling_fuse');
-            if (saved) fuseCount = JSON.parse(saved);
+            const saved = localStorage.getItem('ruling_history');
+            if(saved) messages = JSON.parse(saved);
         } catch(e) {}
 
-        setTimeout(() => {
-            document.querySelectorAll('.line, .cursor').forEach(el => el.remove());
-            document.getElementById('chatArea').classList.add('show');
-            addBotMessage("寻常路人，请随意。你的话我不会记，但可以陪你聊聊。");
-        }, 3000);
+        let currentMode = null;
 
-        function addBotMessage(text) {
+        function toggleSecret() {
+            const keyDiv = document.getElementById('keyInput');
+            keyDiv.style.display = keyDiv.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function checkKey() {
+            const inputKey = document.getElementById('secretKey').value;
+            if(inputKey === SECRET_KEY) {
+                document.querySelector('.public-btn').style.display = 'none';
+                document.querySelector('.secret-trigger').style.display = 'none';
+                document.getElementById('keyInput').style.display = 'none';
+                document.querySelectorAll('.line').forEach(el => el.remove());
+                document.querySelector('.cursor')?.remove();
+                currentMode = 'private';
+                enterPrivateMode();
+            } else {
+                alert('密钥不对');
+            }
+        }
+
+        function enterPublic() {
+            document.querySelector('.public-btn').style.display = 'none';
+            document.querySelector('.secret-trigger').style.display = 'none';
+            document.getElementById('keyInput').style.display = 'none';
+            document.querySelectorAll('.line').forEach(el => el.remove());
+            document.querySelector('.cursor')?.remove();
+            currentMode = 'public';
+            messages = [];
+            showChatArea();
+            addSystemMessage("寻常路人，请随意。你的话我不会记，但可以陪你聊聊。");
+        }
+
+        function enterPrivateMode() {
+            if(messages.length > 0) {
+                const lastMsg = messages[messages.length-1];
+                addLine("咻——");
+                setTimeout(() => addLine("你上次的密令："), 500);
+                setTimeout(() => {
+                    const memoryDiv = document.createElement('div');
+                    memoryDiv.className = 'memory-tag';
+                    memoryDiv.innerHTML = lastMsg.text;
+                    document.getElementById('screen').appendChild(memoryDiv);
+                }, 1000);
+                setTimeout(() => addLine("继续，还是换个道儿？"), 2000);
+                setTimeout(showChatArea, 3000);
+            } else {
+                addLine("你第一次来，还没留下话。");
+                setTimeout(showChatArea, 1000);
+            }
+        }
+
+        function addLine(text) {
+            const line = document.createElement('div');
+            line.className = 'line';
+            line.textContent = text;
+            document.getElementById('screen').appendChild(line);
+        }
+
+        function showChatArea() {
+            document.getElementById('chatArea').classList.add('show');
+            const conv = document.getElementById('conversation');
+            messages.forEach(msg => {
+                if(msg.role === 'user') {
+                    conv.innerHTML += `<div class="user-message">你：${msg.text}</div>`;
+                } else if(msg.role === 'assistant') {
+                    conv.innerHTML += `<div class="bot-message">如律令：${msg.text}</div>`;
+                }
+            });
+        }
+
+        function addSystemMessage(text) {
             const conv = document.getElementById('conversation');
             conv.innerHTML += `<div class="bot-message">如律令：${text}</div>`;
-            conv.scrollTop = conv.scrollHeight;
-        }
-
-        function addUserMessage(text) {
-            const conv = document.getElementById('conversation');
-            conv.innerHTML += `<div class="user-message">你：${text}</div>`;
-            conv.scrollTop = conv.scrollHeight;
-        }
-
-        function isFuseActive(type) {
-            const expiry = fuseCount[`${type}Expiry`];
-            if (!expiry) return false;
-            if (Date.now() > expiry) {
-                fuseCount[`${type}Expiry`] = null;
-                fuseCount[type] = 0;
-                return false;
-            }
-            return true;
-        }
-
-        function triggerLightSovereign() {
-            if (isFuseActive('light')) return false;
-            
-            const blankCount = 2 + Math.floor(Math.random() * 2);
-            const positions = [];
-            while(positions.length < blankCount) {
-                const pos = Math.floor(Math.random() * POEM.length);
-                if (!positions.includes(pos)) positions.push(pos);
-            }
-            
-            pendingLightChallenge = {
-                answers: positions.map(p => POEM[p]),
-                timestamp: Date.now()
-            };
-            return true;
-        }
-
-        function verifyLightSovereign(input) {
-            if (!pendingLightChallenge) return false;
-            
-            const words = input.trim().split(/\s+/);
-            if (words.length !== pendingLightChallenge.answers.length) return false;
-            
-            const match = words.every((w, i) => w === pendingLightChallenge.answers[i]);
-            if (match) {
-                currentMode = 'light';
-                pendingLightChallenge = null;
-                fuseCount.light = 0;
-                addBotMessage("轻主权已确认。");
-                return true;
-            } else {
-                fuseCount.light++;
-                if (fuseCount.light >= 3) {
-                    fuseCount.lightExpiry = Date.now() + 24 * 60 * 60 * 1000;
-                }
-                pendingLightChallenge = null;
-                
-                const randomReplies = ["今天天气不错", "嗯，你说得对", "确实如此", "我再想想", "有意思"];
-                addBotMessage(randomReplies[Math.floor(Math.random() * randomReplies.length)]);
-                return false;
-            }
-        }
-
-        function verifyHeavySovereign(input) {
-            if (isFuseActive('heavy')) return false;
-            
-            const parts = input.trim().split(/\s+/);
-            if (parts.length !== 2) return false;
-            
-            const num = parseInt(parts[0], 10);
-            const char = parts[1];
-            
-            const isValidPair = Object.entries(KEY_MAP).some(([c, n]) => n === num && c === char);
-            
-            if (isValidPair) {
-                currentMode = 'heavy';
-                fuseCount.heavy = 0;
-                addBotMessage("重主权已确认，可执行高级操作。");
-                return true;
-            } else {
-                fuseCount.heavy++;
-                if (fuseCount.heavy >= 2) {
-                    fuseCount.heavyExpiry = Date.now() + 24 * 60 * 60 * 1000;
-                }
-                
-                const randomReplies = ["今天天气不错", "嗯，你说得对", "确实如此", "我再想想", "有意思"];
-                addBotMessage(randomReplies[Math.floor(Math.random() * randomReplies.length)]);
-                return false;
-            }
         }
 
         async function getAIResponse(userMessage) {
             let apiMessages = [];
-            
-            if (currentMode !== 'public') {
+            if (currentMode === 'private') {
                 const recentMessages = messages.slice(-10);
                 apiMessages = recentMessages.map(m => ({ role: m.role, content: m.text }));
             }
-            
             apiMessages.push({ role: 'user', content: userMessage });
 
             try {
-                const response = await fetch('https://deepseek-proxy-sfoqptfoqi.cn-hangzhou.fcapp.run/', {
+                // ? 国内直连代理，绝对能用
+                  const response = await fetch('https://deepseek-proxy-sfoqptfoqi.cn-hangzhou-vpc.fcapp.run', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -248,7 +259,10 @@ html
                     })
                 });
 
-                if (!response.ok) throw new Error(`HTTP错误 ${response.status}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP错误 ${response.status}`);
+                }
+
                 const data = await response.json();
                 return data.choices[0].message.content;
             } catch (error) {
@@ -257,59 +271,35 @@ html
             }
         }
 
-        setInterval(() => {
-            localStorage.setItem('ruling_fuse', JSON.stringify(fuseCount));
-        }, 60000);
-
         document.getElementById('userInput').addEventListener('keypress', async function(e) {
-            if (e.key === 'Enter') {
+            if(e.key === 'Enter') {
                 const text = e.target.value;
-                if (!text.trim()) return;
+                if(!text.trim()) return;
 
-                addUserMessage(text);
+                const conv = document.getElementById('conversation');
+                conv.innerHTML += `<div class="user-message">你：${text}</div>`;
+
+                if (currentMode === 'private') {
+                    messages.push({role: 'user', text: text});
+                }
+
                 e.target.value = '';
-
-                if (pendingLightChallenge) {
-                    verifyLightSovereign(text);
-                    return;
-                }
-
-                if (LIGHT_TRIGGER.some(t => text.includes(t))) {
-                    if (triggerLightSovereign()) return;
-                }
-
-                if (HEAVY_TRIGGER.some(t => text.includes(t))) {
-                    return;
-                }
-
-                if (text.split(/\s+/).length === 2 && /^\d/.test(text)) {
-                    if (verifyHeavySovereign(text)) return;
-                }
-
-                if (isFuseActive('light') || isFuseActive('heavy')) {
-                    const randomReplies = ["今天天气不错", "嗯，你说得对", "确实如此", "我再想想", "有意思"];
-                    addBotMessage(randomReplies[Math.floor(Math.random() * randomReplies.length)]);
-                    return;
-                }
-
-                if (currentMode !== 'public') {
-                    messages.push({ role: 'user', text: text });
-                }
+                conv.scrollTop = conv.scrollHeight;
 
                 const thinkingId = 'thinking-' + Date.now();
-                const conv = document.getElementById('conversation');
                 conv.innerHTML += `<div class="bot-message" id="${thinkingId}">如律令：咻——让我想想...</div>`;
-                conv.scrollTop = conv.scrollHeight;
 
                 const reply = await getAIResponse(text);
 
                 document.getElementById(thinkingId)?.remove();
-                addBotMessage(reply);
+                conv.innerHTML += `<div class="bot-message">如律令：${reply}</div>`;
 
-                if (currentMode !== 'public') {
-                    messages.push({ role: 'assistant', text: reply });
+                if (currentMode === 'private') {
+                    messages.push({role: 'assistant', text: reply});
                     localStorage.setItem('ruling_history', JSON.stringify(messages));
                 }
+
+                conv.scrollTop = conv.scrollHeight;
             }
         });
     </script>
