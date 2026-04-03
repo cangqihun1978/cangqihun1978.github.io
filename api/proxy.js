@@ -7,25 +7,21 @@ export default async function handler(req, res) {
     }
 
     if (req.method !== 'POST') {
-        return res.status(405).end('Method Not Allowed');
+        return res.status(405).json({ error: 'Method Not Allowed' });
     }
 
     try {
-        const body = req.body;
-        body.model = 'deepseek-chat';
-
-        const deepseekRes = await fetch('https://api.deepseek.com/v1/chat/completions', {
+        const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': req.headers.authorization
             },
-            body: JSON.stringify(body)
+            body: JSON.stringify(req.body)
         });
-
-        const data = await deepseekRes.json();
+        const data = await response.json();
         res.setHeader('Access-Control-Allow-Origin', '*');
-        return res.status(deepseekRes.status).json(data);
+        return res.status(response.status).json(data);
     } catch (err) {
         return res.status(500).json({ error: err.message });
     }
