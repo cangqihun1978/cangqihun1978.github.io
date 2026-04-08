@@ -166,19 +166,15 @@
         }
 
         function checkKey() {
-            const inputKey = document.getElementById('secretKey').value;
-            if(inputKey === SECRET_KEY) {
-                document.querySelector('.public-btn').style.display = 'none';
-                document.querySelector('.secret-trigger').style.display = 'none';
-                document.getElementById('keyInput').style.display = 'none';
-                document.querySelectorAll('.line').forEach(el => el.remove());
-                document.querySelector('.cursor')?.remove();
-                currentMode = 'private';
-                enterPrivateMode();
-            } else {
-                alert('密钥不对');
-            }
-        }
+    // 直接进入私密模式，不验证密码
+    document.querySelector('.public-btn').style.display = 'none';
+    document.querySelector('.secret-trigger').style.display = 'none';
+    document.getElementById('keyInput').style.display = 'none';
+    document.querySelectorAll('.line').forEach(el => el.remove());
+    document.querySelector('.cursor')?.remove();
+    currentMode = 'private';
+    enterPrivateMode();
+}
 
         function enterPublic() {
             document.querySelector('.public-btn').style.display = 'none';
