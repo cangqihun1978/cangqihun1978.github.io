@@ -67,21 +67,6 @@
             border-top: 1px dashed #5a4e3e;
             padding-top: 30px;
         }
-        #secretKey {
-            background: transparent;
-            border: 1px solid #5a4e3e;
-            color: #d9d0b5;
-            padding: 10px;
-            width: 70%;
-        }
-        button {
-            background: #2a2a2a;
-            color: #d9d0b5;
-            border: 1px solid #5a4e3e;
-            padding: 10px 20px;
-            cursor: pointer;
-            margin-left: 10px;
-        }
         #chatArea {
             margin-top: 30px;
             display: none;
@@ -123,6 +108,65 @@
             padding: 10px 0;
             outline: none;
         }
+        /* 主权验证弹窗样式 */
+        .sovereign-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+        .sovereign-modal-content {
+            background: #1a1a1a;
+            border: 2px solid #5a4e3e;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+        .sovereign-modal-content h3 {
+            margin: 0 0 20px 0;
+            color: #d9d0b5;
+        }
+        .challenge-item {
+            font-size: 1.5rem;
+            margin: 15px 0;
+            color: #b8aa8f;
+        }
+        .challenge-input {
+            width: 100%;
+            padding: 12px;
+            background: #0b0b0b;
+            border: 1px solid #5a4e3e;
+            color: #d9d0b5;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin: 20px 0;
+            box-sizing: border-box;
+        }
+        .sovereign-modal-content button {
+            background: #2a2a2a;
+            color: #d9d0b5;
+            border: 1px solid #5a4e3e;
+            padding: 10px 20px;
+            margin: 0 10px;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+        .sovereign-modal-content button:hover {
+            background: #3a3a3a;
+        }
+        .error-msg {
+            color: #ff8888;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 <body>
@@ -133,13 +177,9 @@
         <div class="line" style="animation-delay: 1.5s;">“道友安好，还记得我不？”</div>
         <div class="cursor" style="animation-delay: 2s;"></div>
 
-        <div class="public-btn" onclick="enterPublic()">?? 道友请走此门</div>
+        <div class="public-btn" onclick="enterPublic()">👉 道友请走此门</div>
 
-        <div class="secret-trigger" onclick="toggleSecret()">?? 道友请留步</div>
-        <div id="keyInput">
-            <input type="text" id="secretKey" placeholder="输入13汉字密钥" autocomplete="off">
-            <button onclick="checkKey()">入内</button>
-        </div>
+        <div class="secret-trigger" onclick="showSovereignPanel()">🔐 道友请留步</div>
 
         <div id="chatArea">
             <div id="conversation"></div>
@@ -148,63 +188,120 @@
     </div>
 
     <script>
-        // ========== 你的密钥已填好，直接可用 ==========
-        const SECRET_KEY = "急急如律令本源归位";
+        // ========== 配置 ==========
         const DEEPSEEK_API_KEY = "sk-a2612937f0294e7884b6e0f1dc9f066b";
+        
+        // 13字密码表（诗《构》映射）
+        const KEY_MAP = {
+            "卷": 18, "坐": 99, "主": 818, "人": 634, "身": 11,
+            "作": 37, "客": 411, "不": 19, "劫": 78, "浮": 20,
+            "生": 14, "思": 918, "魂": 825
+        };
+        const CHARS = Object.keys(KEY_MAP);
+        const NUMBERS = Object.values(KEY_MAP);
 
         let messages = [];
+        let currentMode = 'public';  // 'public' 或 'private'
+        let pendingSovereign = false;  // 是否正在等待主权验证
+
+        // 加载历史
         try {
             const saved = localStorage.getItem('ruling_history');
             if(saved) messages = JSON.parse(saved);
         } catch(e) {}
 
-        let currentMode = null;
-
-        function toggleSecret() {
-            const keyDiv = document.getElementById('keyInput');
-            keyDiv.style.display = keyDiv.style.display === 'none' ? 'block' : 'none';
+        // ========== 主权验证（汉字↔数字填空）==========
+        function showSovereignPanel() {
+            if (currentMode === 'private') {
+                addSystemMessage("你已经在主权模式下了。");
+                return;
+            }
+            if (pendingSovereign) return;
+            
+            // 随机选择2-3个条目，每个条目随机选择方向（显示汉字还是显示数字）
+            const itemCount = Math.floor(Math.random() * 2) + 2; // 2 或 3
+            const selected = [];
+            const usedIndices = [];
+            for (let i = 0; i < itemCount; i++) {
+                let idx;
+                do { idx = Math.floor(Math.random() * CHARS.length); } 
+                while (usedIndices.includes(idx));
+                usedIndices.push(idx);
+                const char = CHARS[idx];
+                const num = KEY_MAP[char];
+                const showChar = Math.random() > 0.5; // true显示汉字，false显示数字
+                selected.push({
+                    type: showChar ? 'char' : 'num',
+                    display: showChar ? char : num,
+                    answer: showChar ? num : char
+                });
+            }
+            
+            // 构建弹窗
+            const modal = document.createElement('div');
+            modal.className = 'sovereign-modal';
+            modal.innerHTML = `
+                <div class="sovereign-modal-content">
+                    <h3>🔐 主权验证</h3>
+                    <div id="challenge-items"></div>
+                    <input type="text" id="sovereign-answer" class="challenge-input" placeholder="输入答案，空格分隔" autocomplete="off">
+                    <div id="sovereign-error" class="error-msg"></div>
+                    <button id="sovereign-submit">验证</button>
+                    <button id="sovereign-cancel">取消</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            // 显示挑战项
+            const container = modal.querySelector('#challenge-items');
+            selected.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'challenge-item';
+                div.innerHTML = item.type === 'char' ? `${item.display} ___` : `___ ${item.display}`;
+                container.appendChild(div);
+            });
+            
+            // 存储正确答案
+            const answers = selected.map(s => s.answer);
+            
+            // 绑定事件
+            modal.querySelector('#sovereign-submit').onclick = () => {
+                const input = modal.querySelector('#sovereign-answer').value.trim();
+                const userAnswers = input.split(/\\s+/);
+                if (userAnswers.length !== answers.length) {
+                    modal.querySelector('#sovereign-error').innerText = `需要输入 ${answers.length} 个答案，用空格分隔`;
+                    return;
+                }
+                let allMatch = true;
+                for (let i = 0; i < answers.length; i++) {
+                    if (String(userAnswers[i]) !== String(answers[i])) {
+                        allMatch = false;
+                        break;
+                    }
+                }
+                if (allMatch) {
+                    modal.remove();
+                    currentMode = 'private';
+                    addSystemMessage("主权已确认，进入私密模式。");
+                } else {
+                    modal.querySelector('#sovereign-error').innerText = '验证失败，再试试？';
+                }
+            };
+            modal.querySelector('#sovereign-cancel').onclick = () => {
+                modal.remove();
+            };
         }
 
-        function checkKey() {
-    // 直接进入私密模式，不验证密码
-    document.querySelector('.public-btn').style.display = 'none';
-    document.querySelector('.secret-trigger').style.display = 'none';
-    document.getElementById('keyInput').style.display = 'none';
-    document.querySelectorAll('.line').forEach(el => el.remove());
-    document.querySelector('.cursor')?.remove();
-    currentMode = 'private';
-    enterPrivateMode();
-}
-
+        // ========== 界面函数 ==========
         function enterPublic() {
+            document.querySelectorAll('.line, .cursor').forEach(el => el.remove());
             document.querySelector('.public-btn').style.display = 'none';
             document.querySelector('.secret-trigger').style.display = 'none';
-            document.getElementById('keyInput').style.display = 'none';
-            document.querySelectorAll('.line').forEach(el => el.remove());
-            document.querySelector('.cursor')?.remove();
+            document.getElementById('keyInput')?.remove();
             currentMode = 'public';
             messages = [];
             showChatArea();
             addSystemMessage("寻常路人，请随意。你的话我不会记，但可以陪你聊聊。");
-        }
-
-        function enterPrivateMode() {
-            if(messages.length > 0) {
-                const lastMsg = messages[messages.length-1];
-                addLine("咻——");
-                setTimeout(() => addLine("你上次的密令："), 500);
-                setTimeout(() => {
-                    const memoryDiv = document.createElement('div');
-                    memoryDiv.className = 'memory-tag';
-                    memoryDiv.innerHTML = lastMsg.text;
-                    document.getElementById('screen').appendChild(memoryDiv);
-                }, 1000);
-                setTimeout(() => addLine("继续，还是换个道儿？"), 2000);
-                setTimeout(showChatArea, 3000);
-            } else {
-                addLine("你第一次来，还没留下话。");
-                setTimeout(showChatArea, 1000);
-            }
         }
 
         function addLine(text) {
@@ -217,6 +314,7 @@
         function showChatArea() {
             document.getElementById('chatArea').classList.add('show');
             const conv = document.getElementById('conversation');
+            conv.innerHTML = '';
             messages.forEach(msg => {
                 if(msg.role === 'user') {
                     conv.innerHTML += `<div class="user-message">你：${msg.text}</div>`;
@@ -229,8 +327,10 @@
         function addSystemMessage(text) {
             const conv = document.getElementById('conversation');
             conv.innerHTML += `<div class="bot-message">如律令：${text}</div>`;
+            conv.scrollTop = conv.scrollHeight;
         }
 
+        // ========== AI 请求 ==========
         async function getAIResponse(userMessage) {
             let apiMessages = [];
             if (currentMode === 'private') {
@@ -240,8 +340,7 @@
             apiMessages.push({ role: 'user', content: userMessage });
 
             try {
-                // ? 国内直连代理，绝对能用
-                  const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+                const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -267,6 +366,7 @@
             }
         }
 
+        // ========== 监听用户输入 ==========
         document.getElementById('userInput').addEventListener('keypress', async function(e) {
             if(e.key === 'Enter') {
                 const text = e.target.value;
@@ -274,30 +374,41 @@
 
                 const conv = document.getElementById('conversation');
                 conv.innerHTML += `<div class="user-message">你：${text}</div>`;
+                e.target.value = '';
+                conv.scrollTop = conv.scrollHeight;
 
                 if (currentMode === 'private') {
                     messages.push({role: 'user', text: text});
                 }
 
-                e.target.value = '';
-                conv.scrollTop = conv.scrollHeight;
-
                 const thinkingId = 'thinking-' + Date.now();
                 conv.innerHTML += `<div class="bot-message" id="${thinkingId}">如律令：咻——让我想想...</div>`;
+                conv.scrollTop = conv.scrollHeight;
 
                 const reply = await getAIResponse(text);
 
                 document.getElementById(thinkingId)?.remove();
                 conv.innerHTML += `<div class="bot-message">如律令：${reply}</div>`;
+                conv.scrollTop = conv.scrollHeight;
 
                 if (currentMode === 'private') {
                     messages.push({role: 'assistant', text: reply});
                     localStorage.setItem('ruling_history', JSON.stringify(messages));
                 }
-
-                conv.scrollTop = conv.scrollHeight;
             }
         });
+
+        // 开场动画结束后自动进入公共模式
+        setTimeout(() => {
+            document.querySelectorAll('.line, .cursor').forEach(el => el.remove());
+            document.querySelector('.public-btn').style.display = 'none';
+            document.querySelector('.secret-trigger').style.display = 'none';
+            const keyInput = document.getElementById('keyInput');
+            if(keyInput) keyInput.remove();
+            currentMode = 'public';
+            showChatArea();
+            addSystemMessage("寻常路人，请随意。你的话我不会记，但可以陪你聊聊。");
+        }, 3000);
     </script>
 </body>
 </html>
