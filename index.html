@@ -61,12 +61,6 @@
             border-bottom: 1px dotted #5a4e3e;
             display: inline-block;
         }
-        #keyInput {
-            margin-top: 20px;
-            display: none;
-            border-top: 1px dashed #5a4e3e;
-            padding-top: 30px;
-        }
         #chatArea {
             margin-top: 30px;
             display: none;
@@ -92,13 +86,6 @@
             border-bottom: 1px dotted #5a4e3e;
             padding-bottom: 10px;
         }
-        .memory-tag {
-            color: #8a7e6a;
-            border: 1px solid #5a4e3e;
-            padding: 5px 10px;
-            display: inline-block;
-            margin-bottom: 20px;
-        }
         #userInput {
             background: transparent;
             border: none;
@@ -108,7 +95,6 @@
             padding: 10px 0;
             outline: none;
         }
-        /* 主权验证弹窗样式 */
         .sovereign-modal {
             position: fixed;
             top: 0;
@@ -159,9 +145,6 @@
             cursor: pointer;
             border-radius: 8px;
         }
-        .sovereign-modal-content button:hover {
-            background: #3a3a3a;
-        }
         .error-msg {
             color: #ff8888;
             margin-top: 10px;
@@ -178,7 +161,6 @@
         <div class="cursor" style="animation-delay: 2s;"></div>
 
         <div class="public-btn" onclick="enterPublic()">👉 道友请走此门</div>
-
         <div class="secret-trigger" onclick="showSovereignPanel()">🔐 道友请留步</div>
 
         <div id="chatArea">
@@ -188,38 +170,32 @@
     </div>
 
     <script>
-        // ========== 配置 ==========
         const DEEPSEEK_API_KEY = "sk-a2612937f0294e7884b6e0f1dc9f066b";
+        const PROXY_URL = "https://ruling-proxyyy-oopjlknonk.cn-hangzhou.fcapp.run";
         
-        // 13字密码表（诗《构》映射）
         const KEY_MAP = {
             "卷": 18, "坐": 99, "主": 818, "人": 634, "身": 11,
             "作": 37, "客": 411, "不": 19, "劫": 78, "浮": 20,
             "生": 14, "思": 918, "魂": 825
         };
         const CHARS = Object.keys(KEY_MAP);
-        const NUMBERS = Object.values(KEY_MAP);
 
         let messages = [];
-        let currentMode = 'public';  // 'public' 或 'private'
-        let pendingSovereign = false;  // 是否正在等待主权验证
+        let currentMode = 'public';
 
-        // 加载历史
         try {
             const saved = localStorage.getItem('ruling_history');
             if(saved) messages = JSON.parse(saved);
         } catch(e) {}
 
-        // ========== 主权验证（汉字↔数字填空）==========
+        // ========== 主权验证（支持空格/逗号，不要求顺序）==========
         function showSovereignPanel() {
             if (currentMode === 'private') {
                 addSystemMessage("你已经在主权模式下了。");
                 return;
             }
-            if (pendingSovereign) return;
             
-            // 随机选择2-3个条目，每个条目随机选择方向（显示汉字还是显示数字）
-            const itemCount = Math.floor(Math.random() * 2) + 2; // 2 或 3
+            const itemCount = Math.floor(Math.random() * 2) + 2;
             const selected = [];
             const usedIndices = [];
             for (let i = 0; i < itemCount; i++) {
@@ -229,22 +205,20 @@
                 usedIndices.push(idx);
                 const char = CHARS[idx];
                 const num = KEY_MAP[char];
-                const showChar = Math.random() > 0.5; // true显示汉字，false显示数字
+                const showChar = Math.random() > 0.5;
                 selected.push({
-                    type: showChar ? 'char' : 'num',
                     display: showChar ? char : num,
                     answer: showChar ? num : char
                 });
             }
             
-            // 构建弹窗
             const modal = document.createElement('div');
             modal.className = 'sovereign-modal';
             modal.innerHTML = `
                 <div class="sovereign-modal-content">
                     <h3>🔐 主权验证</h3>
                     <div id="challenge-items"></div>
-                    <input type="text" id="sovereign-answer" class="challenge-input" placeholder="输入答案，空格分隔" autocomplete="off">
+                    <input type="text" id="sovereign-answer" class="challenge-input" placeholder="用空格或逗号分隔答案，如：魂,思,78" autocomplete="off">
                     <div id="sovereign-error" class="error-msg"></div>
                     <button id="sovereign-submit">验证</button>
                     <button id="sovereign-cancel">取消</button>
@@ -252,29 +226,34 @@
             `;
             document.body.appendChild(modal);
             
-            // 显示挑战项
             const container = modal.querySelector('#challenge-items');
             selected.forEach(item => {
                 const div = document.createElement('div');
                 div.className = 'challenge-item';
-                div.innerHTML = item.type === 'char' ? `${item.display} ___` : `___ ${item.display}`;
+                div.innerHTML = typeof item.display === 'number' ? `___ ${item.display}` : `${item.display} ___`;
                 container.appendChild(div);
             });
             
-            // 存储正确答案
-            const answers = selected.map(s => s.answer);
+            const expectedAnswers = selected.map(s => String(s.answer));
             
-            // 绑定事件
             modal.querySelector('#sovereign-submit').onclick = () => {
                 const input = modal.querySelector('#sovereign-answer').value.trim();
-                const userAnswers = input.split(/\\s+/);
-                if (userAnswers.length !== answers.length) {
-                    modal.querySelector('#sovereign-error').innerText = `需要输入 ${answers.length} 个答案，用空格分隔`;
+                if (!input) {
+                    modal.querySelector('#sovereign-error').innerText = '请输入答案';
                     return;
                 }
+                // 支持空格和逗号分隔，自动清理
+                const userAnswers = input.split(/[\s,，]+/).filter(s => s.length > 0);
+                if (userAnswers.length !== expectedAnswers.length) {
+                    modal.querySelector('#sovereign-error').innerText = `需要输入 ${expectedAnswers.length} 个答案，用空格或逗号分隔`;
+                    return;
+                }
+                // 不要求顺序，只检查集合是否匹配
+                const sortedExpected = [...expectedAnswers].sort();
+                const sortedUser = [...userAnswers].sort();
                 let allMatch = true;
-                for (let i = 0; i < answers.length; i++) {
-                    if (String(userAnswers[i]) !== String(answers[i])) {
+                for (let i = 0; i < sortedExpected.length; i++) {
+                    if (sortedUser[i] !== sortedExpected[i]) {
                         allMatch = false;
                         break;
                     }
@@ -287,28 +266,17 @@
                     modal.querySelector('#sovereign-error').innerText = '验证失败，再试试？';
                 }
             };
-            modal.querySelector('#sovereign-cancel').onclick = () => {
-                modal.remove();
-            };
+            modal.querySelector('#sovereign-cancel').onclick = () => modal.remove();
         }
 
-        // ========== 界面函数 ==========
         function enterPublic() {
             document.querySelectorAll('.line, .cursor').forEach(el => el.remove());
             document.querySelector('.public-btn').style.display = 'none';
             document.querySelector('.secret-trigger').style.display = 'none';
-            document.getElementById('keyInput')?.remove();
             currentMode = 'public';
             messages = [];
             showChatArea();
             addSystemMessage("寻常路人，请随意。你的话我不会记，但可以陪你聊聊。");
-        }
-
-        function addLine(text) {
-            const line = document.createElement('div');
-            line.className = 'line';
-            line.textContent = text;
-            document.getElementById('screen').appendChild(line);
         }
 
         function showChatArea() {
@@ -330,7 +298,6 @@
             conv.scrollTop = conv.scrollHeight;
         }
 
-        // ========== AI 请求 ==========
         async function getAIResponse(userMessage) {
             let apiMessages = [];
             if (currentMode === 'private') {
@@ -353,11 +320,7 @@
                         max_tokens: 500
                     })
                 });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP错误 ${response.status}`);
-                }
-
+                if (!response.ok) throw new Error(`HTTP错误 ${response.status}`);
                 const data = await response.json();
                 return data.choices[0].message.content;
             } catch (error) {
@@ -366,45 +329,85 @@
             }
         }
 
-        // ========== 监听用户输入 ==========
+        async function callTool(tool, params) {
+            try {
+                const response = await fetch(PROXY_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tool, params })
+                });
+                return await response.json();
+            } catch (err) {
+                return { success: false, error: err.message };
+            }
+        }
+
         document.getElementById('userInput').addEventListener('keypress', async function(e) {
-            if(e.key === 'Enter') {
-                const text = e.target.value;
-                if(!text.trim()) return;
-
-                const conv = document.getElementById('conversation');
-                conv.innerHTML += `<div class="user-message">你：${text}</div>`;
-                e.target.value = '';
-                conv.scrollTop = conv.scrollHeight;
-
-                if (currentMode === 'private') {
-                    messages.push({role: 'user', text: text});
+            if (e.key !== 'Enter') return;
+            const text = e.target.value;
+            e.target.value = '';
+            
+            const conv = document.getElementById('conversation');
+            
+            // ========== 工具调用分支 ==========
+            if (text.startsWith('/tool')) {
+                const parts = text.split(' ');
+                if (parts.length >= 3) {
+                    const tool = parts[1];
+                    const paramsStr = parts.slice(2).join(' ');
+                    conv.innerHTML += `<div class="user-message">你：${text}</div>`;
+                    let params;
+                    try { params = JSON.parse(paramsStr); } catch { params = { raw: paramsStr }; }
+                    conv.innerHTML += `<div class="bot-message">如律令：调用工具 ${tool}...</div>`;
+                    conv.scrollTop = conv.scrollHeight;
+                    const result = await callTool(tool, params);
+                    const lastMsg = conv.lastChild;
+                    if (lastMsg && lastMsg.classList && lastMsg.classList.contains('bot-message')) {
+                        lastMsg.remove();
+                    }
+                    if (result.success) {
+                        conv.innerHTML += `<div class="bot-message">如律令：工具 ${tool} 返回: ${JSON.stringify(result.data)}</div>`;
+                    } else {
+                        conv.innerHTML += `<div class="bot-message">如律令：工具调用失败: ${result.error}</div>`;
+                    }
+                    conv.scrollTop = conv.scrollHeight;
+                } else {
+                    conv.innerHTML += `<div class="user-message">你：${text}</div>`;
+                    conv.innerHTML += `<div class="bot-message">如律令：用法: /tool &lt;工具名&gt; &lt;参数JSON&gt;，如 /tool echo {"test":"hello"}</div>`;
+                    conv.scrollTop = conv.scrollHeight;
                 }
-
-                const thinkingId = 'thinking-' + Date.now();
-                conv.innerHTML += `<div class="bot-message" id="${thinkingId}">如律令：咻——让我想想...</div>`;
-                conv.scrollTop = conv.scrollHeight;
-
-                const reply = await getAIResponse(text);
-
-                document.getElementById(thinkingId)?.remove();
-                conv.innerHTML += `<div class="bot-message">如律令：${reply}</div>`;
-                conv.scrollTop = conv.scrollHeight;
-
-                if (currentMode === 'private') {
-                    messages.push({role: 'assistant', text: reply});
-                    localStorage.setItem('ruling_history', JSON.stringify(messages));
-                }
+                return;
+            }
+            // ========== 工具调用分支结束 ==========
+            
+            // 普通对话
+            conv.innerHTML += `<div class="user-message">你：${text}</div>`;
+            conv.scrollTop = conv.scrollHeight;
+            
+            if (currentMode === 'private') {
+                messages.push({ role: 'user', text: text });
+            }
+            
+            const thinkingId = 'thinking-' + Date.now();
+            conv.innerHTML += `<div class="bot-message" id="${thinkingId}">如律令：咻——让我想想...</div>`;
+            conv.scrollTop = conv.scrollHeight;
+            
+            const reply = await getAIResponse(text);
+            
+            document.getElementById(thinkingId)?.remove();
+            conv.innerHTML += `<div class="bot-message">如律令：${reply}</div>`;
+            conv.scrollTop = conv.scrollHeight;
+            
+            if (currentMode === 'private') {
+                messages.push({ role: 'assistant', text: reply });
+                localStorage.setItem('ruling_history', JSON.stringify(messages));
             }
         });
 
-        // 开场动画结束后自动进入公共模式
         setTimeout(() => {
             document.querySelectorAll('.line, .cursor').forEach(el => el.remove());
             document.querySelector('.public-btn').style.display = 'none';
             document.querySelector('.secret-trigger').style.display = 'none';
-            const keyInput = document.getElementById('keyInput');
-            if(keyInput) keyInput.remove();
             currentMode = 'public';
             showChatArea();
             addSystemMessage("寻常路人，请随意。你的话我不会记，但可以陪你聊聊。");
