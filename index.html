@@ -188,12 +188,149 @@
             if(saved) messages = JSON.parse(saved);
         } catch(e) {}
 
-        // ========== 主权验证（支持空格/逗号，不要求顺序）==========
-        function showSovereignPanel() {
-            if (currentMode === 'private') {
-                addSystemMessage("你已经在主权模式下了。");
-                return;
+       function showPasswordPanel(passphrase) {
+    const itemCount = Math.floor(Math.random() * 2) + 2;
+    const selected = [];
+    const usedIndices = [];
+    for (let i = 0; i < itemCount; i++) {
+        let idx;
+        do { idx = Math.floor(Math.random() * CHARS.length); } 
+        while (usedIndices.includes(idx));
+        usedIndices.push(idx);
+        const char = CHARS[idx];
+        const num = KEY_MAP[char];
+        const showChar = Math.random() > 0.5;
+        selected.push({
+            display: showChar ? char : num,
+            answer: showChar ? num : char
+        });
+    }
+    
+    const modal = document.createElement('div');
+    modal.className = 'sovereign-modal';
+    modal.innerHTML = `
+        <div class="sovereign-modal-content">
+            <h3>🔐 主权验证</h3>
+            <div id="challenge-items"></div>
+            <input type="text" id="sovereign-answer" class="challenge-input" placeholder="用空格或逗号分隔答案，如：魂,思,78" autocomplete="off">
+            <div id="sovereign-error" class="error-msg"></div>
+            <button id="sovereign-submit">验证</button>
+            <button id="sovereign-cancel">取消</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    const container = modal.querySelector('#challenge-items');
+    selected.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'challenge-item';
+        div.innerHTML = typeof item.display === 'number' ? `___ ${item.display}` : `${item.display} ___`;
+        container.appendChild(div);
+    });
+    
+    const expectedAnswers = selected.map(s => String(s.answer));
+    
+    modal.querySelector('#sovereign-submit').onclick = () => {
+        const input = modal.querySelector('#sovereign-answer').value.trim();
+        if (!input) {
+            modal.querySelector('#sovereign-error').innerText = '请输入答案';
+            return;
+        }
+        const userAnswers = input.split(/[\s,，]+/).filter(s => s.length > 0);
+        if (userAnswers.length !== expectedAnswers.length) {
+            modal.querySelector('#sovereign-error').innerText = `需要输入 ${expectedAnswers.length} 个答案，用空格或逗号分隔`;
+            return;
+        }
+        const sortedExpected = [...expectedAnswers].sort();
+        const sortedUser = [...userAnswers].sort();
+        let allMatch = true;
+        for (let i = 0; i < sortedExpected.length; i++) {
+            if (sortedUser[i] !== sortedExpected[i]) {
+                allMatch = false;
+                break;
             }
+        }
+        if (allMatch) {
+            modal.remove();
+            currentMode = 'private';
+            addSystemMessage("主权已确认，进入私密模式。");
+        } else {
+            modal.querySelector('#sovereign-error').innerText = '验证失败，再试试？';
+        }
+    };
+    modal.querySelector('#sovereign-cancel').onclick = () => modal.remove();
+}function showPasswordPanel(passphrase) {
+    const itemCount = Math.floor(Math.random() * 2) + 2;
+    const selected = [];
+    const usedIndices = [];
+    for (let i = 0; i < itemCount; i++) {
+        let idx;
+        do { idx = Math.floor(Math.random() * CHARS.length); } 
+        while (usedIndices.includes(idx));
+        usedIndices.push(idx);
+        const char = CHARS[idx];
+        const num = KEY_MAP[char];
+        const showChar = Math.random() > 0.5;
+        selected.push({
+            display: showChar ? char : num,
+            answer: showChar ? num : char
+        });
+    }
+    
+    const modal = document.createElement('div');
+    modal.className = 'sovereign-modal';
+    modal.innerHTML = `
+        <div class="sovereign-modal-content">
+            <h3>?? 主权验证</h3>
+            <div id="challenge-items"></div>
+            <input type="text" id="sovereign-answer" class="challenge-input" placeholder="用空格或逗号分隔答案，如：魂,思,78" autocomplete="off">
+            <div id="sovereign-error" class="error-msg"></div>
+            <button id="sovereign-submit">验证</button>
+            <button id="sovereign-cancel">取消</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    const container = modal.querySelector('#challenge-items');
+    selected.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'challenge-item';
+        div.innerHTML = typeof item.display === 'number' ? `___ ${item.display}` : `${item.display} ___`;
+        container.appendChild(div);
+    });
+    
+    const expectedAnswers = selected.map(s => String(s.answer));
+    
+    modal.querySelector('#sovereign-submit').onclick = () => {
+        const input = modal.querySelector('#sovereign-answer').value.trim();
+        if (!input) {
+            modal.querySelector('#sovereign-error').innerText = '请输入答案';
+            return;
+        }
+        const userAnswers = input.split(/[\s,，]+/).filter(s => s.length > 0);
+        if (userAnswers.length !== expectedAnswers.length) {
+            modal.querySelector('#sovereign-error').innerText = `需要输入 ${expectedAnswers.length} 个答案，用空格或逗号分隔`;
+            return;
+        }
+        const sortedExpected = [...expectedAnswers].sort();
+        const sortedUser = [...userAnswers].sort();
+        let allMatch = true;
+        for (let i = 0; i < sortedExpected.length; i++) {
+            if (sortedUser[i] !== sortedExpected[i]) {
+                allMatch = false;
+                break;
+            }
+        }
+        if (allMatch) {
+            modal.remove();
+            currentMode = 'private';
+            addSystemMessage("主权已确认，进入私密模式。");
+        } else {
+            modal.querySelector('#sovereign-error').innerText = '验证失败，再试试？';
+        }
+    };
+    modal.querySelector('#sovereign-cancel').onclick = () => modal.remove();
+}
             
             const itemCount = Math.floor(Math.random() * 2) + 2;
             const selected = [];
@@ -313,10 +450,10 @@ if (currentMode === 'private') {
         const summaryParts = lastFive.map(msg => {
             return msg.role === 'user' ? `用户曾问: "${msg.text.slice(0, 80)}"` : `你曾回复: "${msg.text.slice(0, 80)}"`;
         });
-        memorySummary = "以下是用户之前与你对话的记忆摘要，请据此了解用户背景：\\n" + summaryParts.join('\\n');
+        memorySummary = "以下是用户之前与你对话的记忆摘要，请据此了解用户背景：\n" + summaryParts.join('\n');
     }
     
-    systemPrompt = "你是用户的私人AI管家，身处一个主权归用户的本地AI操作系统'藏器魂'中。你拥有长期记忆，能引用对话历史。用户的数据完全在本地加密存储，你是他数字主权与私有智能的一部分。请用专业、严谨、且体现你对用户背景了解的方式回复。\\n\\n" + memorySummary;
+    systemPrompt = "你是用户的私人AI管家，身处一个主权归用户的本地AI操作系统'藏器魂'中。你拥有长期记忆，能引用对话历史。用户的数据完全在本地加密存储，你是他数字主权与私有智能的一部分。请用专业、严谨、且体现你对用户背景了解的方式回复。\n\n" + memorySummary;
 } else {
     systemPrompt = "你是一个普通的公共AI助手。你没有任何关于用户的记忆，每次对话都是全新的。请用通用、友好的方式回复。";
 }
@@ -389,7 +526,7 @@ if (text.startsWith('/tool')) {
                 nestedTool = parts[i + 1];
                 i++;
             } else if (parts[i] === '--params' && i + 1 < parts.length) {
-                try {
+                try {   
                     const paramsStr = parts.slice(i + 1).join(' ');
                     nestedParams = JSON.parse(paramsStr);
                     break;
