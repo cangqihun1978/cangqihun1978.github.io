@@ -116,7 +116,18 @@
                 if (userAnswers.length !== expectedAnswers.length) { modal.querySelector('#sovereign-error').innerText = '需要输入 ' + expectedAnswers.length + ' 个答案'; return; }
                 const sortedExpected = [...expectedAnswers].sort(), sortedUser = [...userAnswers].sort();
                 let allMatch = true; for (let i = 0; i < sortedExpected.length; i++) { if (sortedUser[i] !== sortedExpected[i]) { allMatch = false; break; } }
-                if (allMatch) { modal.remove(); currentMode = 'private'; addSystemMessage("主权已确认，进入私密模式。"); }
+               if (allMatch) {
+    modal.remove();
+    currentMode = 'private';
+    setTimeout(() => {
+        if (typeof showChatArea === 'function') {
+            showChatArea();
+        }
+        if (typeof addSystemMessage === 'function') {
+            addSystemMessage("主权已确认，进入私密模式。");
+        }
+    }, 100);
+}
                 else { modal.querySelector('#sovereign-error').innerText = '验证失败，再试试？'; }
             };
             modal.querySelector('#sovereign-cancel').onclick = () => modal.remove();
