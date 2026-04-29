@@ -360,17 +360,16 @@
         const introBtns = document.getElementById('introBtns');
         const introOverlay = document.getElementById('introOverlay');
         const appContainer = document.getElementById('appContainer');
-
-        setTimeout(() => {
-            if (!hasVisitedSovereign) {
-                // 首次访问：显示3秒动画后自动进入普通模式
-                setTimeout(() => { enterPublic(); }, 1000);
-            } else {
-                // 老用户：显示按钮
-                introBtns.style.display = 'flex';
-            }
-        }, 3000);
-
+setTimeout(() => {
+    if (!hasVisitedSovereign) {
+        // 首次访问：1秒后自动进入普通模式
+        setTimeout(() => { enterPublic(); }, 1000);
+    } else {
+        // 老用户：显示按钮，点击后再进入对应模式
+        introBtns.style.display = 'flex';
+        introOverlay.style.display = 'flex';
+    }
+}, 3000);
         // ==================== 模式切换 ====================
         function enterPublic() {
             introOverlay.style.display = 'none';
@@ -384,6 +383,14 @@
 
         function showSovereignPanel() {
             if (currentMode === 'private') { addMessage('system', '你已经在主权模式下了。'); return; }
+function showSovereignPanel() {
+    if (currentMode === 'private') { addMessage('system', '你已经在主权模式下了。'); return; }
+    // 加这两行：隐藏动画层，显示主界面
+    introOverlay.style.display = 'none';
+    appContainer.style.display = 'flex';
+    // 下面是你原来的代码...
+    const modal = document.createElement('div');
+    // ...后续保持不变
             const modal = document.createElement('div');
             modal.className = 'sovereign-modal';
             modal.innerHTML = '<div class="sovereign-modal-content"><h3>☯ 道友安好，请对你的口令</h3><input type="text" id="sovereign-passphrase" class="challenge-input" placeholder="5字固定，申请时自设" maxlength="5" autocomplete="off"><div id="passphrase-error" class="error-msg"></div><button id="passphrase-submit">验证</button><button id="passphrase-cancel">取消</button></div>';
