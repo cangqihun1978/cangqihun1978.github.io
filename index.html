@@ -221,14 +221,20 @@
             conv.scrollTop = conv.scrollHeight;
             if (currentMode === 'private') { messages.push({ role: 'assistant', text: reply }); localStorage.setItem('ruling_history', JSON.stringify(messages)); }
         });
+const hasVisitedSovereign = localStorage.getItem('cangqihun_registered_passphrase');
 
-        setTimeout(() => {
-            document.querySelectorAll('.line, .cursor').forEach(el => el.remove());
-            document.querySelector('.public-btn').style.display = 'none';
-            document.querySelector('.secret-trigger').style.display = 'none';
-            currentMode = 'public'; showChatArea();
-            addSystemMessage("寻常路人，请随意。你的话我不会记，但可以陪你聊聊。");
-        }, 3000);
+setTimeout(() => {
+    document.querySelectorAll('.line, .cursor').forEach(el => el.remove());
+    
+    if (!hasVisitedSovereign) {
+        document.querySelector('.public-btn').style.display = 'none';
+        document.querySelector('.secret-trigger').style.display = 'none';
+        currentMode = 'public';
+        messages = [];
+        showChatArea();
+        addSystemMessage("寻常路人，请随意。你的话我不会记，但可以陪你聊聊。");
+    }
+}, 3000);
     </script>
 </body>
 </html>
