@@ -445,8 +445,12 @@ function renderConversationList() {
     list.innerHTML = '<div class="sidebar-item" onclick="newConversation()">+ 新对话</div>';
     // 遍历 conversations，为每个会话生成一个列表项
     for (let id in conversations) {
-        const conv = conversations[id];
-        if (id === currentConversationId) continue; // 当前对话不显示
+    const conv = conversations[id];
+    // ✅ 新增：只显示当前模式的对话
+    if (conv.mode !== currentMode) continue;
+    if (id === currentConversationId) continue;
+    // ... 生成列表项
+}
         const item = document.createElement('div');
         item.className = 'sidebar-item';
         item.textContent = '📝 ' + (conv.title || '旧对话');
@@ -458,6 +462,7 @@ function renderConversationList() {
                     messages: [...messages],
                     title: messages[0] ? messages[0].text.slice(0, 30) : '新对话',
                     timestamp: Date.now()
+                    mode: currentMode
                 };
             }
             // 切换到选中的对话
