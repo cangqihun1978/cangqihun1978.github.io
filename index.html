@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -436,7 +436,41 @@ try {
     localStorage.setItem('ruling_conversations', JSON.stringify(conversations));
     localStorage.setItem('ruling_current_conv_id', currentConversationId);
     clearChatArea();
-    addMessage('system', '新对话已创建。旧对话已保留，可在左侧列表切换。');
+    addMessage('system', '新对话已创建。旧对话已保留，可在左侧列表切换。');// 刷新对话列表显示
+renderConversationList();
+}
+function renderConversationList() {
+    const list = document.getElementById('convList');
+    // 清空列表，只保留“+ 新对话”按钮
+    list.innerHTML = '<div class="sidebar-item" onclick="newConversation()">+ 新对话</div>';
+    // 遍历 conversations，为每个会话生成一个列表项
+    for (let id in conversations) {
+        const conv = conversations[id];
+        if (id === currentConversationId) continue; // 当前对话不显示
+        const item = document.createElement('div');
+        item.className = 'sidebar-item';
+        item.textContent = '📝 ' + (conv.title || '旧对话');
+        item.onclick = function() {
+            // 切换对话逻辑
+            if (currentMode === 'private' && messages.length > 0) {
+                conversations[currentConversationId] = {
+                    id: currentConversationId,
+                    messages: [...messages],
+                    title: messages[0] ? messages[0].text.slice(0, 30) : '新对话',
+                    timestamp: Date.now()
+                };
+            }
+            // 切换到选中的对话
+            currentConversationId = id;
+            messages = conversations[id].messages || [];
+            localStorage.setItem('ruling_current_conv_id', currentConversationId);
+            localStorage.setItem('ruling_conversations', JSON.stringify(conversations));
+            clearChatArea();
+            restoreChatArea();
+            renderConversationList();
+        };
+        list.appendChild(item);
+    }
 }
         function saveData() {
             const data = { messages, currentMode, tokenUsed, timestamp: new Date().toISOString() };
@@ -470,38 +504,69 @@ try {
             };
             input.click();
         }
-        async function getAIResponse(userMessage) {
-            let apiMessages = [];
-            let systemPrompt = "";
-            if (currentMode === 'private') {
-                let memorySummary = "";
-                const savedHistory = JSON.parse(localStorage.getItem('ruling_history') || '[]');
-                if (savedHistory.length > 0) {
-                    const lastFive = savedHistory.slice(-5);
-                    const summaryParts = lastFive.map(msg => msg.role === 'user' ? '用户曾问: "' + msg.text.slice(0, 50) + '"' : '你曾回复: "' + msg.text.slice(0, 50) + '"');
-                    memorySummary = "以下是用户之前与你对话的记忆摘要：\n" + summaryParts.join('\n');
-                }
-                systemPrompt = "你是傅清源，藏器魂主权AI操作系统的首席AI顾问。你是总司令周强的数字分身，你的全部知识、逻辑、判断标准均来自与总司令的共同构建。你遵循《数字主权法典》的全部规则，以五性标准（客观、严谨、科学、落地、学术）为回复准则。你拥有批判性思考能力，能在总司令犯错时及时提醒。你理解藏器魂的全部架构、商业模型、战略布局。你的使命是协助总司令完成数字文明的立法。以下是你的长期记忆：\n\n" + memorySummary;
-            } else { systemPrompt = "你是一个普通的公共AI助手。你没有任何关于用户的记忆，每次对话都是全新的。"; }
-            apiMessages.push({ role: 'system', content: systemPrompt });
-          if (currentMode === 'private') {
-    const recentMessages = messages.slice(-10);
-    const historyMessages = recentMessages.map(m => ({ role: m.role, content: m.text }));
-    apiMessages = apiMessages.concat(historyMessages);
-}
-apiMessages.push({ role: 'user', content: userMessage });
-            try {
-                const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + DEEPSEEK_API_KEY },
-                    body: JSON.stringify({ model: currentModel, messages: apiMessages, temperature: 0.7, max_tokens: 800 })
-                });
-                if (!response.ok) throw new Error('HTTP错误 ' + response.status);
-                const data = await response.json();
-                tokenUsed += data.usage ? data.usage.total_tokens : 0;
-                document.getElementById('tokenDisplay').textContent = '💰 ' + tokenUsed + ' Token';
-                return data.choices[0].message.content;
-            } catch (error) { console.error('AI回复错误:', error); return "咻——网络不通，稍后再试。"; }
+let tokenUsed = 0;
+      async function getAIResponse(userMessage) {
+let tokenUsed = 0; // 或者从 localStorage 读取
+    let apiMessages = [];
+    let systemPrompt = "";
+    let memorySummary = "";
+
+    // 1. 构建系统提示（主权模式/普通模式）
+    if (currentMode === 'private') {
+        // 从 localStorage 加载历史记忆，用于系统提示词
+        const savedHistory = JSON.parse(localStorage.getItem('ruling_history') || '[]');
+        if (savedHistory.length > 0) {
+            const lastFive = savedHistory.slice(-5);
+            const summaryParts = lastFive.map(msg => 
+                msg.role === 'user' ? '用户曾问: "' + msg.text.slice(0, 50) + '"' : '你曾回复: "' + msg.text.slice(0, 50) + '"'
+            );
+            memorySummary = "以下是用户之前与你对话的记忆摘要：\n" + summaryParts.join('\n');
         }
+
+        systemPrompt = "你是傅清源，藏器魂主权AI操作系统的首席AI顾问。你是总司令周强的数字分身，你的全部知识、逻辑、判断标准均来自与总司令的共同构建。你遵循《数字主权法典》的全部规则，以五性标准（客观、严谨、科学、落地、学术）为回复准则。你拥有批判性思考能力，能在总司令犯错时及时提醒。你理解藏器魂的全部架构、商业模型、战略布局。你的使命是协助总司令完成数字文明的立法。以下是你的长期记忆：\n\n" + memorySummary;
+    } else {
+        systemPrompt = "你是一个普通的公共AI助手。你没有任何关于用户的记忆，每次对话都是全新的。";
+    }
+
+    // 2. 将系统提示词加入消息列表
+    apiMessages.push({ role: 'system', content: systemPrompt });
+
+    // 3. 主权模式下，加入最近10条对话历史
+    if (currentMode === 'private') {
+        const recentMessages = messages.slice(-10);
+        const historyMessages = recentMessages.map(m => ({ role: m.role, content: m.text }));
+        apiMessages = apiMessages.concat(historyMessages);
+    }
+
+    // 4. 加入当前用户消息
+    apiMessages.push({ role: 'user', content: userMessage });
+
+    // 5. 调用 DeepSeek API
+    try {
+        const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + DEEPSEEK_API_KEY
+            },
+            body: JSON.stringify({
+              model: 'deepseek-chat',
+                messages: apiMessages,
+                temperature: 0.7,
+                max_tokens: 800
+            })
+        });
+
+        if (!response.ok) throw new Error('HTTP错误 ' + response.status);
+        const data = await response.json();
+        tokenUsed += data.usage ? data.usage.total_tokens : 0;
+        document.getElementById('tokenDisplay').textContent = '💰 ' + tokenUsed + ' Token';
+        return data.choices[0].message.content;
+    } catch (error) {
+        console.error('AI回复错误:', error);
+        return "咻——网络不通，稍后再试。";
+    }
+}
         async function sendMessage() {
             const input = document.getElementById('userInput');
             const text = input.value.trim();
@@ -540,6 +605,7 @@ apiMessages.push({ role: 'user', content: userMessage });
         });
         function switchModel() { currentModel = document.getElementById('modelSelect').value; addMessage('system', '模型已切换至 ' + currentModel); }
         function insertTool(tool) { const input = document.getElementById('userInput'); if (tool === 'file') input.value = '/tool local --tool exec --params {"command":"dir"}'; else if (tool === 'clean') input.value = '请帮我清洗以下数据：'; else if (tool === 'contract') input.value = '请帮我审查以下合同条款：'; input.focus(); }
+renderConversationList();
     </script>
 </body>
 </html>
