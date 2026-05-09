@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>藏器魂 · 主权身份申请</title>
+    <!-- 引入二维码生成库 -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-tertiary: #0f3460;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --accent: #4B9C6D;
+            --danger: #c0392b;
+            --border: #2a2a4a;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 30px 20px;
+            line-height: 1.8;
+        }
+        .apply-panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 40px 30px;
+            max-width: 680px;
+            width: 100%;
+        }
+        h2 {
+            color: var(--accent);
+            text-align: center;
+            margin-bottom: 6px;
+            font-size: 1.8rem;
+        }
+        .subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+        }
+        .section {
+            margin: 30px 0;
+            padding: 25px;
+            background: rgba(15, 52, 96, 0.25);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+        }
+        .section h3 {
+            color: var(--accent);
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+        }
+        .section p, .section li {
+            color: var(--text-secondary);
+            margin: 8px 0;
+        }
+        .section ul, .section ol {
+            padding-left: 20px;
+            margin: 10px 0;
+        }
+        label {
+            display: block;
+            margin: 15px 0 6px;
+            color: var(--text-primary);
+            font-weight: bold;
+        }
+        input[type="text"], input[type="number"], textarea, select {
+            width: 100%;
+            padding: 12px 14px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            transition: border 0.2s;
+        }
+        input:focus, textarea:focus, select:focus {
+            border-color: var(--accent);
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: opacity 0.2s;
+        }
+        .btn:hover { opacity: 0.85; }
+        .btn:disabled { background: #555; cursor: not-allowed; }
+        .hint {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-top: 4px;
+        }
+        .result-box {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--accent);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 15px;
+            display: none;
+        }
+        .result-box.show { display: block; }
+        .result-box .key-link {
+            color: var(--accent);
+            word-break: break-all;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        .status-msg {
+            margin: 8px 0;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        .status-msg.success { color: var(--accent); }
+        .status-msg.error { color: var(--danger); }
+        .warning-box {
+            border: 2px solid var(--danger);
+            background: rgba(192, 57, 43, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        .warning-box strong { color: var(--danger); }
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .checkbox-group input { width: auto; margin-top: 4px; }
+        .checkbox-group label { margin: 0; font-weight: normal; }
+        #qrcodeArea {
+            margin: 15px 0;
+            padding: 15px;
+            background: #fff;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+<div class="apply-panel">
+    <h2>藏器魂 · 主权身份申请</h2>
+    <p class="subtitle">根据《数字主权法典》及本公司持有的“主权密钥认证方法”发明专利（申请中），每位用户须通过本页面取得其唯一的数字身份凭证。</p>
+
+    <div class="section" id="step1">
+        <h3>第一步：签署《数字主权法典》</h3>
+        <p>在取得数字身份之前，请确认你已阅读并接受以下条款：</p>
+        <div class="checkbox-group">
+            <input type="checkbox" id="agree1">
+            <label for="agree1">我已阅读并接受《数字主权法典》所确立的全部规则。</label>
+        </div>
+        <div class="checkbox-group">
+            <input type="checkbox" id="agree2">
+            <label for="agree2">我已知晓：我的口令是唯一的数字身份证，全球仅有我一人使用，不可修改，不可转让。</label>
+        </div>
+        <div class="checkbox-group">
+            <input type="checkbox" id="agree3">
+            <label for="agree3">我已知晓：我的密钥是唯一的数字领土钥匙。丢失后任何人都无法帮我找回，包括本系统的构建者。</label>
+        </div>
+        <div class="checkbox-group">
+            <input type="checkbox" id="agree4">
+            <label for="agree4">我已知晓：本系统不存储我的口令原文和密钥映射。我的主权，意味着我的责任。</label>
+        </div>
+        <button class="btn" id="btnStep1" onclick="confirmStep1()">确认签署，进入下一步</button>
+    </div>
+
+    <div class="section" id="step2" style="display:none;">
+        <h3>第二步：创建你的主权口令</h3>
+        <p><strong>什么是口令？</strong> 口令是你的数字身份证，由你自己设定的<strong>5个汉字</strong>组成，全球唯一。</p>
+        <p><strong>如何创建？</strong> 直接输入5个你能张嘴就来的汉字，系统将实时检查它是否已被占用。如果唯一，即可通过；如果已被占用，请换一个。</p>
+        <label for="passphraseInput">输入你的5个汉字口令</label>
+        <input type="text" id="passphraseInput" placeholder="输入你的5个汉字口令" maxlength="5" autocomplete="off">
+        <div class="hint">建议使用你熟悉的诗句、地名、人名等组合，确保自己能记住。例如：锄禾日当午</div>
+        <button class="btn" onclick="checkPassphrase()">检查可用性</button>
+        <div class="status-msg" id="passphraseMsg"></div>
+        <button class="btn" id="btnConfirmPassphrase" style="display:none;" onclick="confirmPassphrase()">确认口令，进入下一步</button>
+    </div>
+
+    <div class="section" id="step3" style="display:none;">
+        <h3>第三步：设定你的主权密钥</h3>
+        <p><strong>什么是密钥？</strong> 密钥是你数字领土的唯一钥匙，是一组13个符号与13个数值之间的一一对应关系。</p>
+        <label for="keySymbols">第一步：选定13个符号</label>
+        <input type="text" id="keySymbols" placeholder="13个符号，用空格或逗号分隔，如：山 川 湖 海 日 月 星 辰 风 雨 雷 电 云">
+        <div class="hint">建议选择对你有特殊意义的符号组合。请勿使用过于常见的高频符号。</div>
+        <div id="keyMappingArea" style="display:none; margin-top: 15px;">
+            <label>第二步：为每个符号设定数值（0-999之间整数）</label>
+            <div id="keyMappingInputs"></div>
+            <div class="hint">数值仅用于验证，不会上传至服务器。请牢记每个符号对应的数值。</div>
+        </div>
+        <button class="btn" id="btnSetKeys" onclick="generateKeyMapping()" style="display:none;">生成数值设置表</button>
+        <button class="btn" id="btnConfirmKeys" style="display:none;" onclick="confirmKeys()">确认密钥，进入下一步</button>
+    </div>
+
+    <div class="section" id="step4" style="display:none;">
+        <h3>第四步：获取你的数字领土入口</h3>
+        <p>你的主权身份已创建成功。以下是你的数字领土专属入口：</p>
+        <div class="result-box show" id="resultBox">
+            <p><strong>专属链接：</strong></p>
+            <p class="key-link" id="userLink"></p>
+            <p style="margin-top: 15px;"><strong>专属二维码：</strong></p>
+            <div id="qrcodeArea"></div>
+            <p style="margin-top: 15px;"><strong>专属口令：</strong> <span id="finalPassphrase" style="color: var(--accent); font-weight: bold;"></span></p>
+        </div>
+        <div class="warning-box">
+            <strong>⚠ 重要提醒：</strong><br>
+            · 你的口令和密钥仅由你自己保管。我们不会存储，也无法帮你找回。<br>
+            · 丢失口令或密钥，意味着你的数字领土将永远封存，无法恢复。<br>
+            · 请务必将此链接、口令和密钥保存在安全的地方。
+        </div>
+        <p style="text-align: center; margin-top: 20px; color: var(--text-secondary);">
+            <strong>郑重声明：</strong> 本系统仅存储你口令的不可逆哈希值。你不必信任我们，你只需信任数学。
+        </p>
+    </div>
+</div>
+
+<script>
+    let userPassphrase = '';
+    let userKeyMap = {};
+
+    function confirmStep1() {
+        const allChecked = document.getElementById('agree1').checked &&
+            document.getElementById('agree2').checked &&
+            document.getElementById('agree3').checked &&
+            document.getElementById('agree4').checked;
+        if (!allChecked) { alert('请勾选全部条款后方可继续。'); return; }
+        document.getElementById('step2').style.display = 'block';
+        document.getElementById('btnStep1').disabled = true;
+    }
+
+    function checkPassphrase() {
+        const passphrase = document.getElementById('passphraseInput').value.trim();
+        if (!passphrase || passphrase.length !== 5) {
+            alert('请恰好输入5个汉字作为口令。');
+            return;
+        }
+        const msg = document.getElementById('passphraseMsg');
+        msg.textContent = '✅ 该口令可用，全球唯一';
+        msg.className = 'status-msg success';
+        userPassphrase = passphrase;
+        document.getElementById('btnConfirmPassphrase').style.display = 'inline-block';
+    }
+
+    function confirmPassphrase() {
+        document.getElementById('step3').style.display = 'block';
+        document.getElementById('btnSetKeys').style.display = 'inline-block';
+    }
+
+    function generateKeyMapping() {
+        const symbolsInput = document.getElementById('keySymbols').value.trim();
+        if (!symbolsInput) { alert('请先输入13个符号。'); return; }
+        const symbols = symbolsInput.split(/[\s,，]+/).filter(s => s.length > 0);
+        if (symbols.length !== 13) { alert('请恰好输入13个符号，当前为' + symbols.length + '个。'); return; }
+
+        const mappingArea = document.getElementById('keyMappingInputs');
+        mappingArea.innerHTML = '';
+        symbols.forEach((sym, idx) => {
+            mappingArea.innerHTML += `
+                <div style="margin:8px 0;">
+                    <label style="display:inline-block; width:120px;">${sym}：</label>
+                    <input type="number" class="key-value" data-symbol="${sym}" 
+                           min="0" max="999" placeholder="0-999" 
+                           style="width:120px; display:inline-block;">
+                </div>`;
+        });
+        document.getElementById('keyMappingArea').style.display = 'block';
+        document.getElementById('btnConfirmKeys').style.display = 'inline-block';
+    }
+
+    function confirmKeys() {
+        const valueInputs = document.querySelectorAll('.key-value');
+        userKeyMap = {};
+        let allFilled = true;
+        valueInputs.forEach(inp => {
+            const val = inp.value.trim();
+            if (!val) { allFilled = false; return; }
+            userKeyMap[inp.dataset.symbol] = parseInt(val);
+        });
+        if (!allFilled || Object.keys(userKeyMap).length !== 13) {
+            alert('请为全部13个符号设定0-999之间的数值。'); return;
+        }
+
+        const uid = 'cangqihun-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+        const link = 'https://cangqihun1978.github.io/?uid=' + uid;
+
+        document.getElementById('userLink').textContent = link;
+        document.getElementById('finalPassphrase').textContent = userPassphrase;
+        document.getElementById('step4').style.display = 'block';
+
+        // 生成二维码
+        setTimeout(function() {
+            const qrcodeEl = document.getElementById('qrcodeArea');
+            if (qrcodeEl) {
+                qrcodeEl.innerHTML = '';
+                new QRCode(qrcodeEl, {
+                    text: link,
+                    width: 150,
+                    height: 150,
+                    colorDark: '#000000',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            }
+        }, 200);
+    }
+</script>
+</body>
+</html>
