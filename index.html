@@ -317,11 +317,8 @@
         const introOverlay = document.getElementById('introOverlay');
         const appContainer = document.getElementById('appContainer');
 
-        setTimeout(() => {
-            document.querySelectorAll('.intro-line').forEach(el => el.remove());
-            if (!hasVisitedSovereign) { setTimeout(() => { enterPublic(); }, 1000); }
-            else { introBtns.style.display = 'flex'; }
-        }, 3000);
+       document.querySelectorAll('.intro-line').forEach(el => el.remove());
+enterPublic();
 
         function enterPublic() {
             if (document.getElementById('modeMenu')) document.getElementById('modeMenu').style.display = 'none';
