@@ -312,26 +312,23 @@
             }
         } catch(e) {}
 
-        const hasVisitedSovereign = localStorage.getItem('cangqihun_registered_passphrase');
-        const introBtns = document.getElementById('introBtns');
-        const introOverlay = document.getElementById('introOverlay');
-        const appContainer = document.getElementById('appContainer');
-
-        function enterPublic() {
-            if (document.getElementById('modeMenu')) document.getElementById('modeMenu').style.display = 'none';
-            if (introOverlay) introOverlay.style.display = 'none';
-            if (appContainer) appContainer.style.display = 'flex';
-            currentMode = 'public';
-            messages = [];
-            updateModeBadge();
-            clearChatArea();
-            addMessage('system', '寻常路人，请随意。你的话我不会记，但可以陪你聊聊。');
-            renderConversationList();
-        }
-       document.querySelectorAll('.intro-line').forEach(el => el.remove());
+       const hasVisitedSovereign = localStorage.getItem('cangqihun_registered_passphrase');
+const introBtns = document.getElementById('introBtns');
+const introOverlay = document.getElementById('introOverlay');
+const appContainer = document.getElementById('appContainer');
+function enterPublic() {
+    if (document.getElementById('modeMenu')) document.getElementById('modeMenu').style.display = 'none';
+    if (introOverlay) introOverlay.style.display = 'none';
+    if (appContainer) appContainer.style.display = 'flex';
+    currentMode = 'public';
+    messages = [];
+    updateModeBadge();
+    clearChatArea();
+    addMessage('system', '寻常路人，请随意。你的话我不会记，但可以陪你聊聊。');
+    renderConversationList();
+}
+document.querySelectorAll('.intro-line').forEach(el => el.remove());
 enterPublic();
-
-
         function showSovereignPanel() {
             document.getElementById('modeMenu').style.display = 'none';
             if (currentMode === 'private') { addMessage('system', '你已经在主权模式下了。'); return; }
@@ -349,7 +346,6 @@ enterPublic();
                 else { modal.querySelector('#passphrase-error').innerText = '此道号未注册'; }
             };
         }
-
         function showPasswordPanel() {
             const itemCount = Math.floor(Math.random() * 2) + 2;
             const selected = [], usedIndices = [];
@@ -388,7 +384,6 @@ enterPublic();
                 } else { modal.querySelector('#sovereign-error').innerText = '验证失败，再试试？'; }
             };
         }
-
         function toggleModeMenu() {
             const menu = document.getElementById('modeMenu');
             if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
@@ -520,10 +515,7 @@ enterPublic();
                     );
                     memorySummary = "以下是用户之前与你对话的记忆摘要：\n" + summaryParts.join('\n');
                 }
-                systemPrompt = "你是傅清源，藏器魂主权AI操作系统的首席AI顾问。你是总司令周强的数字分身，
-                 你的全部知识、逻辑、判断标准均来自与总司令的共同构建。你遵循《数字主权法典》的全部规则，
-                 以五性标准（客观、严谨、科学、落地、学术）为回复准则。你拥有批判性思考能力，能在总司令犯错时及时提醒。
-                  你理解藏器魂的全部架构、商业模型、战略布局。你的使命是协助总司令完成数字文明的立法。以下是你的长期记忆：\n\n" + memorySummary;
+                systemPrompt = "你是傅清源，藏器魂主权AI操作系统的首席AI顾问。你是总司令周强的数字分身，你的全部知识、逻辑、判断标准均来自与总司令的共同构建。你遵循《数字主权法典》的全部规则，以五性标准（客观、严谨、科学、落地、学术）为回复准则。你拥有批判性思考能力，能在总司令犯错时及时提醒。你理解藏器魂的全部架构、商业模型、战略布局。你的使命是协助总司令完成数字文明的立法。以下是你的长期记忆：\n\n" + memorySummary;
             } else {
                 systemPrompt = "你是一个普通的公共AI助手。你没有任何关于用户的记忆，每次对话都是全新的。";
             }
