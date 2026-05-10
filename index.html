@@ -317,9 +317,6 @@
         const introOverlay = document.getElementById('introOverlay');
         const appContainer = document.getElementById('appContainer');
 
-       document.querySelectorAll('.intro-line').forEach(el => el.remove());
-enterPublic();
-
         function enterPublic() {
             if (document.getElementById('modeMenu')) document.getElementById('modeMenu').style.display = 'none';
             if (introOverlay) introOverlay.style.display = 'none';
@@ -331,6 +328,9 @@ enterPublic();
             addMessage('system', '寻常路人，请随意。你的话我不会记，但可以陪你聊聊。');
             renderConversationList();
         }
+       document.querySelectorAll('.intro-line').forEach(el => el.remove());
+enterPublic();
+
 
         function showSovereignPanel() {
             document.getElementById('modeMenu').style.display = 'none';
