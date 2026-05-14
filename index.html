@@ -626,7 +626,7 @@ if (text.startsWith('/tool')) {
         addMessage('system', '导线不通 ⚠️ ' + err.message);
         }
         return;
-}
+    }
     addMessage('user', text);
             if (currentMode === 'private') messages.push({ role: 'user', text: text });
             addMessage('system', '咻——让我想想...');
