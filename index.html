@@ -385,15 +385,7 @@
             renderConversationList();
         }
 
-       // 强制跳过启动动画，立即进入主界面
-const introOverlay = document.getElementById('introOverlay');
-if (introOverlay) {
-    introOverlay.style.display = 'none';
-}
-const appContainer = document.getElementById('appContainer');
-if (appContainer) {
-    appContainer.style.display = 'flex';
-}
+     
 enterPublic();
 
         function showSovereignPanel() {
