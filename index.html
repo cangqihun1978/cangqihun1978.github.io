@@ -385,7 +385,6 @@
             renderConversationList();
         }  
             document.querySelectorAll('.intro-line').forEach(el => el.remove());
-  enterPublic();
        function showSovereignPanel() {
             document.getElementById('modeMenu').style.display = 'none';
             if (currentMode === 'private') { addMessage('system', '你已经在主权模式下了。'); return; }
@@ -573,8 +572,8 @@
                 };
                 reader.readAsText(file);
             };
-            input.click();
-     
+                input.click();
+           }
         // ============================================
         // 核心功能：大模型调用（工具超市 + 双轨调度）
         //============================================
