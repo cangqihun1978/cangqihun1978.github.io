@@ -383,12 +383,9 @@
             clearChatArea();
             addMessage('system', '寻常路人，请随意。你的话我不会记，但可以陪你聊聊。');
             renderConversationList();
-        }
-
-     
+        }     
 enterPublic();
-
-        function showSovereignPanel() {
+       function showSovereignPanel() {
             document.getElementById('modeMenu').style.display = 'none';
             if (currentMode === 'private') { addMessage('system', '你已经在主权模式下了。'); return; }
             introOverlay.style.display = 'none';
