@@ -796,36 +796,35 @@ async function loadData() {
         }
 
           // 更新账单 UI
-          function updateBillUI() {
-           const balanceEl = document.getElementById('billBalance');
-           const totalEl = document.getElementById('billTotalUsed');
-          const sessionEl = document.getElementById('billSessionCount');
-           const historyEl = document.getElementById('billHistory');
-       
-           if (balanceEl) balanceEl.textContent = '￥' + billData.balance.toFixed(2);
-           if (totalEl) totalEl.textContent = billData.totalUsed.toLocaleString();
-           if (sessionEl) sessionEl.textContent = billData.sessions;
-    
-           if (historyEl) {
-              if (billData.history.length === 0) {
-                   historyEl.innerHTML = '<div style="color:#5a4e3e; text-align:center; padding:20px 0;">暂无记录</div>';
+    function updateBillUI() {
+    const balanceEl = document.getElementById('billBalance');
+    const totalEl = document.getElementById('billTotalUsed');
+    const sessionEl = document.getElementById('billSessionCount');
+    const historyEl = document.getElementById('billHistory');
+
+    if (balanceEl) balanceEl.textContent = '¥' + billData.balance.toFixed(2);
+    if (totalEl) totalEl.textContent = billData.totalUsed.toLocaleString();
+    if (sessionEl) sessionEl.textContent = billData.sessions;
+
+    if (historyEl) {
+        if (billData.history.length === 0) {
+            historyEl.innerHTML = '<div style="color:#5a4e3e; text-align:center; padding:20px 0;">暂无记录</div>';
         } else {
-                   historyEl.innerHTML = billData.history.slice(0, 30).map(item => {
-                     const time = new Date(item.time).toLocaleString();
-                     const isRecharge = item.type === 'recharge';
-                     const color = isRecharge ? '#7bc67b' : '#d9d0b5';
-                     const sign = isRecharge ? '+' : '-';
-                     const label = isRecharge ? '?? 充值' : '?? 对话';
-                     return `<div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #2a2a2a; color:${color};">
-                           <span>${label} ${item.note || ''}</span>
-                          <span>${sign}${isRecharge ? '￥' : ''}${item.amount}${isRecharge ? '' : ' token'}</span>
-                         <span style="color:#5a4e3e; font-size:11px;">${time}</span>
-                </div>`;
+            historyEl.innerHTML = billData.history.slice(0, 30).map(function(item) {
+                var time = new Date(item.time).toLocaleString();
+                var isRecharge = item.type === 'recharge';
+                var color = isRecharge ? '#7bc67b' : '#d9d0b5';
+                var sign = isRecharge ? '+' : '-';
+                var label = isRecharge ? '💰 充值' : '💬 对话';
+                return '<div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #2a2a2a; color:' + color + ';">' +
+                    '<span>' + label + ' ' + (item.note || '') + '</span>' +
+                    '<span>' + sign + (isRecharge ? '¥' : '') + item.amount + (isRecharge ? '' : ' token') + '</span>' +
+                    '<span style="color:#5a4e3e; font-size:11px;">' + time + '</span>' +
+                '</div>';
             }).join('');
         }
     }
 }
-
             // 打开账单面板
             function openBillPanel() {
                refreshBalance();
