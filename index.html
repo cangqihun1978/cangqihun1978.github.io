@@ -1,6 +1,6 @@
-
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +11,7 @@
             padding: 0;
             box-sizing: border-box;
         }
+
         :root {
             --bg-primary: #0a0a0a;
             --bg-secondary: #141414;
@@ -23,8 +24,9 @@
             --accent: #7a8a6a;
             --accent-hover: #8a9a7a;
             --radius: 8px;
-            --shadow: 0 4px 20px rgba(0,0,0,0.4);
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
         }
+
         body {
             background: var(--bg-primary);
             color: var(--text-primary);
@@ -34,6 +36,7 @@
             display: flex;
             flex-direction: column;
         }
+
         /* 侧边栏 */
         .sidebar {
             position: fixed;
@@ -48,6 +51,7 @@
             z-index: 100;
             transition: transform 0.3s ease;
         }
+
         .sidebar-header {
             padding: 20px 16px 12px;
             border-bottom: 1px solid var(--border-color);
@@ -58,16 +62,19 @@
             align-items: center;
             justify-content: space-between;
         }
+
         .sidebar-header .badge {
             font-size: 11px;
             color: var(--text-muted);
             font-weight: normal;
         }
+
         .sidebar-list {
             flex: 1;
             overflow-y: auto;
             padding: 8px 0;
         }
+
         .sidebar-item {
             padding: 10px 20px;
             cursor: pointer;
@@ -79,18 +86,22 @@
             align-items: center;
             gap: 8px;
         }
+
         .sidebar-item:hover {
             background: var(--bg-hover);
             color: var(--text-primary);
         }
+
         .sidebar-item.active {
             background: var(--bg-hover);
             border-left-color: var(--accent);
             color: var(--text-primary);
         }
+
         .sidebar-item .icon {
             font-size: 16px;
         }
+
         .sidebar-footer {
             padding: 12px 16px;
             border-top: 1px solid var(--border-color);
@@ -98,6 +109,7 @@
             color: var(--text-muted);
             text-align: center;
         }
+
         /* 主界面 */
         .main-container {
             margin-left: 240px;
@@ -107,6 +119,7 @@
             height: 100vh;
             background: var(--bg-primary);
         }
+
         /* 顶部栏 */
         .header {
             display: flex;
@@ -118,25 +131,30 @@
             flex-shrink: 0;
             height: 56px;
         }
+
         .header-left {
             display: flex;
             align-items: center;
             gap: 12px;
         }
+
         .header-left .logo {
             font-size: 18px;
             font-weight: bold;
             color: var(--text-primary);
         }
+
         .header-left .logo span {
             color: var(--text-muted);
             font-weight: normal;
         }
+
         .header-right {
             display: flex;
             align-items: center;
             gap: 12px;
         }
+
         .mode-badge {
             padding: 4px 14px;
             border-radius: 20px;
@@ -147,13 +165,16 @@
             cursor: pointer;
             transition: all 0.2s;
         }
+
         .mode-badge.sovereign {
             border-color: #7a8a6a;
             color: #7a8a6a;
         }
+
         .mode-badge:hover {
             background: var(--border-color);
         }
+
         .header-btn {
             padding: 6px 14px;
             border-radius: 6px;
@@ -164,24 +185,30 @@
             font-size: 13px;
             transition: all 0.2s;
         }
+
         .header-btn:hover {
             background: var(--bg-hover);
             color: var(--text-primary);
         }
+
         .header-btn.save-btn {
             border-color: #7a8a6a;
             color: #7a8a6a;
         }
+
         .header-btn.save-btn:hover {
             background: #7a8a6a22;
         }
+
         .header-btn.load-btn {
             border-color: #5a7a8a;
             color: #5a7a8a;
         }
+
         .header-btn.load-btn:hover {
             background: #5a7a8a22;
         }
+
         .model-select {
             background: var(--bg-hover);
             color: var(--text-primary);
@@ -192,10 +219,12 @@
             cursor: pointer;
             font-family: inherit;
         }
+
         .model-select:focus {
             outline: none;
             border-color: var(--accent);
         }
+
         .token-display {
             font-size: 13px;
             color: var(--text-secondary);
@@ -204,6 +233,7 @@
             background: var(--bg-hover);
             border: 1px solid var(--border-color);
         }
+
         /* 对话区域 */
         .chat-area {
             flex: 1;
@@ -211,10 +241,12 @@
             padding: 24px 32px;
             background: var(--bg-primary);
         }
+
         .chat-area .message {
             margin-bottom: 16px;
             animation: fadeIn 0.3s ease;
         }
+
         .chat-area .message.system {
             color: var(--text-muted);
             font-size: 13px;
@@ -222,10 +254,12 @@
             padding: 6px 0;
             margin-bottom: 12px;
         }
+
         .chat-area .message.user {
             display: flex;
             justify-content: flex-end;
         }
+
         .chat-area .message.user .bubble {
             background: var(--bg-card);
             color: var(--text-primary);
@@ -236,10 +270,12 @@
             word-wrap: break-word;
             white-space: pre-wrap;
         }
+
         .chat-area .message.assistant {
             display: flex;
             justify-content: flex-start;
         }
+
         .chat-area .message.assistant .bubble {
             background: var(--bg-secondary);
             color: var(--text-primary);
@@ -251,13 +287,17 @@
             white-space: pre-wrap;
             line-height: 1.8;
         }
+
         .chat-area .message.assistant .bubble p {
             margin: 6px 0;
         }
-        .chat-area .message.assistant .bubble ul, .chat-area .message.assistant .bubble ol {
+
+        .chat-area .message.assistant .bubble ul,
+        .chat-area .message.assistant .bubble ol {
             padding-left: 20px;
             margin: 6px 0;
         }
+
         /* 输入区域 */
         .input-area {
             padding: 12px 24px 20px;
@@ -268,6 +308,7 @@
             align-items: flex-end;
             gap: 10px;
         }
+
         .input-area textarea {
             flex: 1;
             background: var(--bg-primary);
@@ -284,12 +325,15 @@
             transition: border-color 0.2s;
             line-height: 1.5;
         }
+
         .input-area textarea:focus {
             border-color: var(--accent);
         }
+
         .input-area textarea::placeholder {
             color: var(--text-muted);
         }
+
         .input-area .send-btn {
             padding: 10px 24px;
             border-radius: 8px;
@@ -302,9 +346,11 @@
             transition: background 0.2s;
             height: 44px;
         }
+
         .input-area .send-btn:hover {
             background: var(--accent-hover);
         }
+
         .input-area .tool-btn {
             padding: 10px 16px;
             border-radius: 8px;
@@ -316,14 +362,24 @@
             transition: all 0.2s;
             height: 44px;
         }
+
         .input-area .tool-btn:hover {
             background: var(--bg-hover);
             color: var(--text-primary);
         }
+
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
+
         /* 主权验证弹窗 */
         .sovereign-modal {
             position: fixed;
@@ -331,13 +387,14 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.75);
+            background: rgba(0, 0, 0, 0.75);
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 999;
             animation: fadeIn 0.3s ease;
         }
+
         .sovereign-modal-content {
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
@@ -347,11 +404,13 @@
             width: 90%;
             box-shadow: var(--shadow);
         }
+
         .sovereign-modal-content h3 {
             margin-bottom: 16px;
             text-align: center;
             font-size: 20px;
         }
+
         .sovereign-modal-content .challenge-item {
             font-size: 18px;
             text-align: center;
@@ -361,6 +420,7 @@
             border-radius: 6px;
             letter-spacing: 2px;
         }
+
         .sovereign-modal-content .challenge-input {
             width: 100%;
             padding: 10px 14px;
@@ -373,15 +433,18 @@
             margin-top: 12px;
             outline: none;
         }
+
         .sovereign-modal-content .challenge-input:focus {
             border-color: var(--accent);
         }
+
         .sovereign-modal-content .error-msg {
             color: #cc5544;
             font-size: 13px;
             margin-top: 6px;
             min-height: 20px;
         }
+
         .sovereign-modal-content button {
             padding: 8px 20px;
             border-radius: 6px;
@@ -394,34 +457,43 @@
             margin-right: 8px;
             font-weight: bold;
         }
+
         .sovereign-modal-content button:hover {
             background: var(--accent-hover);
         }
+
         .sovereign-modal-content button:last-child {
             background: transparent;
             border: 1px solid var(--border-color);
             color: var(--text-secondary);
         }
+
         .sovereign-modal-content button:last-child:hover {
             background: var(--bg-hover);
         }
+
         /* 滚动条 */
         ::-webkit-scrollbar {
             width: 4px;
         }
+
         ::-webkit-scrollbar-track {
             background: transparent;
         }
+
         ::-webkit-scrollbar-thumb {
             background: var(--border-color);
             border-radius: 4px;
         }
+
         ::-webkit-scrollbar-thumb:hover {
             background: var(--text-muted);
         }
+
         .sidebar-list::-webkit-scrollbar {
             width: 3px;
         }
+
         /* 模式菜单 */
         .mode-menu {
             position: absolute;
@@ -436,6 +508,7 @@
             display: none;
             z-index: 50;
         }
+
         .mode-menu .menu-item {
             padding: 8px 16px;
             cursor: pointer;
@@ -443,13 +516,16 @@
             font-size: 14px;
             transition: background 0.2s;
         }
+
         .mode-menu .menu-item:hover {
             background: var(--bg-hover);
             color: var(--text-primary);
         }
+
         .mode-menu .menu-item .highlight {
             color: var(--accent);
         }
+
         /* 开启动画 */
         .intro-overlay {
             position: fixed;
@@ -465,10 +541,12 @@
             z-index: 1000;
             transition: opacity 0.8s ease;
         }
+
         .intro-overlay.hidden {
             opacity: 0;
             pointer-events: none;
         }
+
         .intro-overlay .line {
             font-size: 24px;
             color: var(--text-primary);
@@ -476,10 +554,23 @@
             animation: fadeIn 0.8s forwards;
             margin: 6px 0;
         }
-        .intro-overlay .line:nth-child(1) { animation-delay: 0s; }
-        .intro-overlay .line:nth-child(2) { animation-delay: 0.6s; }
-        .intro-overlay .line:nth-child(3) { animation-delay: 1.2s; }
-        .intro-overlay .line:nth-child(4) { animation-delay: 1.8s; }
+
+        .intro-overlay .line:nth-child(1) {
+            animation-delay: 0s;
+        }
+
+        .intro-overlay .line:nth-child(2) {
+            animation-delay: 0.6s;
+        }
+
+        .intro-overlay .line:nth-child(3) {
+            animation-delay: 1.2s;
+        }
+
+        .intro-overlay .line:nth-child(4) {
+            animation-delay: 1.8s;
+        }
+
         .intro-overlay .cursor {
             display: inline-block;
             width: 2px;
@@ -488,10 +579,20 @@
             animation: blink 1s infinite;
             margin-left: 4px;
         }
+
         @keyframes blink {
-            0%, 50% { opacity: 1; }
-            51%, 100% { opacity: 0; }
+
+            0%,
+            50% {
+                opacity: 1;
+            }
+
+            51%,
+            100% {
+                opacity: 0;
+            }
         }
+
         .intro-overlay .public-btn {
             margin-top: 40px;
             padding: 14px 40px;
@@ -504,10 +605,12 @@
             transition: all 0.3s;
             font-family: inherit;
         }
+
         .intro-overlay .public-btn:hover {
             background: var(--accent);
             color: #0a0a0a;
         }
+
         .intro-overlay .secret-trigger {
             margin-top: 20px;
             color: var(--text-muted);
@@ -515,95 +618,117 @@
             cursor: pointer;
             border-bottom: 1px dotted var(--text-muted);
         }
+
         .intro-overlay .secret-trigger:hover {
             color: var(--text-secondary);
         }
+
         /* 响应式 */
         @media (max-width: 640px) {
             .sidebar {
                 transform: translateX(-100%);
                 width: 200px;
             }
+
             .sidebar.open {
                 transform: translateX(0);
             }
+
             .main-container {
                 margin-left: 0;
             }
+
             .header {
                 padding: 8px 12px;
                 flex-wrap: wrap;
                 height: auto;
                 gap: 6px;
             }
+
             .header-right {
                 flex-wrap: wrap;
                 gap: 6px;
             }
+
             .chat-area {
                 padding: 16px;
             }
+
             .input-area {
                 padding: 8px 12px 16px;
                 flex-wrap: wrap;
             }
+
             .input-area textarea {
                 min-height: 36px;
                 font-size: 14px;
             }
+
             .input-area .send-btn {
                 padding: 8px 16px;
                 font-size: 14px;
                 height: 38px;
             }
+
             .input-area .tool-btn {
                 padding: 8px 12px;
                 font-size: 12px;
                 height: 38px;
             }
+
             .intro-overlay .line {
                 font-size: 18px;
             }
+
             .sovereign-modal-content {
                 padding: 24px 20px;
             }
+
             .model-select {
                 font-size: 12px;
                 padding: 2px 8px;
                 max-width: 100px;
             }
+
             .token-display {
                 font-size: 11px;
                 padding: 2px 8px;
             }
+
             .header-btn {
                 font-size: 11px;
                 padding: 4px 10px;
             }
+
             .header-left .logo {
                 font-size: 15px;
             }
         }
+
         @media (max-width: 480px) {
             .header-right .header-btn {
                 font-size: 10px;
                 padding: 3px 8px;
             }
+
             .token-display {
                 font-size: 10px;
                 padding: 2px 6px;
             }
+
             .chat-area .message.assistant .bubble {
                 max-width: 92%;
                 font-size: 14px;
             }
+
             .chat-area .message.user .bubble {
                 max-width: 85%;
                 font-size: 14px;
             }
         }
-  </style>
+    </style>
 </head>
+
 <body>
     <!-- 开启动画 -->
     <div class="intro-overlay" id="introOverlay">
@@ -658,6 +783,9 @@
         // 核心资产：API 密钥与代理服务
         const DEEPSEEK_API_KEY = "sk-89010c8b6e6d4fb491501c1f221557a4";
         const PROXY_URL = "https://ruling-proxy-srjkvnzngm.cn-shanghai.fcapp.run";
+        // ===== 修改开始：新增身份认证后台地址 =====
+        const IDENTITY_API_BASE = "http://121.41.100.242:3000/api";
+        // ===== 修改结束 =====
         // 密钥映射：13 字密码表
         const KEY_MAP = { "卷": 18, "坐": 99, "主": 818, "人": 634, "身": 11, "作": 37, "客": 411, "不": 19, "劫": 78, "浮": 20, "生": 14, "思": 918, "魂": 825 };
         const CHARS = Object.keys(KEY_MAP);
@@ -723,7 +851,7 @@
                 currentConversationId = Object.keys(conversations)[0];
                 messages = conversations[currentConversationId].messages || [];
             }
-        } catch(e) {}
+        } catch (e) { }
 
         const hasVisitedSovereign = localStorage.getItem('cangqihun_registered_passphrase');
         const introOverlay = document.getElementById('introOverlay');
@@ -733,33 +861,201 @@
             if (document.getElementById('modeMenu')) document.getElementById('modeMenu').style.display = 'none';
             if (introOverlay) introOverlay.style.display = 'none';
             if (appContainer) appContainer.style.display = 'flex';
-            currentMode = 'public';
-            messages = [];
-            updateModeBadge();
-            clearChatArea();
-            addMessage('system', '寻常路人，请随意。你的话我不会记，但可以陪你聊聊。');
+
+            // 检查本地是否保存了主权验证状态
+            const isVerified = localStorage.getItem('sovereign_verified');
+            if (isVerified === 'true') {
+                // 恢复主权模式
+                currentMode = 'private';
+                updateModeBadge();
+                clearChatArea();
+                try {
+                    var saved = localStorage.getItem('ruling_history');
+                    if (saved) messages = JSON.parse(saved);
+                } catch (e) { }
+                setTimeout(function () {
+                    if (messages.length > 0) restoreChatArea();
+                    else addMessage('system', '主权模式已恢复。');
+                }, 100);
+            } else {
+                // 普通模式
+                currentMode = 'public';
+                messages = [];
+                updateModeBadge();
+                clearChatArea();
+                localStorage.removeItem('sovereign_verified');
+                localStorage.removeItem('sovereign_identity_id');
+                addMessage('system', '寻常路人，请随意。你的话我不会记，但可以陪你聊聊。');
+            }
+
             renderConversationList();
             document.querySelectorAll('.intro-line').forEach(el => el.remove());
         }
 
         function showSovereignPanel() {
             document.getElementById('modeMenu').style.display = 'none';
-            if (currentMode === 'private') { addMessage('system', '你已经在主权模式下了。'); return; }
+            if (currentMode === 'private') {
+                addMessage('system', '你已经在主权模式下了。');
+                return;
+            }
             introOverlay.style.display = 'none';
             appContainer.style.display = 'flex';
+
             const modal = document.createElement('div');
             modal.className = 'sovereign-modal';
-            modal.innerHTML = '<div class="sovereign-modal-content"><h3>🔐 道友安好，请对你的口令</h3><input type="text" id="sovereign-passphrase" class="challenge-input" placeholder="5字固定，申请时自设" maxlength="5" autocomplete="off"><div id="passphrase-error" class="error-msg"></div><button id="passphrase-submit">验证</button><button id="passphrase-cancel">取消</button></div>';
+            modal.innerHTML = '<div class="sovereign-modal-content"><h3>?? 道友安好，请对口令</h3><input type="text" id="sovereign-passphrase" class="challenge-input" placeholder="5字固定，申请时自设" maxlength="5" autocomplete="off"><div id="passphrase-error" class="error-msg"></div><button id="passphrase-submit">验证</button><button id="passphrase-cancel">取消</button></div>';
             document.body.appendChild(modal);
-            modal.querySelector('#passphrase-cancel').onclick = () => modal.remove();
-            modal.querySelector('#passphrase-submit').onclick = () => {
-                const passphrase = modal.querySelector('#sovereign-passphrase').value.trim();
-                if (!passphrase || passphrase.length !== 5) { modal.querySelector('#passphrase-error').innerText = '请输入5字口令'; return; }
-                if (passphrase === VALID_PASSPHRASE) { modal.remove(); showPasswordPanel(); }
-                else { modal.querySelector('#passphrase-error').innerText = '此道号未注册'; }
+
+            modal.querySelector('#passphrase-cancel').onclick = function () { modal.remove(); };
+
+            modal.querySelector('#passphrase-submit').onclick = function () {
+                var passphrase = modal.querySelector('#sovereign-passphrase').value.trim();
+                if (!passphrase || passphrase.length !== 5) {
+                    modal.querySelector('#passphrase-error').innerText = '请输入5字口令';
+                    return;
+                }
+                if (passphrase === VALID_PASSPHRASE) {
+                    modal.remove();
+                    showModeSelection();
+                } else {
+                    modal.querySelector('#passphrase-error').innerText = '此道号未注册';
+                }
+            };
+        }
+        // ===== 新增：showModeSelection 函数 =====
+        function showModeSelection() {
+            const modal = document.createElement('div');
+            modal.className = 'sovereign-modal';
+            modal.innerHTML = `
+        <div class="sovereign-modal-content">
+            <h3>?? 选择认证方式</h3>
+            <p style="color: var(--text-secondary); font-size: 14px; text-align: center; margin-bottom: 16px;">
+                口令验证通过，请选择你的认证方式
+            </p>
+            <button id="real-mode-btn" style="width: 100%; padding: 12px; margin: 6px 0; opacity: 0.5; cursor: not-allowed;" disabled>
+                ???? 真实模式（国家认证）
+            </button>
+            <div style="font-size: 12px; color: var(--text-muted); text-align: center; margin: -4px 0 12px 0;">
+                ? 国家认证平台对接中，敬请期待
+            </div>
+            <button id="simulate-mode-btn" style="width: 100%; padding: 12px; margin: 6px 0; background: var(--accent); color: #0a0a0a; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer;">
+                ?? 模拟模式（演示）
+            </button>
+            <div style="font-size: 12px; color: var(--text-muted); text-align: center; margin: -4px 0 8px 0;">
+                仅用于演示完整申请流程
+            </div>
+            <button id="mode-cancel" style="width: 100%; padding: 10px; margin: 8px 0 0 0; background: transparent; border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-secondary); cursor: pointer;">
+                取消
+            </button>
+        </div>
+    `;
+            document.body.appendChild(modal);
+
+            modal.querySelector('#mode-cancel').onclick = function () { modal.remove(); };
+
+            modal.querySelector('#simulate-mode-btn').onclick = function () {
+                modal.remove();
+                enterSimulateMode();
+            };
+
+            modal.querySelector('#real-mode-btn').onclick = function () {
+                addMessage('system', '? 国家认证平台对接中，请使用模拟模式演示。');
+                modal.remove();
             };
         }
 
+        // ===== 新增：enterSimulateMode 函数 =====
+        function enterSimulateMode() {
+            const modal = document.createElement('div');
+            modal.className = 'sovereign-modal';
+            modal.innerHTML = `
+        <div class="sovereign-modal-content">
+            <h3>?? 模拟国家认证</h3>
+            <p style="color: var(--text-secondary); font-size: 14px; text-align: center; margin: 8px 0 16px 0;">
+                点击下方按钮模拟完成国家网络身份认证
+            </p>
+            <button id="simulate-auth-btn" style="width: 100%; padding: 14px; background: var(--accent); color: #0a0a0a; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer;">
+                ???? 点击完成国家认证（模拟）
+            </button>
+            <div id="simulate-status" style="margin: 12px 0; font-size: 14px; color: var(--text-secondary); text-align: center;"></div>
+            <button id="simulate-cancel" style="width: 100%; padding: 10px; margin-top: 8px; background: transparent; border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-secondary); cursor: pointer;">
+                取消
+            </button>
+        </div>
+    `;
+            document.body.appendChild(modal);
+
+            modal.querySelector('#simulate-cancel').onclick = function () { modal.remove(); };
+
+            modal.querySelector('#simulate-auth-btn').onclick = function () {
+                var statusEl = modal.querySelector('#simulate-status');
+                var btn = modal.querySelector('#simulate-auth-btn');
+                btn.disabled = true;
+                btn.textContent = '? 认证中...';
+                statusEl.textContent = '? 正在模拟认证...';
+
+                var simulateIdentityKey = 'sim_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
+                fetch(IDENTITY_API_BASE + '/check-identity', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ identityKey: simulateIdentityKey })
+                })
+                    .then(function (res) { return res.json(); })
+                    .then(function (checkData) {
+                        if (checkData.exists) {
+                            statusEl.textContent = '?? 该模拟标识已存在，请重试';
+                            btn.disabled = false;
+                            btn.textContent = '???? 点击完成国家认证（模拟）';
+                            return;
+                        }
+
+                        var simulateKeyData = JSON.stringify(KEY_MAP);
+                        return fetch(IDENTITY_API_BASE + '/register', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                identityKey: simulateIdentityKey,
+                                keyData: simulateKeyData
+                            })
+                        })
+                            .then(function (res) { return res.json(); })
+                            .then(function (registerData) {
+                                if (registerData.success) {
+                                    statusEl.textContent = '? 模拟认证通过！身份ID：' + registerData.identityId;
+                                    btn.textContent = '? 已完成';
+                                    setTimeout(function () {
+                                        modal.remove();
+                                        currentMode = 'private';
+                                        // 保存主权验证状态到 localStorage
+                                        localStorage.setItem('sovereign_verified', 'true');
+                                        localStorage.setItem('sovereign_identity_id', registerData.identityId);
+                                        addMessage('system', '主权已确认（模拟模式），进入私密模式。');
+                                        updateModeBadge();
+                                        clearChatArea();
+                                        try {
+                                            var saved = localStorage.getItem('ruling_history');
+                                            if (saved) messages = JSON.parse(saved);
+                                        } catch (e) { }
+                                        setTimeout(function () {
+                                            if (messages.length > 0) restoreChatArea();
+                                            else addMessage('system', '你已进入主权模式（模拟），所有对话将保存在本地。');
+                                        }, 100);
+                                    }, 1500);
+                                } else {
+                                    statusEl.textContent = '? 模拟注册失败：' + (registerData.error || '未知错误');
+                                    btn.disabled = false;
+                                    btn.textContent = '???? 点击完成国家认证（模拟）';
+                                }
+                            });
+                    })
+                    .catch(function (err) {
+                        statusEl.textContent = '? 网络错误：' + err.message;
+                        btn.disabled = false;
+                        btn.textContent = '???? 点击完成国家认证（模拟）';
+                    });
+            };
+        }
         function showPasswordPanel() {
             const itemCount = Math.floor(Math.random() * 2) + 2;
             const selected = [], usedIndices = [];
@@ -789,7 +1085,7 @@
                     currentMode = 'private';
                     addMessage('system', '主权已确认，进入私密模式。');
                     renderConversationList();
-                    try { const saved = localStorage.getItem('ruling_history'); if (saved) messages = JSON.parse(saved); } catch (e) {}
+                    try { const saved = localStorage.getItem('ruling_history'); if (saved) messages = JSON.parse(saved); } catch (e) { }
                     updateModeBadge();
                     clearChatArea();
                     setTimeout(() => {
@@ -845,7 +1141,7 @@
                 item.className = 'sidebar-item';
                 const title = conv.title || (conv.messages[0] ? conv.messages[0].text.slice(0, 20) : '空对话');
                 item.textContent = '📝 ' + title;
-                item.onclick = function() {
+                item.onclick = function () {
                     if (currentMode === 'private' && messages.length > 0) {
                         conversations[currentConversationId] = {
                             id: currentConversationId,
@@ -865,7 +1161,7 @@
                 list.appendChild(item);
             }
         }
-         //====================================================
+        //====================================================
         // 定居引擎增强：保存与提取
         //====================================================
         function saveData() {
@@ -876,11 +1172,11 @@
             const input = document.createElement('input');
             input.type = 'file';
             input.accept = '.json';
-            input.onchange = function(e) {
+            input.onchange = function (e) {
                 const file = e.target.files[0];
                 if (!file) return;
                 const reader = new FileReader();
-                reader.onload = function(ev) {
+                reader.onload = function (ev) {
                     try {
                         const data = JSON.parse(ev.target.result);
                         if (data.windowKey && data.windowKey === WINDOW_KEY) {
@@ -917,7 +1213,7 @@
                 const savedHistory = JSON.parse(localStorage.getItem('ruling_history') || '[]');
                 if (savedHistory.length > 0) {
                     const lastFive = savedHistory.slice(-5);
-                    const summaryParts = lastFive.map(msg => 
+                    const summaryParts = lastFive.map(msg =>
                         msg.role === 'user' ? '用户曾问: "' + msg.text.slice(0, 50) + '"' : '你曾回复: "' + msg.text.slice(0, 50) + '"'
                     );
                     memorySummary = "以下是用户之前与你对话的记忆摘要：\n" + summaryParts.join('\n');
@@ -938,15 +1234,29 @@
             apiMessages.push({ role: 'user', content: userMessage });
 
             const selectedModel = document.getElementById('modelSelect').value;
-            let modelEndpoint = 'https://api.deepseek.com/v1/chat/completions';
-            let modelName = selectedModel;
+            let modelEndpoint = '';
+            let modelName = '';
+            let apiKey = '';
 
+            if (selectedModel === 'deepseek-chat' || selectedModel === 'deepseek-reasoner') {
+                modelEndpoint = 'https://api.deepseek.com/v1/chat/completions';
+                modelName = selectedModel;
+                apiKey = 'sk-89010c8b6e6d4fb491501c1f221557a4';
+            } else if (selectedModel === 'glm-4.7-flash') {
+                modelEndpoint = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
+                modelName = 'glm-4-flash';
+                apiKey = '58f29af72485471295d1aadd6f484475.qIdE2ZpbwyV5gOQb';
+            } else if (selectedModel === 'qwq-32b') {
+                modelEndpoint = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
+                modelName = 'qwq-32b';
+                apiKey = 'sk-ws-H.EHMPRMM.vb9k.MEQCIB1fBbLMjLCf7WASXMH4ZJzjdjKkAK5sCYHvX9s3cuVxAiBy7m2uOkK8HO8PMqXqIv8X9GP9e8g3dkAX5ITrBQAaKw';
+            }
             try {
                 const response = await fetch(modelEndpoint, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + DEEPSEEK_API_KEY
+                        'Authorization': 'Bearer ' + apiKey
                     },
                     body: JSON.stringify({
                         model: modelName,
@@ -958,8 +1268,20 @@
 
                 if (!response.ok) throw new Error('HTTP错误 ' + response.status);
                 const data = await response.json();
-                tokenUsed += data.usage ? data.usage.total_tokens : 0;
-                document.getElementById('tokenDisplay').textContent = '💰 ' + tokenUsed + ' Token';
+
+                // 安全检查
+                if (!data || !data.choices || !data.choices.length) {
+                    throw new Error('API 返回格式异常');
+                }
+
+                const tokenUsage = data.usage ? data.usage.total_tokens : 0;
+                tokenUsed += tokenUsage;
+
+                const tokenDisplay = document.getElementById('tokenDisplay');
+                if (tokenDisplay) {
+                    tokenDisplay.textContent = '💰 ' + tokenUsed + ' Token';
+                }
+
                 return data.choices[0].message.content;
             } catch (error) {
                 console.error('AI回复错误:', error);
@@ -1033,7 +1355,7 @@
             if (currentMode === 'private') { messages.push({ role: 'assistant', text: reply }); localStorage.setItem('ruling_history', JSON.stringify(messages)); }
         }
 
-        document.getElementById('userInput').addEventListener('keydown', function(e) {
+        document.getElementById('userInput').addEventListener('keydown', function (e) {
             if (e.key === 'Enter' && e.shiftKey) return;
             if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }
         });
@@ -1060,4 +1382,5 @@
         renderConversationList();
     </script>
 </body>
+
 </html>
