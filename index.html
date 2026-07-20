@@ -758,12 +758,12 @@
                 </div>
                 <button class="header-btn save-btn" onclick="saveData()">?? 保存</button>
                 <button class="header-btn load-btn" onclick="loadData()">?? 提取</button>
-                    <select class="model-select" id="modelSelect" onchange="switchModel()">
-                      <option value="deepseek-chat">DeepSeek Chat</option>
-                      <option value="deepseek-reasoner">DeepSeek Reasoner</option>
-                      <option value="glm-4.7-flash">智谱 GLM-4.7-Flash</option>
-                      <option value="qwq-32b">阿里 QwQ-32B</option>
-                 </select>
+                <select class="model-select" id="modelSelect" onchange="switchModel()">
+                    <option value="deepseek-chat">DeepSeek Chat</option>
+                    <option value="deepseek-reasoner">DeepSeek Reasoner</option>
+                    <option value="glm-4.7-flash">智谱 GLM-4.7-Flash</option>
+                    <option value="qwq-32b">阿里 QwQ-32B</option>
+                </select>
                 <span class="token-display" id="tokenDisplay">💰 0 Token</span>
             </div>
         </div>
@@ -1249,9 +1249,9 @@
                 modelName = 'glm-4-flash';
                 apiKey = '58f29af72485471295d1aadd6f484475.qIdE2ZpbwyV5gOQb';
             } else if (selectedModel === 'qwq-32b') {
-                modelEndpoint = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
+                modelEndpoint = 'http://localhost:18888/api/qwen';
                 modelName = 'qwq-32b';
-                apiKey = 'sk-ws-H.EHMPRMM.vb9k.MEQCIB1fBbLMjLCf7WASXMH4ZJzjdjKkAK5sCYHvX9s3cuVxAiBy7m2uOkK8HO8PMqXqIv8X9GP9e8g3dkAX5ITrBQAaKw';
+                apiKey = '';
             }
             try {
                 const response = await fetch(modelEndpoint, {
