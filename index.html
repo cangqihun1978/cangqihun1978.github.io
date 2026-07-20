@@ -1378,6 +1378,9 @@
         }
 
         // 初始化：启动公共模式并渲染对话列表
+        localStorage.removeItem('sovereign_verified');
+        localStorage.removeItem('sovereign_identity_id');
+
         enterPublic();
         renderConversationList();
     </script>
