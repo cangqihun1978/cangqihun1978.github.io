@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>如律令</title>
-    <style>f
+    <style>
         * {
             margin: 0;
             padding: 0;
@@ -1329,7 +1329,7 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             tool: localTool,
-                            params: { tool: nestedTool, params: nestedParams }
+                            params: nestedParams
                         })
                     });
                     const result = await response.json();
@@ -1368,15 +1368,17 @@
         }
 
         function insertTool(tool) {
-            const input = document.getElementById('userInput');
+            var input = document.getElementById('userInput');
             if (tool === 'file') {
-                input.value = '/tool local --tool exec --params {"command":"dir"}';
+                input.value = '/tool exec --params {"command":"dir"}';
+                sendMessage();
             } else if (tool === 'clean') {
-                input.value = '请帮我清洗以下数据：';
+                input.value = '/tool clean --params {"path":"D:\\测试数据.xlsx","action":"dedupe"}';
+                sendMessage();
             } else if (tool === 'contract') {
-                input.value = '请帮我审查以下合同条款：';
+                input.value = '/tool contract --params {"path":"D:\\测试合同.docx"}';
+                sendMessage();
             }
-            input.focus();
         }
 
         // 初始化：启动公共模式并渲染对话列表
