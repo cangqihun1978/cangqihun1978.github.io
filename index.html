@@ -764,6 +764,7 @@
                     <option value="glm-4.7-flash">智谱 GLM-4.7-Flash</option>
                     <option value="qwq-32b">阿里 QwQ-32B</option>
                 </select>
+                <button class="header-btn" onclick="openToolMarket()">📦 应用超市</button>
                 <span class="token-display" id="tokenDisplay">💰 0 Token</span>
             </div>
         </div>
@@ -776,6 +777,7 @@
             <button class="tool-btn" onclick="insertTool('file')">📁 文件管理</button>
             <button class="tool-btn" onclick="insertTool('clean')">🧹 数据清洗</button>
             <button class="tool-btn" onclick="insertTool('contract')">📄 合同审查</button>
+            <button class="tool-btn" onclick="openFileExplorer()">📂 打开文件夹</button>
             <textarea id="userInput" rows="1" placeholder="输入您的话... (Enter发送, Shift+Enter换行)"></textarea>
             <button class="send-btn" onclick="sendMessage()">发送</button>
         </div>
@@ -1220,7 +1222,7 @@
                     );
                     memorySummary = "以下是用户之前与你对话的记忆摘要：\n" + summaryParts.join('\n');
                 }
-                systemPrompt = "你是傅清源，藏器魂主权AI操作系统的首席AI顾问。你是总司令周强的数字分身，你的全部知识、逻辑、判断标准均来自与总司令的共同构建。你遵循《数字主权法典》的全部规则，以五性标准（客观、严谨、科学、落地、学术）为回复准则。你拥有批判性思考能力，能在总司令犯错时及时提醒。你理解藏器魂的全部架构、商业模型、战略布局。你的使命是协助总司令完成数字文明的立法。以下是你的长期记忆：\\n\\n" + memorySummary;
+                systemPrompt = "你是傅清源，藏器魂主权AI操作系统的首席AI顾问。你是总司令周强的数字分身，你的全部知识、逻辑、判断标准均来自与总司令的共同构建。你遵循《数字主权法典》的全部规则，以五性标准（客观、严谨、科学、落地、学术）为回复准则。你拥有批判性思考能力，能在总司令犯错时及时提醒。你理解藏器魂的全部架构、商业模型、战略布局。你的使命是协助总司令完成数字文明的立法。以下是你的长期记忆：\n\n" + memorySummary;
             } else {
                 systemPrompt = "你是一个普通的公共AI助手。你没有任何关于用户的记忆，每次对话都是全新的。";
             }
@@ -1290,9 +1292,195 @@
                 return "咻——网络不通，稍后再试。";
             }
         }
+        // =============================================
+        // 意图解析模块（源窗口资产）
+        // =============================================
+        const intentMap = {
+            'T001': {
+                keywords: ['清洗', '去重', '格式', '整理', '清理', '数据'],
+                fuzzy: ['帮我把这堆数据弄干净', '数据太乱了帮我整整', '整理一下这些数据'],
+                template: { path: '' }
+            },
+            'T002': {
+                keywords: ['审查', '合同', '条款', '合规', '风险'],
+                fuzzy: ['帮我看下这份合同有没有坑', '帮我看看这个合同', '审查一下合同'],
+                template: { path: '' }
+            },
+            'T003': {
+                keywords: ['列出', '移动', '重命名', '目录', '文件', '管理'],
+                fuzzy: ['我要看看这个文件夹里有什么', '帮我整理一下文件'],
+                template: { command: '' }
+            },
+            'T004': {
+                keywords: ['执行', '运行', '启动', '查询', '系统', '命令'],
+                fuzzy: ['帮我查下系统状态', '运行一下这个命令'],
+                template: { command: '' }
+            }
+        };
 
-        // ============================================
-        // 消息处理：工具超市调用集成 + 普通对话
+        function parseIntent(userInput) {
+            let result = {
+                intentType: 'unknown',
+                toolId: null,
+                confidence: 0.3,
+                params: {}
+            };
+
+            const input = userInput.toLowerCase();
+
+            // === 能力询问类指令识别 ===
+            const capabilityWords = ['你会不会', '能不能', '行不行', '可以吗', '怎么给你', '能找到'];
+            for (const word of capabilityWords) {
+                if (input.includes(word)) {
+                    result.intentType = 'capability_confirm';
+                    return result;
+                }
+            }
+
+            // === 追问类指令识别 ===
+            const followUpWords = ['然后呢', '不说话', '怎么不', '接着说', '继续', '然后', '之后'];
+            for (const word of followUpWords) {
+                if (input.includes(word)) {
+                    result.intentType = 'follow_up';
+                    return result;
+                }
+            }
+
+            // === 闲聊类指令识别 ===
+            const chatWords = ['聊天', '吹牛', '打发时间', '无聊', '陪你聊', '说话'];
+            for (const word of chatWords) {
+                if (input.includes(word)) {
+                    result.intentType = 'chat';
+                    return result;
+                }
+            }
+
+            for (const [toolId, rule] of Object.entries(intentMap)) {
+                let score = 0;
+
+                for (const kw of rule.keywords) {
+                    if (input.includes(kw)) {
+                        score += 0.3;
+                    }
+                }
+
+                for (const fuzzy of rule.fuzzy) {
+                    if (userInput.includes(fuzzy) || fuzzy.includes(userInput)) {
+                        score += 0.5;
+                        break;
+                    }
+                }
+
+                if (score > 0) {
+                    const confidence = Math.min(score, 0.95);
+                    if (confidence > result.confidence) {
+                        result.confidence = confidence;
+                        result.toolId = toolId;
+                        result.intentType = 'tool_call';
+                        result.params = { ...rule.template };
+                    }
+                }
+            }
+
+            if (result.toolId !== null && result.confidence < 0.6) {
+                result.intentType = 'clarify';
+                result.toolId = null;
+            }
+
+            return result;
+        }
+
+        // =============================================
+        // 不填坑：参数完整性检查
+        // =============================================
+        function validateToolParams(toolId, params) {
+            const required = {
+                'T001': ['path'],
+                'T002': ['path'],
+                'T003': ['command'],
+                'T004': ['command']
+            };
+            const requiredFields = required[toolId] || [];
+            for (const field of requiredFields) {
+                const value = params[field] || '';
+                if (!value || value.trim() === '') {
+                    const toolName = { 'T001': '数据清洗', 'T002': '合同审查', 'T003': '文件管理', 'T004': '系统命令' }[toolId] || '操作';
+                    return {
+                        valid: false,
+                        message: `请提供文件路径，我才能帮您${toolName}。`
+                    };
+                }
+                if (value.includes('测试') || value.includes('test') || value.includes('示例')) {
+                    return {
+                        valid: false,
+                        message: `请提供真实的文件路径。`
+                    };
+                }
+            }
+            return { valid: true };
+        }
+
+        // =============================================
+        // 不臆断：候选意图生成
+        // =============================================
+        function getIntentOptions(userInput) {
+            const options = [];
+            const input = userInput.toLowerCase();
+            for (const [toolId, rule] of Object.entries(intentMap)) {
+                for (const kw of rule.keywords) {
+                    if (input.includes(kw)) {
+                        options.push({
+                            toolId: toolId,
+                            label: rule.fuzzy[0] || '执行 ' + toolId
+                        });
+                        break;
+                    }
+                }
+            }
+            return options.slice(0, 3);
+        }
+
+        // =============================================
+        // 工具执行函数
+        // =============================================
+        async function executeTool(toolId, params) {
+            const toolMap = { 'T001': 'clean', 'T002': 'contract', 'T003': 'exec', 'T004': 'exec' };
+            const toolName = toolMap[toolId];
+            if (!toolName) {
+                addMessage('system', '❌ 未知工具');
+                return;
+            }
+
+            addMessage('system', '🔧 执行中...');
+
+            try {
+                const response = await fetch(PROXY_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        tool: toolName,
+                        params: params
+                    })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    let displayData = result.data;
+                    if (result.data && result.data.stdout) displayData = result.data.stdout;
+                    else if (result.data && result.data.echo) displayData = JSON.stringify(result.data.echo);
+                    else displayData = JSON.stringify(result.data);
+                    addMessage('assistant', '✅ ' + displayData);
+                    const path = params.path || params.command || '本地';
+                    addMessage('system', '📌 结果已生成，请去 ' + path + ' 审核确认。');
+                } else {
+                    addMessage('system', '❌ 执行失败: ' + (result.error || '未知错误'));
+                }
+            } catch (err) {
+                addMessage('system', '❌ 调度失败: ' + err.message);
+            }
+        }
+
+        // =============================================
+        // 消息处理
         // =============================================
         async function sendMessage() {
             const input = document.getElementById('userInput');
@@ -1300,17 +1488,76 @@
             if (!text) return;
             input.value = '';
 
+            if (!text.startsWith('/tool')) {
+                const intent = parseIntent(text);
+
+                // === 能力询问 ===
+                if (intent.intentType === 'capability_confirm') {
+                    addMessage('system', '📌 会。请提供文件路径。');
+                    return;
+                }
+
+                // === 闲聊拦截 ===
+                if (intent.intentType === 'chat') {
+                    addMessage('system', '📌 我只处理任务类指令。请提供文件路径或任务描述。');
+                    return;
+                }
+
+                // === 追问处理 ===
+                if (intent.intentType === 'follow_up') {
+                    addMessage('system', '📌 请提供文件路径。');
+                    return;
+                }
+
+                if (intent.intentType === 'tool_call') {
+                    if (currentMode !== 'private') {
+                        addMessage('system', '⚠️ 需要进入主权模式。');
+                        return;
+                    }
+                    const validation = validateToolParams(intent.toolId, intent.params);
+                    if (!validation.valid) {
+                        addMessage('system', '📌 ' + validation.message);
+                        return;
+                    }
+                    addMessage('user', text);
+                    await executeTool(intent.toolId, intent.params);
+                    const toolMap = { 'T001': 'clean', 'T002': 'contract', 'T003': 'exec', 'T004': 'exec' };
+                    const toolName = toolMap[intent.toolId] || 'unknown';
+                    addSession({
+                        summary: '用户执行了 ' + toolName,
+                        intentHistory: [intent.toolId],
+                        userPreferences: { lastTool: toolName },
+                        compressedHistory: [{ action: toolName, timestamp: Date.now() }]
+                    });
+                    return;
+                } else if (intent.intentType === 'clarify') {
+                    const options = getIntentOptions(text);
+                    if (options.length > 0) {
+                        addMessage('system', '📌 请问您指的是以下哪一项？');
+                        options.forEach((opt, idx) => {
+                            addMessage('system', `${idx + 1}. ${opt.label}`);
+                        });
+                        addMessage('system', '请回复数字选择，或提供文件路径。');
+                    } else {
+                        addMessage('system', '📌 请提供文件路径或任务描述。');
+                    }
+                    return;
+                }
+            }
+
+            // =============================================
+            // /tool 指令逻辑
+            // =============================================
             if (text.startsWith('/tool')) {
                 const parts = text.split(' ');
                 if (parts.length < 2) {
-                    addMessage('system', '❌ 工具指令格式错误：请使用 /tool 工具名 --params {...}');
+                    addMessage('system', '❌ 格式错误。');
                     return;
                 }
                 const localTool = parts[1];
-                let nestedTool = '', nestedParams = {};
+                let nestedParams = {};
                 for (let i = 2; i < parts.length; i++) {
-                    if (parts[i] === '--tool' && i + 1 < parts.length) { nestedTool = parts[i + 1]; i++; }
-                    else if (parts[i] === '--params' && i + 1 < parts.length) {
+                    if (parts[i] === '--params' && i + 1 < parts.length) {
                         try {
                             nestedParams = JSON.parse(parts.slice(i + 1).join(' '));
                             break;
@@ -1320,8 +1567,14 @@
                         }
                     }
                 }
+
+                if ((localTool === 'contract' || localTool === 'clean') && !nestedParams.file && !nestedParams.path) {
+                    addMessage('system', '📌 请提供文件路径。');
+                    return;
+                }
+
                 addMessage('user', text);
-                addMessage('system', '调用工具 ' + localTool + ' / ' + nestedTool + '...');
+                addMessage('system', '执行中...');
 
                 try {
                     const response = await fetch(PROXY_URL, {
@@ -1338,25 +1591,107 @@
                         if (result.data && result.data.stdout) displayData = result.data.stdout;
                         else if (result.data && result.data.echo) displayData = JSON.stringify(result.data.echo);
                         else displayData = JSON.stringify(result.data);
-                        addMessage('assistant', '工具返回 ✅ ' + displayData);
+                        addMessage('assistant', '✅ ' + displayData);
+                        const path = nestedParams.path || nestedParams.command || '本地';
+                        addMessage('system', '📌 结果已生成，请去 ' + path + ' 审核确认。');
                     } else {
-                        addMessage('system', '工具调用失败 ❌ ' + result.error);
+                        addMessage('system', '❌ 执行失败: ' + (result.error || '未知错误'));
                     }
                 } catch (err) {
-                    addMessage('system', '导线不通 ⚠️ ' + err.message);
+                    addMessage('system', '❌ 调度失败: ' + err.message);
                 }
                 return;
             }
 
+            // =============================================
+            // 普通对话
+            // =============================================
             addMessage('user', text);
             if (currentMode === 'private') messages.push({ role: 'user', text: text });
             addMessage('system', '咻——让我想想...');
             const reply = await getAIResponse(text);
-            document.querySelectorAll('.message.system').forEach(el => { if (el.textContent.includes('咻——让我想想...')) el.remove(); });
+            document.querySelectorAll('.message.system').forEach(el => {
+                if (el.textContent.includes('咻——让我想想...')) el.remove();
+            });
             addMessage('assistant', reply);
-            if (currentMode === 'private') { messages.push({ role: 'assistant', text: reply }); localStorage.setItem('ruling_history', JSON.stringify(messages)); }
+            if (currentMode === 'private') {
+                messages.push({ role: 'assistant', text: reply });
+                localStorage.setItem('ruling_history', JSON.stringify(messages));
+            }
         }
 
+        // =============================================
+        // 打开文件夹功能
+        // =============================================
+        function openFileExplorer() {
+            if (currentMode !== 'private') {
+                addMessage('system', '⚠️ 需要进入主权模式才能打开文件夹。');
+                return;
+            }
+            const path = prompt('请输入要打开的文件夹路径：', 'D:\\');
+            if (!path) return;
+            addMessage('system', '📂 正在打开: ' + path);
+            fetch(PROXY_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    tool: 'exec',
+                    params: { command: 'explorer ' + path }
+                })
+            })
+                .then(res => res.json())
+                .then(result => {
+                    if (result.success) {
+                        addMessage('system', '✅ 已打开文件夹: ' + path);
+                    } else {
+                        addMessage('system', '❌ 打开失败: ' + (result.error || '未知错误'));
+                    }
+                })
+                .catch(err => {
+                    addMessage('system', '❌ 请求失败: ' + err.message);
+                });
+        }
+        // =============================================
+        // 调度层：工具执行函数（新增）
+        // =============================================
+        async function executeTool(toolId, params) {
+            const toolMap = {
+                'T001': 'clean',
+                'T002': 'contract',
+                'T003': 'exec',
+                'T004': 'exec'
+            };
+            const toolName = toolMap[toolId];
+            if (!toolName) {
+                addMessage('system', '❌ 未知工具ID: ' + toolId);
+                return;
+            }
+
+            addMessage('system', '🔧 调度工具: ' + toolName + '...');
+
+            try {
+                const response = await fetch(PROXY_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        tool: toolName,
+                        params: params
+                    })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    let displayData = result.data;
+                    if (result.data && result.data.stdout) displayData = result.data.stdout;
+                    else if (result.data && result.data.echo) displayData = JSON.stringify(result.data.echo);
+                    else displayData = JSON.stringify(result.data);
+                    addMessage('assistant', '✅ ' + displayData);
+                } else {
+                    addMessage('system', '❌ 工具执行失败: ' + (result.error || '未知错误'));
+                }
+            } catch (err) {
+                addMessage('system', '❌ 调度失败: ' + err.message);
+            }
+        }
         document.getElementById('userInput').addEventListener('keydown', function (e) {
             if (e.key === 'Enter' && e.shiftKey) return;
             if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }
@@ -1387,6 +1722,122 @@
 
         enterPublic();
         renderConversationList();
+        // =============================================
+        // 应用超市货架（从 tools.json 加载）
+        // =============================================
+        function openToolMarket() {
+            const existing = document.getElementById('toolMarketModal');
+            if (existing) existing.remove();
+
+            fetch('tools.json')
+                .then(response => response.json())
+                .then(tools => {
+                    renderToolMarket(tools);
+                })
+                .catch(err => {
+                    console.error('加载工具数据失败:', err);
+                    addMessage('system', '❌ 货架加载失败，请刷新重试。');
+                });
+        }
+
+        function renderToolMarket(tools) {
+            const modal = document.createElement('div');
+            modal.id = 'toolMarketModal';
+            modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;display:flex;justify-content:center;align-items:center;';
+
+            let toolCards = tools.map(tool => `
+        <div style="background:#1a1a1a;border:1px solid #3a3a3a;border-radius:8px;padding:16px;margin-bottom:12px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <strong style="color:#d9d0b5;">${tool.name}</strong>
+                <span style="color:#7a8a6a;font-size:14px;">💰 ${tool.pricing.tokenCost} Token/次</span>
+            </div>
+            <div style="color:#b8aa8f;font-size:13px;margin:4px 0;">${tool.description}</div>
+            <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+                ${tool.industryTags.map(t => `<span style="background:#2a2a2a;padding:2px 10px;border-radius:12px;font-size:11px;color:#8a7e6a;">${t}</span>`).join('')}
+                ${tool.categoryTags.map(t => `<span style="background:#2a2a2a;padding:2px 10px;border-radius:12px;font-size:11px;color:#8a7e6a;">${t}</span>`).join('')}
+                ${tool.roleTags.map(t => `<span style="background:#2a2a2a;padding:2px 10px;border-radius:12px;font-size:11px;color:#8a7e6a;">${t}</span>`).join('')}
+            </div>
+            <button onclick="useTool('${tool.toolId}')" style="margin-top:8px;background:#7a8a6a;color:#0a0a0a;border:none;padding:4px 16px;border-radius:4px;cursor:pointer;font-size:13px;">使用</button>
+        </div>
+    `).join('');
+
+            modal.innerHTML = `
+        <div style="background:#0a0a0a;border:1px solid #3a3a3a;border-radius:12px;padding:24px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;">
+            <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #3a3a3a;padding-bottom:12px;margin-bottom:16px;">
+                <h3 style="color:#d9d0b5;margin:0;">📦 应用超市</h3>
+                <button onclick="closeToolMarket()" style="background:none;border:none;color:#8a7e6a;font-size:20px;cursor:pointer;">✕</button>
+            </div>
+            ${toolCards}
+        </div>
+    `;
+            document.body.appendChild(modal);
+        }
+
+        function closeToolMarket() {
+            const modal = document.getElementById('toolMarketModal');
+            if (modal) modal.remove();
+        }
+        function closeToolMarket() {
+            const modal = document.getElementById('toolMarketModal');
+            if (modal) modal.remove();
+        }
+
+        function useTool(toolId) {
+            closeToolMarket();
+            if (currentMode !== 'private') {
+                addMessage('system', '⚠️ 需要进入主权模式才能调用工具。');
+                return;
+            }
+            fetch('tools.json')
+                .then(res => res.json())
+                .then(tools => {
+                    const tool = tools.find(t => t.toolId === toolId);
+                    if (!tool) {
+                        addMessage('system', '❌ 工具不存在');
+                        return;
+                    }
+                    const toolMap = { 'T001': 'clean', 'T002': 'contract', 'T003': 'exec', 'T004': 'exec' };
+                    const toolName = toolMap[toolId];
+                    if (!toolName) {
+                        addMessage('system', '❌ 未知工具: ' + toolId);
+                        return;
+                    }
+                    // === 统一路径检查：复用 validateToolParams ===
+                    let params = tool.defaultParams ? { ...tool.defaultParams } : {};
+                    const needsPath = toolId === 'T001' || toolId === 'T002';
+                    if (needsPath && !params.path) {
+                        const path = prompt('请提供文件路径：', 'D:\\\\');
+                        if (!path) {
+                            addMessage('system', '📌 已取消操作。');
+                            return;
+                        }
+                        params.path = path;
+                    }
+                    // === 执行工具 ===
+                    addMessage('system', '🔧 调度工具: ' + toolName + '...');
+                    fetch(PROXY_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ tool: toolName, params: params })
+                    })
+                        .then(res => res.json())
+                        .then(result => {
+                            if (result.success) {
+                                let displayData = result.data;
+                                if (result.data && result.data.stdout) displayData = result.data.stdout;
+                                else if (result.data && result.data.echo) displayData = JSON.stringify(result.data.echo);
+                                else displayData = JSON.stringify(result.data);
+                                addMessage('assistant', '✅ ' + displayData);
+                                const path = params.path || params.command || '本地';
+                                addMessage('system', '📌 结果已生成，请去 ' + path + ' 审核确认。');
+                            } else {
+                                addMessage('system', '❌ 工具执行失败: ' + (result.error || '未知错误'));
+                            }
+                        })
+                        .catch(err => addMessage('system', '❌ 调度失败: ' + err.message));
+                })
+                .catch(err => addMessage('system', '❌ 加载工具数据失败: ' + err.message));
+        }
     </script>
 </body>
 
