@@ -786,9 +786,9 @@
     <script>
         // 核心资产：API 密钥与代理服务
         const DEEPSEEK_API_KEY = "sk-89010c8b6e6d4fb491501c1f221557a4";
-        const PROXY_URL = "https://cangqihun.nat100.top";
+        const PROXY_URL = "http://localhost:18888";
         // ===== 修改开始：新增身份认证后台地址 =====
-        const IDENTITY_API_BASE = "http://121.41.100.242:3000/api";
+        const IDENTITY_API_BASE = "https://cangqihun.email/api";
         // ===== 修改结束 =====
         // 密钥映射：13 字密码表
         const KEY_MAP = { "卷": 18, "坐": 99, "主": 818, "人": 634, "身": 11, "作": 37, "客": 411, "不": 19, "劫": 78, "浮": 20, "生": 14, "思": 918, "魂": 825 };
@@ -1462,6 +1462,7 @@
                         params: params
                     })
                 });
+                console.log('fetch 响应状态:', response.status);
                 const result = await response.json();
                 if (result.success) {
                     let displayData = result.data;
@@ -1474,6 +1475,8 @@
                 } else {
                     addMessage('system', '❌ 执行失败: ' + (result.error || '未知错误'));
                 }
+                console.log('executeTool 准备返回:', result);
+                return result;
             } catch (err) {
                 addMessage('system', '❌ 调度失败: ' + err.message);
             }
@@ -1651,70 +1654,6 @@
                     addMessage('system', '❌ 请求失败: ' + err.message);
                 });
         }
-        // =============================================
-        // 调度层：工具执行函数（新增）
-        // =============================================
-        async function executeTool(toolId, params) {
-            const toolMap = {
-                'T001': 'clean',
-                'T002': 'contract',
-                'T003': 'exec',
-                'T004': 'exec'
-            };
-            const toolName = toolMap[toolId];
-            if (!toolName) {
-                addMessage('system', '❌ 未知工具ID: ' + toolId);
-                return;
-            }
-
-            addMessage('system', '🔧 调度工具: ' + toolName + '...');
-
-            try {
-                const response = await fetch(PROXY_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        tool: toolName,
-                        params: params
-                    })
-                });
-                const result = await response.json();
-                if (result.success) {
-                    let displayData = result.data;
-                    if (result.data && result.data.stdout) displayData = result.data.stdout;
-                    else if (result.data && result.data.echo) displayData = JSON.stringify(result.data.echo);
-                    else displayData = JSON.stringify(result.data);
-                    addMessage('assistant', '✅ ' + displayData);
-                } else {
-                    addMessage('system', '❌ 工具执行失败: ' + (result.error || '未知错误'));
-                }
-            } catch (err) {
-                addMessage('system', '❌ 调度失败: ' + err.message);
-            }
-        }
-        document.getElementById('userInput').addEventListener('keydown', function (e) {
-            if (e.key === 'Enter' && e.shiftKey) return;
-            if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }
-        });
-
-        function switchModel() {
-            const selectedModel = document.getElementById('modelSelect').value;
-            addMessage('system', '模型已切换至 ' + selectedModel);
-        }
-
-        function insertTool(tool) {
-            var input = document.getElementById('userInput');
-            if (tool === 'file') {
-                input.value = '/tool exec --params {"command":"dir"}';
-                sendMessage();
-            } else if (tool === 'clean') {
-                input.value = '/tool clean --params {"path":"D:\\测试数据.xlsx","action":"dedupe"}';
-                sendMessage();
-            } else if (tool === 'contract') {
-                input.value = '/tool contract --params {"path":"D:\\测试合同.docx"}';
-                sendMessage();
-            }
-        }
 
         // 初始化：启动公共模式并渲染对话列表
         localStorage.removeItem('sovereign_verified');
@@ -1777,12 +1716,8 @@
             const modal = document.getElementById('toolMarketModal');
             if (modal) modal.remove();
         }
-        function closeToolMarket() {
-            const modal = document.getElementById('toolMarketModal');
-            if (modal) modal.remove();
-        }
 
-        function useTool(toolId) {
+        async function useTool(toolId) {
             closeToolMarket();
             if (currentMode !== 'private') {
                 addMessage('system', '⚠️ 需要进入主权模式才能调用工具。');
@@ -1790,7 +1725,7 @@
             }
             fetch('tools.json')
                 .then(res => res.json())
-                .then(tools => {
+                .then(async (tools) => {
                     const tool = tools.find(t => t.toolId === toolId);
                     if (!tool) {
                         addMessage('system', '❌ 工具不存在');
@@ -1802,39 +1737,20 @@
                         addMessage('system', '❌ 未知工具: ' + toolId);
                         return;
                     }
-                    // === 统一路径检查：复用 validateToolParams ===
+                    // === 统一路径检查 ===
                     let params = tool.defaultParams ? { ...tool.defaultParams } : {};
                     const needsPath = toolId === 'T001' || toolId === 'T002';
                     if (needsPath && !params.path) {
-                        const path = prompt('请提供文件路径：', 'D:\\\\');
+                        const path = prompt('请提供文件路径：', 'D:\\');
                         if (!path) {
                             addMessage('system', '📌 已取消操作。');
                             return;
                         }
-                        params.path = path;
+                        const cleanPath = path.trim().replace(/\n/g, '').replace(/\r/g, '');
+                        params.path = cleanPath;
                     }
-                    // === 执行工具 ===
-                    addMessage('system', '🔧 调度工具: ' + toolName + '...');
-                    fetch(PROXY_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ tool: toolName, params: params })
-                    })
-                        .then(res => res.json())
-                        .then(result => {
-                            if (result.success) {
-                                let displayData = result.data;
-                                if (result.data && result.data.stdout) displayData = result.data.stdout;
-                                else if (result.data && result.data.echo) displayData = JSON.stringify(result.data.echo);
-                                else displayData = JSON.stringify(result.data);
-                                addMessage('assistant', '✅ ' + displayData);
-                                const path = params.path || params.command || '本地';
-                                addMessage('system', '📌 结果已生成，请去 ' + path + ' 审核确认。');
-                            } else {
-                                addMessage('system', '❌ 工具执行失败: ' + (result.error || '未知错误'));
-                            }
-                        })
-                        .catch(err => addMessage('system', '❌ 调度失败: ' + err.message));
+                    // === 调用 executeTool 执行 ===
+                    await executeTool(toolId, params);
                 })
                 .catch(err => addMessage('system', '❌ 加载工具数据失败: ' + err.message));
         }
