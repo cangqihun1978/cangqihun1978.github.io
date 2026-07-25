@@ -73,6 +73,7 @@
             flex: 1;
             overflow-y: auto;
             padding: 8px 0;
+            max-height: calc(100vh - 120px);
         }
 
         .sidebar-item {
@@ -763,6 +764,8 @@
         <div class="sidebar-header">
             <span>如律令</span>
             <span class="badge">藏器魂</span>
+            <button onclick="toggleSidebar()"
+                style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:16px;">☰</button>
         </div>
         <div class="sidebar-list" id="convList"></div>
         <div class="sidebar-footer">
@@ -1251,9 +1254,11 @@
             for (let id in conversations) {
                 const conv = conversations[id];
                 if (!conv || !conv.messages) continue;
-                if (id === currentConversationId) continue;
                 const item = document.createElement('div');
                 item.className = 'sidebar-item';
+                if (id === currentConversationId) {
+                    item.classList.add('active');
+                }
                 const title = conv.title || (conv.messages[0] ? conv.messages[0].text.slice(0, 20) : '空对话');
                 item.textContent = '📝 ' + title;
                 item.onclick = function () {
@@ -1274,6 +1279,21 @@
                     renderConversationList();
                 };
                 list.appendChild(item);
+            }
+        }
+        // =============================================
+        // 侧边栏折叠
+        // =============================================
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const mainContainer = document.getElementById('appContainer');
+            if (sidebar) {
+                sidebar.classList.toggle('collapsed');
+                if (sidebar.classList.contains('collapsed')) {
+                    mainContainer.style.marginLeft = '0';
+                } else {
+                    mainContainer.style.marginLeft = '240px';
+                }
             }
         }
         // =============================================
@@ -2035,6 +2055,14 @@
                 })
                 .catch(err => addMessage('system', '❌ 加载工具数据失败: ' + err.message));
         }
+        // =============================================
+        // 键盘事件监听
+        // =============================================
+        document.getElementById('userInput').addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && e.shiftKey) return;
+            if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }
+        });
+
     </script>
 </body>
 
