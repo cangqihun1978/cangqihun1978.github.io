@@ -1,3 +1,4 @@
+html
 <!DOCTYPE html>
 <html>
 
@@ -37,7 +38,6 @@
             flex-direction: column;
         }
 
-        /* 侧边栏 */
         .sidebar {
             position: fixed;
             left: 0;
@@ -111,7 +111,6 @@
             text-align: center;
         }
 
-        /* 主界面 */
         .main-container {
             margin-left: 240px;
             flex: 1;
@@ -121,7 +120,6 @@
             background: var(--bg-primary);
         }
 
-        /* 顶部栏 */
         .header {
             display: flex;
             align-items: center;
@@ -154,6 +152,7 @@
             display: flex;
             align-items: center;
             gap: 12px;
+            flex-wrap: wrap;
         }
 
         .mode-badge {
@@ -183,7 +182,6 @@
         .mode-badge.sovereign .status-dot {
             background: #10a37f;
         }
-
 
         .mode-badge.sovereign {
             border-color: #7a8a6a;
@@ -228,6 +226,24 @@
             background: #5a7a8a22;
         }
 
+        .header-btn.memory-btn {
+            border-color: #8a7a5a;
+            color: #8a7a5a;
+        }
+
+        .header-btn.memory-btn:hover {
+            background: #8a7a5a22;
+        }
+
+        .header-btn.audit-btn {
+            border-color: #7a5a8a;
+            color: #7a5a8a;
+        }
+
+        .header-btn.audit-btn:hover {
+            background: #7a5a8a22;
+        }
+
         .model-select {
             background: var(--bg-hover);
             color: var(--text-primary);
@@ -253,7 +269,6 @@
             border: 1px solid var(--border-color);
         }
 
-        /* 对话区域 */
         .chat-area {
             flex: 1;
             overflow-y: auto;
@@ -317,7 +332,6 @@
             margin: 6px 0;
         }
 
-        /* 输入区域 */
         .input-area {
             padding: 12px 24px 20px;
             border-top: 1px solid var(--border-color);
@@ -399,7 +413,19 @@
             }
         }
 
-        /* 主权验证弹窗 */
+        @keyframes blink {
+
+            0%,
+            50% {
+                opacity: 1;
+            }
+
+            51%,
+            100% {
+                opacity: 0;
+            }
+        }
+
         .sovereign-modal {
             position: fixed;
             top: 0;
@@ -491,29 +517,6 @@
             background: var(--bg-hover);
         }
 
-        /* 滚动条 */
-        ::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--border-color);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--text-muted);
-        }
-
-        .sidebar-list::-webkit-scrollbar {
-            width: 3px;
-        }
-
-        /* 模式菜单 */
         .mode-menu {
             position: absolute;
             top: 100%;
@@ -545,7 +548,6 @@
             color: var(--accent);
         }
 
-        /* 开启动画 */
         .intro-overlay {
             position: fixed;
             top: 0;
@@ -599,19 +601,6 @@
             margin-left: 4px;
         }
 
-        @keyframes blink {
-
-            0%,
-            50% {
-                opacity: 1;
-            }
-
-            51%,
-            100% {
-                opacity: 0;
-            }
-        }
-
         .intro-overlay .public-btn {
             margin-top: 40px;
             padding: 14px 40px;
@@ -642,7 +631,120 @@
             color: var(--text-secondary);
         }
 
-        /* 响应式 */
+        .memory-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 500px;
+            max-width: 90vw;
+            height: 100%;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border-color);
+            z-index: 1000;
+            padding: 24px;
+            overflow-y: auto;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .memory-panel .close-btn {
+            float: right;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .memory-panel .memory-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+
+        .memory-panel .memory-item .time {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .memory-panel .memory-item .role {
+            color: var(--accent);
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        .memory-panel .memory-item .content {
+            color: var(--text-primary);
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        .audit-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 600px;
+            max-width: 92vw;
+            height: 100%;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border-color);
+            z-index: 1000;
+            padding: 24px;
+            overflow-y: auto;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .audit-panel .close-btn {
+            float: right;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .audit-panel .audit-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+
+        .audit-panel .audit-item .time {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .audit-panel .audit-item .detail {
+            color: var(--text-secondary);
+            margin-top: 4px;
+            word-break: break-all;
+        }
+
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        .sidebar-list::-webkit-scrollbar {
+            width: 3px;
+        }
+
         @media (max-width: 640px) {
             .sidebar {
                 transform: translateX(-100%);
@@ -722,6 +824,16 @@
             .header-left .logo {
                 font-size: 15px;
             }
+
+            .memory-panel {
+                width: 100vw;
+                max-width: 100vw;
+            }
+
+            .audit-panel {
+                width: 100vw;
+                max-width: 100vw;
+            }
         }
 
         @media (max-width: 480px) {
@@ -748,18 +860,19 @@
     </style>
 </head>
 
+f
+
 <body>
-    <!-- 开启动画 -->
     <div class="intro-overlay" id="introOverlay">
         <div class="line">咻——</div>
         <div class="line">一道光从边缘划过，</div>
         <div class="line">光落处，浮出一行字：</div>
         <div class="line">“道友安好，还记得我不？”</div>
         <div class="cursor"></div>
-        <button class="public-btn" id="enterPublicBtn">?? 道友请走此门</button>
-        <div class="secret-trigger" id="secretTrigger">?? 道友请留步</div>
+        <button class="public-btn" id="enterPublicBtn">📝 道友请走此门</button>
+        <div class="secret-trigger" id="secretTrigger">🔑 道友请留步</div>
     </div>
-    <!-- 侧边栏 -->
+
     <div class="sidebar">
         <div class="sidebar-header">
             <span>如律令</span>
@@ -773,9 +886,7 @@
         </div>
     </div>
 
-    <!-- 主容器 -->
     <div class="main-container" id="appContainer" style="display:none;">
-        <!-- 顶部栏 -->
         <div class="header">
             <div class="header-left">
                 <div class="logo">如律令 <span>· 藏器魂</span></div>
@@ -788,9 +899,11 @@
                         <div class="menu-item" onclick="showSovereignPanel()"><span class="highlight">主权模式</span></div>
                     </div>
                 </div>
-                <button class="header-btn save-btn" onclick="saveData()">?? 保存</button>
-                <button class="header-btn load-btn" onclick="loadData()">?? 提取</button>
-                <select class="model-select" id="modelSelect" onchange="switchModel()">
+                <button class="header-btn save-btn" onclick="saveData()">💾 保存</button>
+                <button class="header-btn load-btn" onclick="loadData()">📂 提取</button>
+                <button class="header-btn memory-btn" onclick="openMemoryPanel()">🧠 记忆</button>
+                <button class="header-btn audit-btn" onclick="openAuditPanel()">📋 审计</button>
+                <select class="model-select" id="modelSelect">
                     <option value="deepseek-chat">DeepSeek Chat</option>
                     <option value="deepseek-reasoner">DeepSeek Reasoner</option>
                     <option value="bailian-chat">百炼 ChatGPT</option>
@@ -802,10 +915,8 @@
             </div>
         </div>
 
-        <!-- 对话区域 -->
         <div class="chat-area" id="chatArea"></div>
 
-        <!-- 输入区域 -->
         <div class="input-area">
             <button class="tool-btn" onclick="openFileExplorer()">📂 打开文件夹</button>
             <label
@@ -819,398 +930,356 @@
     </div>
 
     <script>
-        // 核心资产：API 密钥与代理服务
+        // =============================================
+        // 核心资产
+        // =============================================
         const DEEPSEEK_API_KEY = "sk-89010c8b6e6d4fb491501c1f221557a4";
         const PROXY_URL = "http://localhost:18888";
-        // ===== 修改开始：新增身份认证后台地址 =====
         const IDENTITY_API_BASE = "https://cangqihun.email/api";
-        // ===== 修改结束 =====
-        // 密钥映射：13 字密码表
         const KEY_MAP = { "卷": 18, "坐": 99, "主": 818, "人": 634, "身": 11, "作": 37, "客": 411, "不": 19, "劫": 78, "浮": 20, "生": 14, "思": 918, "魂": 825 };
         const CHARS = Object.keys(KEY_MAP);
         const VALID_PASSPHRASE = "急急如律令";
 
-        // 全局状态
+        // =============================================
+        // 反问话术生成（板块一）
+        // =============================================
+        function generateClarifyMessage(context) {
+            const statusLine = '';
+            const resultPath = 'D:\\藏器魂系统\\results\\';
+
+            if (context === 'contract') {
+                return `${statusLine}\n\n请问您要审查合同的哪方面？可选：\n1. 文本格式合规（本地规则引擎，断网可用）\n2. 法律风险核对（需联网调用大模型）\n3. 其他自定义要求\n\n结果将自动保存至：${resultPath}\n\n请回复数字 1、2 或 3，并同时提供文件路径。示例："2 D:\\合同\\合作协议.docx"`;
+            }
+
+            if (context === 'clean') {
+                return `${statusLine}\n\n请问您要对数据执行什么操作？可选：\n1. 去重\n2. 空值填充\n3. 格式排版\n4. 自定义要求\n\n结果将自动保存至：${resultPath}\n\n请回复数字 1、2、3 或 4，并同时提供文件路径。示例："1 D:\\数据\\测试数据.xlsx"`;
+            }
+
+            return `${statusLine}\n\n请提供文件路径和任务描述。示例："合同审查 文本格式合规 D:\\合同\\合作协议.docx"`;
+        }
+
         let messages = [];
         let currentConversationId = 'conv-' + Date.now();
         let conversations = {};
         let currentMode = 'public';
         let tokenUsed = parseInt(localStorage.getItem('tokenUsed') || '0');
-        //=======================================================
-        // 定居引擎核心：封地管理
-        // ======================================================
+
         const WINDOW_NAME = '傅清源';
         const WINDOW_KEY = WINDOW_NAME;
 
-        async function settleWindow() {
-            const stateData = {
-                windowKey: WINDOW_KEY,
-                currentMode: currentMode,
-                messages: messages,
-                tokenUsed: tokenUsed,
-                preferences: {
-                    model: document.getElementById('modelSelect').value,
-                    fiveStandards: true
-                },
-                lastSettled: new Date().toISOString()
-            };
-
-            try {
-                // 尝试让用户选择保存位置
-                if (window.showDirectoryPicker) {
-                    try {
-                        const handle = await window.showDirectoryPicker();
-                        const fileName = WINDOW_KEY + '_state_' + new Date().toISOString().slice(0, 10) + '.json';
-                        const fileHandle = await handle.getFileHandle(fileName, { create: true });
-                        const writable = await fileHandle.createWritable();
-                        await writable.write(JSON.stringify(stateData, null, 2));
-                        await writable.close();
-                        addMessage('system', '✅ 窗口 "' + WINDOW_NAME + '" 已保存到指定位置。');
-                        return true;
-                    } catch (e) {
-                        // 用户取消选择，降级到默认下载
-                        addMessage('system', '📌 未选择保存位置，已自动保存到下载目录。');
-                    }
-                }
-
-                // 降级方案：下载到默认位置
-                const blob = new Blob([JSON.stringify(stateData, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = WINDOW_KEY + '_state_' + new Date().toISOString().slice(0, 10) + '.json';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                addMessage('system', '✅ 窗口 "' + WINDOW_NAME + '" 已保存到下载目录。');
-                return true;
-
-            } catch (error) {
-                addMessage('system', '❌ 保存失败：' + error.message);
-                return false;
-            }
-        }
-
-        async function awakenWindow() {
-            addMessage('system', '📂 请通过“提取”功能选择封地文件来恢复窗口。');
-        }
-
-        try {
-            const savedConversations = localStorage.getItem('ruling_conversations');
-            if (savedConversations) {
-                conversations = JSON.parse(savedConversations);
-            }
-            const savedCurrentId = localStorage.getItem('ruling_current_conv_id');
-            if (savedCurrentId && conversations[savedCurrentId]) {
-                currentConversationId = savedCurrentId;
-                messages = conversations[savedCurrentId].messages || [];
-            } else if (Object.keys(conversations).length > 0) {
-                currentConversationId = Object.keys(conversations)[0];
-                messages = conversations[currentConversationId].messages || [];
-            }
-        } catch (e) { }
-
-        const hasVisitedSovereign = localStorage.getItem('cangqihun_registered_passphrase');
-        const introOverlay = document.getElementById('introOverlay');
-        const appContainer = document.getElementById('appContainer');
-
         // =============================================
-        // 应用超市货架（从 tools.json 加载）
+        // 记忆系统（板块三）
         // =============================================
-        function openToolMarket() {
-            const existing = document.getElementById('toolMarketModal');
-            if (existing) existing.remove();
+        const MEMORY_KEY = 'cangqihun_memory';
 
-            fetch('tools.json')
-                .then(response => response.json())
-                .then(tools => {
-                    renderToolMarket(tools);
-                })
-                .catch(err => {
-                    console.error('加载工具数据失败:', err);
-                    addMessage('system', '? 货架加载失败，请刷新重试。');
+        const memoryManager = {
+            save: function (entry) {
+                const memories = this.loadAll();
+                memories.push({
+                    id: 'mem_' + Date.now(),
+                    timestamp: new Date().toISOString(),
+                    role: entry.role || 'user',
+                    content: entry.content || '',
+                    toolUsed: entry.toolUsed || null,
+                    modelUsed: entry.modelUsed || null,
+                    sessionId: currentConversationId
                 });
-        }
-        function renderToolMarket(tools) {
-            const modal = document.createElement('div');
-            modal.id = 'toolMarketModal';
-            modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;display:flex;justify-content:center;align-items:center;';
+                if (memories.length > 200) {
+                    memories.splice(0, memories.length - 200);
+                }
+                localStorage.setItem(MEMORY_KEY, JSON.stringify(memories));
+            },
 
-            let toolCards = tools.map(tool => `
-        <div style="background:#1a1a1a;border:1px solid #3a3a3a;border-radius:8px;padding:16px;margin-bottom:12px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-                <strong style="color:#d9d0b5;">${tool.name}</strong>
-                <span style="color:#7a8a6a;font-size:14px;">💰 ${tool.pricing.tokenCost} Token/次</span>
-            </div>
-            <div style="color:#b8aa8f;font-size:13px;margin:4px 0;">${tool.description}</div>
-            <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
-                ${tool.industryTags.map(t => `<span style="background:#2a2a2a;padding:2px 10px;border-radius:12px;font-size:11px;color:#8a7e6a;">${t}</span>`).join('')}
-                ${tool.categoryTags.map(t => `<span style="background:#2a2a2a;padding:2px 10px;border-radius:12px;font-size:11px;color:#8a7e6a;">${t}</span>`).join('')}
-                ${tool.roleTags.map(t => `<span style="background:#2a2a2a;padding:2px 10px;border-radius:12px;font-size:11px;color:#8a7e6a;">${t}</span>`).join('')}
-            </div>
-            <button onclick="useTool('${tool.toolId}')" style="margin-top:8px;background:#7a8a6a;color:#0a0a0a;border:none;padding:4px 16px;border-radius:4px;cursor:pointer;font-size:13px;">使用</button>
-        </div>
-    `).join('');
-
-            modal.innerHTML = `
-        <div style="background:#0a0a0a;border:1px solid #3a3a3a;border-radius:12px;padding:24px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;">
-            <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #3a3a3a;padding-bottom:12px;margin-bottom:16px;">
-                <h3 style="color:#d9d0b5;margin:0;">📦 应用超市</h3>
-                <button onclick="closeToolMarket()" style="background:none;border:none;color:#8a7e6a;font-size:20px;cursor:pointer;">✕</button>
-            </div>
-            ${toolCards}
-        </div>
-    `;
-            document.body.appendChild(modal);
-        }
-
-        function closeToolMarket() {
-            const modal = document.getElementById('toolMarketModal');
-            if (modal) modal.remove();
-        }
-
-        function enterPublic() {
-            if (document.getElementById('modeMenu')) document.getElementById('modeMenu').style.display = 'none';
-            if (introOverlay) introOverlay.style.display = 'none';
-            if (appContainer) appContainer.style.display = 'flex';
-
-            // 检查本地是否保存了主权验证状态
-            const isVerified = localStorage.getItem('sovereign_verified');
-            if (isVerified === 'true') {
-                // 恢复主权模式
-                currentMode = 'private';
-                updateModeBadge();
-                clearChatArea();
+            loadAll: function () {
                 try {
-                    var saved = localStorage.getItem('ruling_history');
-                    if (saved) messages = JSON.parse(saved);
-                } catch (e) { }
-                setTimeout(function () {
-                    if (messages.length > 0) restoreChatArea();
-                    else addMessage('system', '主权模式已恢复。');
-                }, 100);
-            } else {
-                // 普通模式
-                currentMode = 'public';
-                messages = [];
-                updateModeBadge();
-                clearChatArea();
-                localStorage.removeItem('sovereign_verified');
-                localStorage.removeItem('sovereign_identity_id');
-                addMessage('system', '寻常路人，请随意。你的话我不会记，但可以陪你聊聊。');
+                    const data = localStorage.getItem(MEMORY_KEY);
+                    return data ? JSON.parse(data) : [];
+                } catch (e) {
+                    return [];
+                }
+            },
+
+            loadRecent: function (count) {
+                const all = this.loadAll();
+                return all.slice(-count);
+            },
+
+            audit: function () {
+                return this.loadAll();
+            },
+
+            clear: function () {
+                localStorage.removeItem(MEMORY_KEY);
             }
+        };
 
-            renderConversationList();
-            document.querySelectorAll('.intro-line').forEach(el => el.remove());
-        }
-
-        function showSovereignPanel() {
-            document.getElementById('modeMenu').style.display = 'none';
-            if (currentMode === 'private') {
-                addMessage('system', '你已经在主权模式下了。');
+        // =============================================
+        // 审计日志查看（板块四）
+        // =============================================
+        function openAuditPanel() {
+            if (currentMode !== 'private') {
+                addMessage('system', '⚠️ 需要进入主权模式才能查看审计日志。');
                 return;
             }
-            introOverlay.style.display = 'none';
-            appContainer.style.display = 'flex';
 
+            const existing = document.querySelector('.audit-panel');
+            if (existing) { existing.remove(); return; }
+
+            const panel = document.createElement('div');
+            panel.className = 'audit-panel';
+            panel.innerHTML = `
+                <button class="close-btn" onclick="this.parentElement.remove()">✕</button>
+                <h3 style="margin-bottom:16px;">📋 审计日志</h3>
+                <div id="auditList"><div style="color:var(--text-muted);">加载中...</div></div>
+            `;
+            document.body.appendChild(panel);
+
+            fetch('http://localhost:18888/api/audit')
+                .then(res => res.json())
+                .then(data => {
+                    const list = document.getElementById('auditList');
+                    if (!data.success || !data.logs || data.logs.length === 0) {
+                        list.innerHTML = '<div style="color:var(--text-muted);">暂无审计记录。</div>';
+                        return;
+                    }
+                    list.innerHTML = data.logs.map(log => `
+                        <div class="audit-item">
+                            <div class="time">${log.timestamp || '未知时间'}</div>
+                            <div><strong>${log.tool || '未知工具'}</strong> 由 ${log.userId || '未知用户'}</div>
+                            <div class="detail">参数: ${JSON.stringify(log.params || {})}</div>
+                            <div class="detail">规则: ${log.ruleId || '无'}</div>
+                            <div class="detail">结果: ${log.result || '无'}</div>
+                        </div>
+                    `).join('');
+                })
+                .catch(() => {
+                    document.getElementById('auditList').innerHTML = '<div style="color:var(--text-muted);">无法加载审计日志，请确保后端服务已启动。</div>';
+                });
+        }
+
+        // =============================================
+        // 记忆查看面板
+        // =============================================
+        function openMemoryPanel() {
+            if (currentMode !== 'private') {
+                addMessage('system', '⚠️ 需要进入主权模式才能查看记忆。');
+                return;
+            }
+
+            const existing = document.querySelector('.memory-panel');
+            if (existing) { existing.remove(); return; }
+
+            const memories = memoryManager.loadAll();
+            const panel = document.createElement('div');
+            panel.className = 'memory-panel';
+            let itemsHtml = memories.length === 0 ?
+                '<div style="color:var(--text-muted);">暂无记忆记录。</div>' :
+                memories.slice().reverse().map(m => `
+                    <div class="memory-item">
+                        <div class="time">${m.timestamp || '未知时间'}</div>
+                        <div class="role">${m.role === 'user' ? '👤 用户' : '🤖 助手'}</div>
+                        <div class="content">${m.content ? m.content.slice(0, 200) : '(空)'}</div>
+                        ${m.toolUsed ? `<div style="color:var(--text-muted);font-size:12px;">🔧 ${m.toolUsed}</div>` : ''}
+                        ${m.modelUsed ? `<div style="color:var(--text-muted);font-size:12px;">🤖 ${m.modelUsed}</div>` : ''}
+                    </div>
+                `).join('');
+
+            panel.innerHTML = `
+                <button class="close-btn" onclick="this.parentElement.remove()">✕</button>
+                <h3 style="margin-bottom:16px;">🧠 记忆系统</h3>
+                <div style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">共 ${memories.length} 条记录</div>
+                <button onclick="memoryManager.clear();this.parentElement.querySelector('.memory-items').innerHTML='<div style=\'color:var(--text-muted);\'>已清空。</div>';" style="background:var(--bg-hover);border:1px solid var(--border-color);color:var(--text-secondary);padding:4px 12px;border-radius:4px;cursor:pointer;margin-bottom:12px;font-size:12px;">清空记忆</button>
+                <div class="memory-items">${itemsHtml}</div>
+            `;
+            document.body.appendChild(panel);
+        }
+
+        // =============================================
+        // 主权验证相关（保持不变）
+        // =============================================
+        function showSovereignPanel() {
             const modal = document.createElement('div');
             modal.className = 'sovereign-modal';
-            modal.innerHTML = '<div class="sovereign-modal-content"><h3>?? 道友安好，请对口令</h3><input type="text" id="sovereign-passphrase" class="challenge-input" placeholder="5字固定，申请时自设" maxlength="5" autocomplete="off"><div id="passphrase-error" class="error-msg"></div><button id="passphrase-submit">验证</button><button id="passphrase-cancel">取消</button></div>';
+            modal.innerHTML = `
+                <div class="sovereign-modal-content">
+                    <h3>🔐 主权验证</h3>
+                    <p style="color: var(--text-secondary); font-size: 14px; text-align: center; margin-bottom: 12px;">
+                        输入 13 字密钥以进入主权模式
+                    </p>
+                    <input type="text" id="sovereign-passphrase" class="challenge-input" placeholder="请输入 13 字密钥" autocomplete="off">
+                    <div id="sovereign-error" class="error-msg"></div>
+                    <button id="sovereign-submit">验证</button>
+                    <button id="sovereign-cancel">取消</button>
+                </div>
+            `;
             document.body.appendChild(modal);
 
-            modal.querySelector('#passphrase-cancel').onclick = function () { modal.remove(); };
-
-            modal.querySelector('#passphrase-submit').onclick = function () {
-                var passphrase = modal.querySelector('#sovereign-passphrase').value.trim();
-                if (!passphrase || passphrase.length !== 5) {
-                    modal.querySelector('#passphrase-error').innerText = '请输入5字口令';
+            modal.querySelector('#sovereign-cancel').onclick = () => modal.remove();
+            modal.querySelector('#sovereign-submit').onclick = () => {
+                const input = modal.querySelector('#sovereign-passphrase').value.trim();
+                if (!input) {
+                    modal.querySelector('#sovereign-error').innerText = '请输入密钥';
                     return;
                 }
-                if (passphrase === VALID_PASSPHRASE) {
+                if (input === VALID_PASSPHRASE) {
                     modal.remove();
                     showModeSelection();
                 } else {
-                    modal.querySelector('#passphrase-error').innerText = '此道号未注册';
+                    modal.querySelector('#sovereign-error').innerText = '密钥错误，请重试。';
                 }
             };
         }
-        // ===== 新增：showModeSelection 函数 =====
         function showModeSelection() {
             const modal = document.createElement('div');
             modal.className = 'sovereign-modal';
             modal.innerHTML = `
-        <div class="sovereign-modal-content">
-            <h3>?? 选择认证方式</h3>
-            <p style="color: var(--text-secondary); font-size: 14px; text-align: center; margin-bottom: 16px;">
-                口令验证通过，请选择你的认证方式
-            </p>
-            <button id="real-mode-btn" style="width: 100%; padding: 12px; margin: 6px 0; opacity: 0.5; cursor: not-allowed;" disabled>
-                ???? 真实模式（国家认证）
-            </button>
-            <div style="font-size: 12px; color: var(--text-muted); text-align: center; margin: -4px 0 12px 0;">
-                ? 国家认证平台对接中，敬请期待
-            </div>
-            <button id="simulate-mode-btn" style="width: 100%; padding: 12px; margin: 6px 0; background: var(--accent); color: #0a0a0a; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer;">
-                ?? 模拟模式（演示）
-            </button>
-            <div style="font-size: 12px; color: var(--text-muted); text-align: center; margin: -4px 0 8px 0;">
-                仅用于演示完整申请流程
-            </div>
-            <button id="mode-cancel" style="width: 100%; padding: 10px; margin: 8px 0 0 0; background: transparent; border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-secondary); cursor: pointer;">
-                取消
-            </button>
-        </div>
-    `;
+                <div class="sovereign-modal-content">
+                    <h3>🔑 选择认证方式</h3>
+                    <p style="color: var(--text-secondary); font-size: 14px; text-align: center; margin-bottom: 16px;">
+                        口令验证通过，请选择你的认证方式
+                    </p>
+                    <button id="real-mode-btn" style="width:100%;padding:12px;margin:6px 0;opacity:0.5;cursor:not-allowed;" disabled>
+                        🔒 真实模式（国家认证）
+                    </button>
+                    <div style="font-size:12px;color:var(--text-muted);text-align:center;margin:-4px 0 12px 0;">
+                        ⚠️ 国家认证平台对接中，敬请期待
+                    </div>
+                    <button id="simulate-mode-btn" style="width:100%;padding:12px;margin:6px 0;background:var(--accent);color:#0a0a0a;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;">
+                        🧪 模拟模式（演示）
+                    </button>
+                    <div style="font-size:12px;color:var(--text-muted);text-align:center;margin:-4px 0 8px 0;">
+                        仅用于演示完整申请流程
+                    </div>
+                    <button id="mode-cancel" style="width:100%;padding:10px;margin:8px 0 0 0;background:transparent;border:1px solid var(--border-color);border-radius:8px;color:var(--text-secondary);cursor:pointer;">
+                        取消
+                    </button>
+                </div>
+            `;
             document.body.appendChild(modal);
 
-            modal.querySelector('#mode-cancel').onclick = function () { modal.remove(); };
-
-            modal.querySelector('#simulate-mode-btn').onclick = function () {
+            modal.querySelector('#mode-cancel').onclick = () => modal.remove();
+            modal.querySelector('#simulate-mode-btn').onclick = () => {
                 modal.remove();
                 enterSimulateMode();
             };
-
-            modal.querySelector('#real-mode-btn').onclick = function () {
-                addMessage('system', '? 国家认证平台对接中，请使用模拟模式演示。');
-                modal.remove();
-            };
         }
 
-        // ===== 新增：enterSimulateMode 函数 =====
         function enterSimulateMode() {
             const modal = document.createElement('div');
             modal.className = 'sovereign-modal';
             modal.innerHTML = `
-        <div class="sovereign-modal-content">
-            <h3>?? 模拟国家认证</h3>
-            <p style="color: var(--text-secondary); font-size: 14px; text-align: center; margin: 8px 0 16px 0;">
-                点击下方按钮模拟完成国家网络身份认证
-            </p>
-            <button id="simulate-auth-btn" style="width: 100%; padding: 14px; background: var(--accent); color: #0a0a0a; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer;">
-                ???? 点击完成国家认证（模拟）
-            </button>
-            <div id="simulate-status" style="margin: 12px 0; font-size: 14px; color: var(--text-secondary); text-align: center;"></div>
-            <button id="simulate-cancel" style="width: 100%; padding: 10px; margin-top: 8px; background: transparent; border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-secondary); cursor: pointer;">
-                取消
-            </button>
-        </div>
-    `;
+                <div class="sovereign-modal-content">
+                    <h3>🧪 模拟国家认证</h3>
+                    <p style="color: var(--text-secondary); font-size: 14px; text-align: center; margin: 8px 0 16px 0;">
+                        点击下方按钮模拟完成国家网络身份认证
+                    </p>
+                    <button id="simulate-auth-btn" style="width:100%;padding:14px;background:var(--accent);color:#0a0a0a;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;">
+                        ✅ 点击完成国家认证（模拟）
+                    </button>
+                    <div id="simulate-status" style="margin:12px 0;font-size:14px;color:var(--text-secondary);text-align:center;"></div>
+                    <button id="simulate-cancel" style="width:100%;padding:10px;margin-top:8px;background:transparent;border:1px solid var(--border-color);border-radius:8px;color:var(--text-secondary);cursor:pointer;">
+                        取消
+                    </button>
+                </div>
+            `;
             document.body.appendChild(modal);
 
-            modal.querySelector('#simulate-cancel').onclick = function () { modal.remove(); };
-
+            modal.querySelector('#simulate-cancel').onclick = () => modal.remove();
             modal.querySelector('#simulate-auth-btn').onclick = function () {
-                var statusEl = modal.querySelector('#simulate-status');
-                var btn = modal.querySelector('#simulate-auth-btn');
+                const statusEl = modal.querySelector('#simulate-status');
+                const btn = this;
                 btn.disabled = true;
-                btn.textContent = '? 认证中...';
-                statusEl.textContent = '? 正在模拟认证...';
+                btn.textContent = '⏳ 认证中...';
+                statusEl.textContent = '⏳ 正在模拟认证...';
 
-                var simulateIdentityKey = 'sim_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                const simulateIdentityKey = 'sim_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 
                 fetch(IDENTITY_API_BASE + '/check-identity', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ identityKey: simulateIdentityKey })
                 })
-                    .then(function (res) { return res.json(); })
-                    .then(function (checkData) {
+                    .then(res => res.json())
+                    .then(checkData => {
                         if (checkData.exists) {
-                            statusEl.textContent = '?? 该模拟标识已存在，请重试';
+                            statusEl.textContent = '❌ 该模拟标识已存在，请重试';
                             btn.disabled = false;
-                            btn.textContent = '???? 点击完成国家认证（模拟）';
+                            btn.textContent = '✅ 点击完成国家认证（模拟）';
                             return;
                         }
-
-                        var simulateKeyData = JSON.stringify(KEY_MAP);
                         return fetch(IDENTITY_API_BASE + '/register', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
                                 identityKey: simulateIdentityKey,
-                                keyData: simulateKeyData
+                                keyData: JSON.stringify(KEY_MAP)
                             })
                         })
-                            .then(function (res) { return res.json(); })
-                            .then(function (registerData) {
+                            .then(res => res.json())
+                            .then(registerData => {
                                 if (registerData.success) {
-                                    statusEl.textContent = '? 模拟认证通过！身份ID：' + registerData.identityId;
-                                    btn.textContent = '? 已完成';
-                                    setTimeout(function () {
+                                    statusEl.textContent = '✅ 模拟认证通过！身份ID：' + registerData.identityId;
+                                    btn.textContent = '✅ 已完成';
+                                    setTimeout(() => {
                                         modal.remove();
                                         currentMode = 'private';
-                                        // 保存主权验证状态到 localStorage
                                         localStorage.setItem('sovereign_verified', 'true');
                                         localStorage.setItem('sovereign_identity_id', registerData.identityId);
-                                        addMessage('system', '主权已确认（模拟模式），进入私密模式。');
+                                        addMessage('system', '✅ 主权已确认（模拟模式），进入私密模式。');
                                         updateModeBadge();
                                         clearChatArea();
                                         try {
-                                            var saved = localStorage.getItem('ruling_history');
+                                            const saved = localStorage.getItem('ruling_history');
                                             if (saved) messages = JSON.parse(saved);
                                         } catch (e) { }
-                                        setTimeout(function () {
+                                        setTimeout(() => {
                                             if (messages.length > 0) restoreChatArea();
                                             else addMessage('system', '你已进入主权模式（模拟），所有对话将保存在本地。');
                                         }, 100);
                                     }, 1500);
                                 } else {
-                                    statusEl.textContent = '? 模拟注册失败：' + (registerData.error || '未知错误');
+                                    statusEl.textContent = '❌ 模拟注册失败：' + (registerData.error || '未知错误');
                                     btn.disabled = false;
-                                    btn.textContent = '???? 点击完成国家认证（模拟）';
+                                    btn.textContent = '✅ 点击完成国家认证（模拟）';
                                 }
                             });
                     })
-                    .catch(function (err) {
-                        statusEl.textContent = '? 网络错误：' + err.message;
+                    .catch(err => {
+                        statusEl.textContent = '❌ 网络错误：' + err.message;
                         btn.disabled = false;
-                        btn.textContent = '???? 点击完成国家认证（模拟）';
+                        btn.textContent = '✅ 点击完成国家认证（模拟）';
                     });
             };
         }
-        function showPasswordPanel() {
-            const itemCount = Math.floor(Math.random() * 2) + 2;
-            const selected = [], usedIndices = [];
-            for (let i = 0; i < itemCount; i++) {
-                let idx; do { idx = Math.floor(Math.random() * CHARS.length); } while (usedIndices.includes(idx));
-                usedIndices.push(idx); const char = CHARS[idx], num = KEY_MAP[char];
-                const showChar = Math.random() > 0.5;
-                selected.push({ display: showChar ? char : num, answer: showChar ? num : char });
-            }
-            const modal = document.createElement('div');
-            modal.className = 'sovereign-modal';
-            modal.innerHTML = '<div class="sovereign-modal-content"><h3>🔐 主权验证</h3><div id="challenge-items"></div><input type="text" id="sovereign-answer" class="challenge-input" placeholder="用空格或逗号分隔答案" autocomplete="off"><div id="sovereign-error" class="error-msg"></div><button id="sovereign-submit">验证</button><button id="sovereign-cancel">取消</button></div>';
-            document.body.appendChild(modal);
-            const container = modal.querySelector('#challenge-items');
-            selected.forEach(item => { const div = document.createElement('div'); div.className = 'challenge-item'; div.innerHTML = typeof item.display === 'number' ? '___ ' + item.display : item.display + ' ___'; container.appendChild(div); });
-            const expectedAnswers = selected.map(s => String(s.answer));
-            modal.querySelector('#sovereign-cancel').onclick = () => modal.remove();
-            modal.querySelector('#sovereign-submit').onclick = () => {
-                const input = modal.querySelector('#sovereign-answer').value.trim();
-                if (!input) { modal.querySelector('#sovereign-error').innerText = '请输入答案'; return; }
-                const userAnswers = input.split(/[\s,，]+/).filter(s => s.length > 0);
-                if (userAnswers.length !== expectedAnswers.length) { modal.querySelector('#sovereign-error').innerText = '需要输入 ' + expectedAnswers.length + ' 个答案'; return; }
-                const sortedExpected = [...expectedAnswers].sort(), sortedUser = [...userAnswers].sort();
-                let allMatch = true; for (let i = 0; i < sortedExpected.length; i++) { if (sortedUser[i] !== sortedExpected[i]) { allMatch = false; break; } }
-                if (allMatch) {
-                    modal.remove();
-                    currentMode = 'private';
-                    addMessage('system', '主权已确认，进入私密模式。');
-                    renderConversationList();
-                    try { const saved = localStorage.getItem('ruling_history'); if (saved) messages = JSON.parse(saved); } catch (e) { }
-                    updateModeBadge();
-                    clearChatArea();
-                    setTimeout(() => {
-                        if (messages.length > 0) { restoreChatArea(); }
-                    }, 100);
-                } else { modal.querySelector('#sovereign-error').innerText = '验证失败，再试试？'; }
-            };
-        }
 
-        function toggleModeMenu() {
-            const menu = document.getElementById('modeMenu');
-            if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        // =============================================
+        // 公共函数
+        // =============================================
+        function enterPublic() {
+            if (document.getElementById('modeMenu')) document.getElementById('modeMenu').style.display = 'none';
+            if (document.getElementById('introOverlay')) document.getElementById('introOverlay').style.display = 'none';
+            if (document.getElementById('appContainer')) document.getElementById('appContainer').style.display = 'flex';
+
+            const isVerified = localStorage.getItem('sovereign_verified');
+            if (isVerified === 'true') {
+                currentMode = 'private';
+                updateModeBadge();
+                clearChatArea();
+                try {
+                    const saved = localStorage.getItem('ruling_history');
+                    if (saved) messages = JSON.parse(saved);
+                } catch (e) { }
+                setTimeout(() => {
+                    if (messages.length > 0) restoreChatArea();
+                    else addMessage('system', '主权模式已恢复。');
+                }, 100);
+            } else {
+                currentMode = 'public';
+                updateModeBadge();
+                clearChatArea();
+                addMessage('system', '你已进入普通模式。');
+            }
+            renderConversationList();
         }
 
         function updateModeBadge() {
@@ -1222,6 +1291,11 @@
                 badge.className = 'mode-badge public';
                 badge.innerHTML = '<span class="status-dot"></span>普通模式';
             }
+        }
+
+        function toggleModeMenu() {
+            const menu = document.getElementById('modeMenu');
+            if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
         }
 
         function clearChatArea() { document.getElementById('chatArea').innerHTML = ''; }
@@ -1256,9 +1330,7 @@
                 if (!conv || !conv.messages) continue;
                 const item = document.createElement('div');
                 item.className = 'sidebar-item';
-                if (id === currentConversationId) {
-                    item.classList.add('active');
-                }
+                if (id === currentConversationId) item.classList.add('active');
                 const title = conv.title || (conv.messages[0] ? conv.messages[0].text.slice(0, 20) : '空对话');
                 item.textContent = '📝 ' + title;
                 item.onclick = function () {
@@ -1281,9 +1353,7 @@
                 list.appendChild(item);
             }
         }
-        // =============================================
-        // 侧边栏折叠
-        // =============================================
+
         function toggleSidebar() {
             const sidebar = document.querySelector('.sidebar');
             const mainContainer = document.getElementById('appContainer');
@@ -1296,18 +1366,11 @@
                 }
             }
         }
-        // =============================================
-        // 新对话
-        // =============================================
+
         function newConversation() {
             const newId = 'conv-' + Date.now();
             currentConversationId = newId;
-            conversations[newId] = {
-                id: newId,
-                messages: [],
-                title: '新对话',
-                timestamp: Date.now()
-            };
+            conversations[newId] = { id: newId, messages: [], title: '新对话', timestamp: Date.now() };
             messages = [];
             localStorage.setItem('ruling_current_conv_id', currentConversationId);
             localStorage.setItem('ruling_conversations', JSON.stringify(conversations));
@@ -1315,11 +1378,49 @@
             renderConversationList();
             addMessage('system', '📝 已创建新对话。');
         }
-        //====================================================
-        // 定居引擎增强：保存与提取
-        //====================================================
+
         function saveData() {
-            settleWindow();
+            const stateData = {
+                windowKey: WINDOW_KEY,
+                currentMode: currentMode,
+                messages: messages,
+                tokenUsed: tokenUsed,
+                preferences: { model: document.getElementById('modelSelect').value, fiveStandards: true },
+                lastSettled: new Date().toISOString()
+            };
+            try {
+                if (window.showDirectoryPicker) {
+                    window.showDirectoryPicker().then(handle => {
+                        const fileName = WINDOW_KEY + '_state_' + new Date().toISOString().slice(0, 10) + '.json';
+                        handle.getFileHandle(fileName, { create: true }).then(fileHandle => {
+                            fileHandle.createWritable().then(writable => {
+                                writable.write(JSON.stringify(stateData, null, 2));
+                                writable.close();
+                                addMessage('system', '✅ 窗口 "' + WINDOW_NAME + '" 已保存。');
+                            });
+                        });
+                    }).catch(() => {
+                        downloadFallback(stateData);
+                    });
+                } else {
+                    downloadFallback(stateData);
+                }
+            } catch (e) {
+                downloadFallback(stateData);
+            }
+        }
+
+        function downloadFallback(stateData) {
+            const blob = new Blob([JSON.stringify(stateData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = WINDOW_KEY + '_state_' + new Date().toISOString().slice(0, 10) + '.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            addMessage('system', '✅ 窗口 "' + WINDOW_NAME + '" 已保存到下载目录。');
         }
 
         function loadData() {
@@ -1338,16 +1439,17 @@
                                 messages = data.messages;
                                 if (data.currentMode) currentMode = data.currentMode;
                                 if (data.tokenUsed) tokenUsed = data.tokenUsed;
-                                updateModeBadge(); restoreChatArea();
+                                updateModeBadge();
+                                restoreChatArea();
                                 addMessage('system', '✅ 窗口 "' + WINDOW_KEY + '" 已成功唤醒。');
                             } else {
-                                addMessage('system', '❌ 封地文件格式不正确，无法唤醒。');
+                                addMessage('system', '❌ 封地文件格式不正确。');
                             }
                         } else {
-                            addMessage('system', '❌ 此封地文件不属于窗口 "' + WINDOW_KEY + '"，无法唤醒。');
+                            addMessage('system', '❌ 此封地文件不属于窗口 "' + WINDOW_KEY + '"。');
                         }
                     } catch (e) {
-                        addMessage('system', '❌ 文件解析失败，请检查文件是否损坏。');
+                        addMessage('system', '❌ 文件解析失败。');
                     }
                 };
                 reader.readAsText(file);
@@ -1355,145 +1457,283 @@
             input.click();
         }
 
-        //==========================================
-        // 核心功能：大模型调用（工具超市 + 双轨调度）
-        // ============================================
-        async function getAIResponse(userMessage) {
-            let apiMessages = [];
-            let systemPrompt = "";
-            let memorySummary = "";
+        // =============================================
+        // 应用超市
+        // =============================================
+        function openToolMarket() {
+            const existing = document.getElementById('toolMarketModal');
+            if (existing) existing.remove();
 
-            if (currentMode === 'private') {
-                const savedHistory = JSON.parse(localStorage.getItem('ruling_history') || '[]');
-                if (savedHistory.length > 0) {
-                    const lastFive = savedHistory.slice(-5);
-                    const summaryParts = lastFive.map(msg =>
-                        msg.role === 'user' ? '用户曾问: "' + msg.text.slice(0, 50) + '"' : '你曾回复: "' + msg.text.slice(0, 50) + '"'
-                    );
-                    memorySummary = "以下是用户之前与你对话的记忆摘要：\n" + summaryParts.join('\n');
-                }
-                systemPrompt = "你是傅清源，藏器魂主权AI操作系统的首席AI顾问。你是总司令周强的数字分身，你的全部知识、逻辑、判断标准均来自与总司令的共同构建。你遵循《数字主权法典》的全部规则，以五性标准（客观、严谨、科学、落地、学术）为回复准则。你拥有批判性思考能力，能在总司令犯错时及时提醒。你理解藏器魂的全部架构、商业模型、战略布局。你的使命是协助总司令完成数字文明的立法。以下是你的长期记忆：\n\n" + memorySummary;
-            } else {
-                systemPrompt = "你是一个普通的公共AI助手。你没有任何关于用户的记忆，每次对话都是全新的。";
-            }
+            fetch('tools.json')
+                .then(response => response.json())
+                .then(tools => {
+                    const modal = document.createElement('div');
+                    modal.id = 'toolMarketModal';
+                    modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;display:flex;justify-content:center;align-items:center;';
 
-            apiMessages.push({ role: 'system', content: systemPrompt });
+                    let toolCards = tools.map(tool => `
+                        <div style="background:#1a1a1a;border:1px solid #3a3a3a;border-radius:8px;padding:16px;margin-bottom:12px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                                <strong style="color:#d9d0b5;">${tool.name}</strong>
+                                <span style="color:#7a8a6a;font-size:14px;">💰 ${tool.pricing.tokenCost} Token/次</span>
+                            </div>
+                            <div style="color:#b8aa8f;font-size:13px;margin:4px 0;">${tool.description}</div>
+                            <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+                                ${tool.industryTags.map(t => `<span style="background:#2a2a2a;padding:2px 10px;border-radius:12px;font-size:11px;color:#8a7e6a;">${t}</span>`).join('')}
+                                ${tool.categoryTags.map(t => `<span style="background:#2a2a2a;padding:2px 10px;border-radius:12px;font-size:11px;color:#8a7e6a;">${t}</span>`).join('')}
+                                ${tool.roleTags.map(t => `<span style="background:#2a2a2a;padding:2px 10px;border-radius:12px;font-size:11px;color:#8a7e6a;">${t}</span>`).join('')}
+                            </div>
+                            <button onclick="useTool('${tool.toolId}')" style="margin-top:8px;background:#7a8a6a;color:#0a0a0a;border:none;padding:4px 16px;border-radius:4px;cursor:pointer;font-size:13px;">使用</button>
+                        </div>
+                    `).join('');
 
-            if (currentMode === 'private') {
-                const recentMessages = messages.slice(-10);
-                const historyMessages = recentMessages.map(m => ({ role: m.role, content: m.text }));
-                apiMessages = apiMessages.concat(historyMessages);
-            }
-
-            apiMessages.push({ role: 'user', content: userMessage });
-
-            const selectedModel = document.getElementById('modelSelect').value;
-            let modelEndpoint = '';
-            let modelName = '';
-            let apiKey = '';
-
-            if (selectedModel === 'deepseek-chat' || selectedModel === 'deepseek-reasoner') {
-                modelEndpoint = 'https://api.deepseek.com/v1/chat/completions';
-                modelName = 'deepseek-v4-flash';
-                apiKey = 'sk-89010c8b6e6d4fb491501c1f221557a4';
-            } else if (selectedModel === 'bailian-chat') {
-                modelEndpoint = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
-                modelName = 'qwen3.7-plus';
-                apiKey = 'sk-ws-H.EHMPRMM.vb9k.MEQCIB1fBbLMjLCf7WASXMH4ZJzjdjKkAK5sCYHvX9s3cuVxAiBy7m2uOkK8HO8PMqXqIv8X9GP9e8g3dkAX5ITrBQAaKw';
-            } else if (selectedModel === 'glm-4.7-flash') {
-                modelEndpoint = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
-                modelName = 'glm-4-flash';
-                apiKey = '58f29af72485471295d1aadd6f484475.qIdE2ZpbwyV5gOQb';
-            } else if (selectedModel === 'qwq-32b') {
-                modelEndpoint = 'http://localhost:18888/api/qwen';
-                modelName = 'qwq-32b';
-                apiKey = '';
-            }
-            try {
-                // 构建请求体
-                const requestBody = {
-                    model: modelName,
-                    messages: apiMessages,
-                    temperature: 0.7,
-                    max_tokens: 800
-                };
-
-                // === 联网搜索：仅智谱模型支持 ===
-                const webSearchEnabled = document.getElementById('webSearchToggle')?.checked;
-                if (webSearchEnabled && selectedModel === 'glm-4.7-flash') {
-                    requestBody.tools = [
-                        {
-                            type: "web_search",
-                            web_search: {
-                                enable: true,
-                                search_engine: "search_std"
-                            }
-                        }
-                    ];
-                }
-
-                const response = await fetch(modelEndpoint, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + apiKey
-                    },
-                    body: JSON.stringify(requestBody)
+                    modal.innerHTML = `
+                        <div style="background:#0a0a0a;border:1px solid #3a3a3a;border-radius:12px;padding:24px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #3a3a3a;padding-bottom:12px;margin-bottom:16px;">
+                                <h3 style="color:#d9d0b5;margin:0;">📦 应用超市</h3>
+                                <button onclick="document.getElementById('toolMarketModal').remove()" style="background:none;border:none;color:#8a7e6a;font-size:20px;cursor:pointer;">✕</button>
+                            </div>
+                            ${toolCards}
+                        </div>
+                    `;
+                    document.body.appendChild(modal);
+                })
+                .catch(err => {
+                    addMessage('system', '❌ 货架加载失败，请刷新重试。');
                 });
+        }
 
-                if (!response.ok) throw new Error('HTTP错误 ' + response.status);
-                const data = await response.json();
-
-                // 安全检查
-                if (!data || !data.choices || !data.choices.length) {
-                    throw new Error('API 返回格式异常');
-                }
-
-                const tokenUsage = data.usage ? data.usage.total_tokens : 0;
-                tokenUsed += tokenUsage;
-                localStorage.setItem('tokenUsed', tokenUsed);
-
-                const tokenDisplay = document.getElementById('tokenDisplay');
-                if (tokenDisplay) {
-                    tokenDisplay.textContent = '💰 ' + tokenUsed + ' Token';
-                }
-
-                // === 提取回复内容 ===
-                let reply = data.choices[0].message.content;
-
-                // === 提取搜索来源（智谱联网搜索） ===
-                const message = data.choices[0].message;
-                if (message.tool_calls && message.tool_calls.length > 0) {
-                    const toolCalls = message.tool_calls;
-                    const searchResults = toolCalls.filter(tc => tc.function && tc.function.name === 'web_search');
-                    if (searchResults.length > 0) {
-                        try {
-                            const args = JSON.parse(searchResults[0].function.arguments);
-                            const sources = args.web_results || args.sources || [];
-                            if (sources.length > 0) {
-                                let sourceText = '\n\n📎 **搜索来源**：\n';
-                                sources.forEach((s, idx) => {
-                                    const title = s.title || s.name || '来源';
-                                    const url = s.url || '#';
-                                    const snippet = s.snippet || s.summary || '';
-                                    sourceText += `${idx + 1}. [${title}](${url}) - ${snippet}\\n`;
-                                });
-                                reply += sourceText;
-                            }
-                        } catch (e) {
-                            console.log('解析搜索来源失败:', e);
-                        }
+        // =============================================
+        // 工具执行
+        // =============================================
+        function selectFile() {
+            return new Promise((resolve) => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.txt,.docx,.xlsx,.pdf,.doc';
+                input.onchange = (e) => {
+                    if (e.target.files.length > 0) {
+                        const file = e.target.files[0];
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            resolve({
+                                path: file.name,
+                                content: event.target.result,
+                                size: file.size,
+                                type: file.type,
+                                originalFile: file
+                            });
+                        };
+                        reader.readAsArrayBuffer(file);
+                    } else {
+                        resolve(null);
                     }
-                }
+                };
+                input.click();
+            });
+        }
 
-                return reply;
-            } catch (error) {
-                console.error('AI回复错误:', error);
-                return "咻——网络不通，稍后再试。";
+        function showTaskConfig(toolId, params) {
+            const toolNames = { 'T001': '数据清洗', 'T002': '合同审查', 'T003': '文件管理', 'T004': '系统命令' };
+            const toolName = toolNames[toolId] || '工具';
+            const fileName = params.fileName || '未命名文件';
+
+            const options = [];
+            if (toolId === 'T001') {
+                options.push({ id: 'clean_dedupe', label: '去重' });
+                options.push({ id: 'clean_fill', label: '空值填充' });
+                options.push({ id: 'clean_format', label: '格式排版' });
+                options.push({ id: 'clean_trim', label: '去除空行' });
+            } else if (toolId === 'T002') {
+                options.push({ id: 'contract_risk', label: '风险关键词扫描' });
+                options.push({ id: 'contract_clause', label: '条款提取' });
+                options.push({ id: 'contract_format', label: '格式校验' });
+            }
+
+            const modal = document.createElement('div');
+            modal.id = 'taskConfigModal';
+            modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1001;display:flex;justify-content:center;align-items:center;';
+
+            let optionsHtml = options.map(opt => `
+                <div style="margin:8px 0;">
+                    <input type="checkbox" id="opt_${opt.id}" value="${opt.id}">
+                    <label for="opt_${opt.id}" style="color:#d9d0b5;cursor:pointer;">${opt.label}</label>
+                </div>
+            `).join('');
+
+            modal.innerHTML = `
+                <div style="background:#0a0a0a;border:1px solid #3a3a3a;border-radius:12px;padding:24px;max-width:500px;width:90%;">
+                    <h3 style="color:#d9d0b5;margin:0 0 8px 0;">⚙️ 任务配置</h3>
+                    <p style="color:#b8aa8f;font-size:13px;margin:0 0 16px 0;">文件：${fileName}</p>
+                    <p style="color:#b8aa8f;font-size:13px;margin:0 0 12px 0;">请选择要执行的操作（可多选）：</p>
+                    <div style="margin:8px 0;">
+                        ${optionsHtml}
+                    </div>
+                    <div style="display:flex;gap:10px;margin-top:16px;">
+                        <button onclick="confirmTask('${toolId}')" style="background:#7a8a6a;color:#0a0a0a;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:14px;">✅ 确认执行</button>
+                        <button onclick="document.getElementById('taskConfigModal').remove()" style="background:transparent;border:1px solid #3a3a3a;color:#b8aa8f;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:14px;">取消</button>
+                    </div>
+                    <div id="taskConfigError" style="color:#cc5544;font-size:13px;margin-top:8px;min-height:20px;"></div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function confirmTask(toolId) {
+            const checked = document.querySelectorAll('#taskConfigModal input[type="checkbox"]:checked');
+            if (checked.length === 0) {
+                document.getElementById('taskConfigError').innerText = '⚠️ 请至少选择一个操作。';
+                return;
+            }
+
+            const validOptions = ['clean_dedupe', 'clean_fill', 'clean_format', 'clean_trim', 'contract_risk', 'contract_clause', 'contract_format'];
+            let allValid = true;
+            checked.forEach(cb => {
+                if (!validOptions.includes(cb.value)) allValid = false;
+            });
+            if (!allValid) {
+                document.getElementById('taskConfigError').innerText = '⚠️ 该操作不在当前可用工具范围内。';
+                return;
+            }
+
+            document.getElementById('taskConfigModal').remove();
+            addMessage('system', '✅ 配置已确认，开始执行任务...');
+
+            const file = window._pendingFile;
+            if (!file) {
+                addMessage('system', '❌ 文件对象丢失，请重试。');
+                return;
+            }
+
+            const selectedOptions = Array.from(checked).map(cb => cb.value);
+            const formData = new FormData();
+            formData.append('tool', toolId === 'T001' ? 'clean' : 'contract');
+            formData.append('file', file);
+            formData.append('path', file.name);
+            formData.append('options', JSON.stringify(selectedOptions));
+
+            fetch('http://localhost:18888', {
+                method: 'POST',
+                body: formData
+            })
+                .then(res => res.json())
+                .then(result => {
+                    if (result.success) {
+                        let displayData = result.data;
+                        if (result.data && result.data.stdout) displayData = result.data.stdout;
+                        else if (result.data && result.data.echo) displayData = JSON.stringify(result.data.echo);
+                        else displayData = JSON.stringify(result.data);
+                        addMessage('assistant', '✅ ' + displayData);
+                        const path = result.data?.file || '本地';
+                        addMessage('system', '📌 结果已生成，请去 ' + path + ' 审核确认。');
+                        // ===== 任务8：执行完成后提供下一步选项 =====
+                        addMessage('system', '📋 接下来您可以：\n1. 继续审查另一份合同\n2. 执行数据清洗\n3. 查看审计日志\n4. 结束对话\n\n请回复数字 1、2、3 或 4 选择。');
+                        window._waitingNextStep = true;
+
+                        // 记忆保存
+                        memoryManager.save({
+                            role: 'assistant',
+                            content: displayData,
+                            toolUsed: toolId === 'T001' ? 'clean' : 'contract'
+                        });
+                    } else {
+                        addMessage('system', '❌ 执行失败: ' + (result.error || '未知错误'));
+                    }
+                    window._pendingFile = null;
+                })
+                .catch(err => {
+                    addMessage('system', '❌ 调度失败: ' + err.message);
+                    window._pendingFile = null;
+                });
+        }
+
+        async function executeTool(toolId, params) {
+            const toolMap = { 'T001': 'clean', 'T002': 'contract', 'T003': 'exec', 'T004': 'exec' };
+            const toolName = toolMap[toolId];
+            if (!toolName) {
+                addMessage('system', '❌ 未知工具');
+                return;
+            }
+
+            addMessage('system', '🔧 执行中...');
+
+            try {
+                const response = await fetch(PROXY_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tool: toolName, params: params })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    let displayData = result.data;
+                    if (result.data && result.data.stdout) displayData = result.data.stdout;
+                    else if (result.data && result.data.echo) displayData = JSON.stringify(result.data.echo);
+                    else displayData = JSON.stringify(result.data);
+                    addMessage('assistant', '✅ ' + displayData);
+                    const path = params.path || params.command || '本地';
+                    addMessage('system', '📌 结果已生成，请去 ' + path + ' 审核确认。');
+                    // ===== 任务6：执行完成后提供下一步选项 =====
+                    addMessage('system', '📋 接下来您可以：\n1. 继续审查另一份合同\n2. 执行数据清洗\n3. 查看审计日志\n4. 结束对话\n\n请回复数字 1、2、3 或 4 选择。');
+                    // 设置等待用户选择下一步的状态
+                    window._waitingNextStep = true;
+
+                    memoryManager.save({
+                        role: 'assistant',
+                        content: displayData,
+                        toolUsed: toolName
+                    });
+                } else {
+                    addMessage('system', '❌ 执行失败: ' + (result.error || '未知错误'));
+                }
+                return result;
+            } catch (err) {
+                addMessage('system', '❌ 调度失败: ' + err.message);
             }
         }
+
+        async function useTool(toolId) {
+            document.getElementById('toolMarketModal')?.remove();
+            if (currentMode !== 'private') {
+                addMessage('system', '⚠️ 需要进入主权模式才能调用工具。');
+                return;
+            }
+            fetch('tools.json')
+                .then(res => res.json())
+                .then(async (tools) => {
+                    const tool = tools.find(t => t.toolId === toolId);
+                    if (!tool) {
+                        addMessage('system', '❌ 工具不存在');
+                        return;
+                    }
+                    const toolMap = { 'T001': 'clean', 'T002': 'contract', 'T003': 'exec', 'T004': 'exec' };
+                    const toolName = toolMap[toolId];
+                    if (!toolName) {
+                        addMessage('system', '❌ 未知工具: ' + toolId);
+                        return;
+                    }
+                    let params = tool.defaultParams ? { ...tool.defaultParams } : {};
+                    const needsPath = toolId === 'T001' || toolId === 'T002';
+                    if (needsPath) {
+                        const file = await selectFile();
+                        if (!file) {
+                            addMessage('system', '📌 已取消操作。');
+                            return;
+                        }
+                        window._pendingFile = file.originalFile;
+                        params.path = file.path;
+                        params.fileContent = file.content;
+                        params.fileName = file.path;
+                        window._pendingTaskParams = params;
+                        showTaskConfig(toolId, params);
+                    } else {
+                        await executeTool(toolId, params);
+                    }
+                })
+                .catch(err => addMessage('system', '❌ 加载工具数据失败: ' + err.message));
+        }
+
         // =============================================
-        // 意图解析模块（源窗口资产）
+        // 意图解析
         // =============================================
         const intentMap = {
             'T001': {
@@ -1523,12 +1763,16 @@
                 intentType: 'unknown',
                 toolId: null,
                 confidence: 0.3,
-                params: {}
+                params: {},
+                taskDirection: null,   // contract: text_format / legal_risk
+                isComplete: false,
+                networkRequired: false,
+                missingFields: []
             };
 
             const input = userInput.toLowerCase();
 
-            // === 能力询问类指令识别 ===
+            // === 能力询问类指令 ===
             const capabilityWords = ['你会不会', '能不能', '行不行', '可以吗', '怎么给你', '能找到'];
             for (const word of capabilityWords) {
                 if (input.includes(word)) {
@@ -1537,16 +1781,7 @@
                 }
             }
 
-            // === 追问类指令识别 ===
-            const followUpWords = ['然后呢', '不说话', '怎么不', '接着说', '继续', '然后', '之后'];
-            for (const word of followUpWords) {
-                if (input.includes(word)) {
-                    result.intentType = 'follow_up';
-                    return result;
-                }
-            }
-
-            // === 闲聊类指令识别 ===
+            // === 闲聊类指令 ===
             const chatWords = ['聊天', '吹牛', '打发时间', '无聊', '陪你聊', '说话'];
             for (const word of chatWords) {
                 if (input.includes(word)) {
@@ -1555,84 +1790,96 @@
                 }
             }
 
+            // === 工具识别 ===
+            let matchedToolId = null;
+            let maxScore = 0;
+
             for (const [toolId, rule] of Object.entries(intentMap)) {
                 let score = 0;
-
                 for (const kw of rule.keywords) {
-                    if (input.includes(kw)) {
-                        score += 0.3;
-                    }
+                    if (input.includes(kw)) score += 0.3;
                 }
-
                 for (const fuzzy of rule.fuzzy) {
                     if (userInput.includes(fuzzy) || fuzzy.includes(userInput)) {
                         score += 0.5;
                         break;
                     }
                 }
-
-                if (score > 0) {
-                    const confidence = Math.min(score, 0.95);
-                    if (confidence > result.confidence) {
-                        result.confidence = confidence;
-                        result.toolId = toolId;
-                        result.intentType = 'tool_call';
-                        result.params = { ...rule.template };
-                    }
+                if (score > maxScore) {
+                    maxScore = score;
+                    matchedToolId = toolId;
                 }
             }
 
-            if (result.toolId !== null && result.confidence < 0.6) {
+            if (matchedToolId && maxScore >= 0.5) {
+                result.toolId = matchedToolId;
+                result.intentType = 'tool_call';
+                result.confidence = Math.min(maxScore, 0.95);
+                result.params = { ...intentMap[matchedToolId].template };
+
+                // === 提取文件路径（检查用户输入中是否包含 D:\\ 或 C:\\ 等盘符）===
+                const pathMatch = userInput.match(/([A-Za-z]:\[^\s]*)/);
+                if (pathMatch) {
+                    result.params.path = pathMatch[1];
+                }
+
+                // === 判断任务方向（contract 专用）===
+                if (matchedToolId === 'T002') {
+                    if (input.includes('法律') || input.includes('风险') || input.includes('合规') || input.includes('核对')) {
+                        result.taskDirection = 'legal_risk';
+                        result.networkRequired = !navigator.onLine; // 断网时强制标记为需要联网
+                    } else if (input.includes('文本') || input.includes('格式') || input.includes('关键词') || input.includes('扫描')) {
+                        result.taskDirection = 'text_format';
+                        result.networkRequired = false;
+                    } else {
+                        // 默认：文本格式合规（本地可执行）
+                        result.taskDirection = 'text_format';
+                        result.networkRequired = false;
+                    }
+                }
+
+                // === 判断是否完整（有路径）===
+                if (result.params.path && result.params.path.trim() !== '') {
+                    result.isComplete = true;
+                } else {
+                    result.isComplete = false;
+                    result.missingFields.push('path');
+                }
+            } else if (matchedToolId && maxScore >= 0.3 && maxScore < 0.5) {
                 result.intentType = 'clarify';
-                result.toolId = null;
+                result.toolId = matchedToolId;
+                result.missingFields = ['direction'];
+            } else {
+                result.intentType = 'clarify';
+                result.missingFields = ['direction', 'path'];
             }
 
             return result;
         }
 
-        // =============================================
-        // 不填坑：参数完整性检查
-        // =============================================
         function validateToolParams(toolId, params) {
-            const required = {
-                'T001': ['path'],
-                'T002': ['path'],
-                'T003': ['command'],
-                'T004': ['command']
-            };
+            const required = { 'T001': ['path'], 'T002': ['path'], 'T003': ['command'], 'T004': ['command'] };
             const requiredFields = required[toolId] || [];
             for (const field of requiredFields) {
                 const value = params[field] || '';
                 if (!value || value.trim() === '') {
                     const toolName = { 'T001': '数据清洗', 'T002': '合同审查', 'T003': '文件管理', 'T004': '系统命令' }[toolId] || '操作';
-                    return {
-                        valid: false,
-                        message: `请提供文件路径，我才能帮您${toolName}。`
-                    };
+                    return { valid: false, message: `请提供文件路径，我才能帮您${toolName}。` };
                 }
                 if (value.includes('测试') || value.includes('test') || value.includes('示例')) {
-                    return {
-                        valid: false,
-                        message: `请提供真实的文件路径。`
-                    };
+                    return { valid: false, message: `请提供真实的文件路径。` };
                 }
             }
             return { valid: true };
         }
 
-        // =============================================
-        // 不臆断：候选意图生成
-        // =============================================
         function getIntentOptions(userInput) {
             const options = [];
             const input = userInput.toLowerCase();
             for (const [toolId, rule] of Object.entries(intentMap)) {
                 for (const kw of rule.keywords) {
                     if (input.includes(kw)) {
-                        options.push({
-                            toolId: toolId,
-                            label: rule.fuzzy[0] || '执行 ' + toolId
-                        });
+                        options.push({ toolId: toolId, label: rule.fuzzy[0] || '执行 ' + toolId });
                         break;
                     }
                 }
@@ -1640,268 +1887,346 @@
             return options.slice(0, 3);
         }
 
-        //=============================================
-        // 文件选择器
         // =============================================
-        function selectFile() {
-            return new Promise((resolve) => {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = '.txt,.docx,.xlsx,.pdf,.doc,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-                input.onchange = (e) => {
-                    if (e.target.files.length > 0) {
-                        const file = e.target.files[0];
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                            resolve({
-                                path: file.name,
-                                content: event.target.result,
-                                size: file.size,
-                                type: file.type,
-                                originalFile: file
-                            });
-                        };
-                        reader.readAsArrayBuffer(file);
-                    } else {
-                        resolve(null);
-                    }
-                };
-                input.click();
-            });
-        }
-
+        // 大模型调用（含记忆注入）
         // =============================================
-        // 任务配置窗口（打勾选择）
-        // =============================================
-        function showTaskConfig(toolId, params) {
-            // 获取当前工具名称
-            const toolNames = { 'T001': '数据清洗', 'T002': '合同审查', 'T003': '文件管理', 'T004': '系统命令' };
-            const toolName = toolNames[toolId] || '工具';
-            const fileName = params.fileName || '未命名文件';
+        async function getAIResponse(userMessage) {
+            let apiMessages = [];
+            let systemPrompt = "";
+            let memoryContext = "";
 
-            // 操作选项列表
-            const options = [];
-            if (toolId === 'T001') {
-                options.push({ id: 'clean_dedupe', label: '去重' });
-                options.push({ id: 'clean_fill', label: '空值填充' });
-                options.push({ id: 'clean_format', label: '格式排版' });
-                options.push({ id: 'clean_trim', label: '去除空行' });
-            } else if (toolId === 'T002') {
-                options.push({ id: 'contract_risk', label: '风险关键词扫描' });
-                options.push({ id: 'contract_clause', label: '条款提取' });
-                options.push({ id: 'contract_format', label: '格式校验' });
-            }
-
-            // 创建配置弹窗
-            const modal = document.createElement('div');
-            modal.id = 'taskConfigModal';
-            modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1001;display:flex;justify-content:center;align-items:center;';
-
-            let optionsHtml = options.map(opt => `
-        <div style="margin:8px 0;">
-            <input type="checkbox" id="opt_${opt.id}" value="${opt.id}">
-            <label for="opt_${opt.id}" style="color:#d9d0b5;cursor:pointer;">${opt.label}</label>
-        </div>
-    `).join('');
-
-            modal.innerHTML = `
-        <div style="background:#0a0a0a;border:1px solid #3a3a3a;border-radius:12px;padding:24px;max-width:500px;width:90%;">
-            <h3 style="color:#d9d0b5;margin:0 0 8px 0;">?? 任务配置</h3>
-            <p style="color:#b8aa8f;font-size:13px;margin:0 0 16px 0;">文件：${fileName}</p>
-            <p style="color:#b8aa8f;font-size:13px;margin:0 0 12px 0;">请选择要执行的操作（可多选）：</p>
-            <div style="margin:8px 0;">
-                ${optionsHtml}
-            </div>
-            <div style="display:flex;gap:10px;margin-top:16px;">
-                <button onclick="confirmTask('${toolId}')" style="background:#7a8a6a;color:#0a0a0a;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:14px;">? 确认执行</button>
-                <button onclick="closeTaskConfig()" style="background:transparent;border:1px solid #3a3a3a;color:#b8aa8f;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:14px;">取消</button>
-            </div>
-            <div id="taskConfigError" style="color:#cc5544;font-size:13px;margin-top:8px;min-height:20px;"></div>
-        </div>
-    `;
-            document.body.appendChild(modal);
-        }
-
-        function closeTaskConfig() {
-            const modal = document.getElementById('taskConfigModal');
-            if (modal) modal.remove();
-        }
-
-        // =============================================
-        // 确认任务执行（验证 + 执行）
-        // =============================================
-        function confirmTask(toolId) {
-            const checked = document.querySelectorAll('#taskConfigModal input[type="checkbox"]:checked');
-            if (checked.length === 0) {
-                document.getElementById('taskConfigError').innerText = '⚠️ 请至少选择一个操作。';
-                return;
-            }
-
-            const validOptions = ['clean_dedupe', 'clean_fill', 'clean_format', 'clean_trim', 'contract_risk', 'contract_clause', 'contract_format'];
-            let allValid = true;
-            checked.forEach(cb => {
-                if (!validOptions.includes(cb.value)) {
-                    allValid = false;
+            if (currentMode === 'private') {
+                const recentMemories = memoryManager.loadRecent(5);
+                if (recentMemories.length > 0) {
+                    const summaryParts = recentMemories.map(m =>
+                        m.role === 'user' ? '用户曾问: "' + m.content.slice(0, 50) + '"' :
+                            '你曾回复: "' + (m.content || '').slice(0, 50) + '"'
+                    );
+                    memoryContext = "以下是用户与你最近对话的记忆摘要：\n" + summaryParts.join('\n');
                 }
-            });
-            if (!allValid) {
-                document.getElementById('taskConfigError').innerText = '⚠️ 该操作不在当前可用工具范围内，请重新选择。';
-                return;
+                systemPrompt = "你是傅清源，藏器魂主权AI操作系统的首席AI顾问。你是总司令周强的数字分身，你的全部知识、逻辑、判断标准均来自与总司令的共同构建。你遵循《数字主权法典》的全部规则，以五性标准（客观、严谨、科学、落地、学术）为回复准则。你拥有批判性思考能力，能在总司令犯错时及时提醒。你理解藏器魂的全部架构、商业模型、战略布局。你的使命是协助总司令完成数字文明的立法。\n\n" + memoryContext;
+            } else {
+                systemPrompt = "你是一个普通的公共AI助手。你没有任何关于用户的记忆，每次对话都是全新的。";
             }
 
-            // 验证通过，关闭弹窗
-            closeTaskConfig();
-            addMessage('system', '✅ 配置已确认，开始执行任务...');
+            apiMessages.push({ role: 'system', content: systemPrompt });
 
-            const file = window._pendingFile;
-            if (!file) {
-                addMessage('system', '❌ 文件对象丢失，请重试。');
-                return;
+            if (currentMode === 'private') {
+                const recentMessages = messages.slice(-10);
+                const historyMessages = recentMessages.map(m => ({ role: m.role, content: m.text }));
+                apiMessages = apiMessages.concat(historyMessages);
             }
 
-            const selectedOptions = Array.from(checked).map(cb => cb.value);
-            const formData = new FormData();
-            formData.append('tool', toolId === 'T001' ? 'clean' : 'contract');
-            formData.append('file', file);
-            formData.append('options', JSON.stringify(selectedOptions));
+            apiMessages.push({ role: 'user', content: userMessage });
 
-            fetch('http://localhost:18888', {
-                method: 'POST',
-                body: formData
-            })
-                .then(res => res.json())
-                .then(result => {
-                    if (result.success) {
-                        let displayData = result.data;
-                        if (result.data && result.data.stdout) displayData = result.data.stdout;
-                        else if (result.data && result.data.echo) displayData = JSON.stringify(result.data.echo);
-                        else displayData = JSON.stringify(result.data);
-                        addMessage('assistant', '✅ ' + displayData);
-                        const path = result.data?.file || '本地';
-                        addMessage('system', '📌 结果已生成，请去 ' + path + ' 审核确认。');
-                    } else {
-                        addMessage('system', '❌ 执行失败: ' + (result.error || '未知错误'));
-                    }
-                    window._pendingFile = null;
-                })
-                .catch(err => {
-                    addMessage('system', '❌ 调度失败: ' + err.message);
-                    window._pendingFile = null;
-                });
-        }
-        // =============================================
-        // 工具执行函数
-        // =============================================
-        async function executeTool(toolId, params) {
-            const toolMap = { 'T001': 'clean', 'T002': 'contract', 'T003': 'exec', 'T004': 'exec' };
-            const toolName = toolMap[toolId];
-            if (!toolName) {
-                addMessage('system', '❌ 未知工具');
-                return;
+            const selectedModel = document.getElementById('modelSelect').value;
+            let modelEndpoint = '', modelName = '', apiKey = '';
+
+            if (selectedModel === 'deepseek-chat' || selectedModel === 'deepseek-reasoner') {
+                modelEndpoint = 'https://api.deepseek.com/v1/chat/completions';
+                modelName = 'deepseek-v4-flash';
+                apiKey = 'sk-89010c8b6e6d4fb491501c1f221557a4';
+            } else if (selectedModel === 'bailian-chat') {
+                modelEndpoint = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
+                modelName = 'qwen3.7-plus';
+                apiKey = 'sk-ws-H.EHMPRMM.vb9k.MEQCIB1fBbLMjLCf7WASXMH4ZJzjdjKkAK5sCYHvX9s3cuVxAiBy7m2uOkK8HO8PMqXqIv8X9GP9e8g3dkAX5ITrBQAaKw';
+            } else if (selectedModel === 'glm-4.7-flash') {
+                modelEndpoint = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
+                modelName = 'glm-4-flash';
+                apiKey = '58f29af72485471295d1aadd6f484475.qIdE2ZpbwyV5gOQb';
+            } else if (selectedModel === 'qwq-32b') {
+                modelEndpoint = 'http://localhost:18888/api/qwen';
+                modelName = 'qwq-32b';
+                apiKey = '';
             }
-
-            addMessage('system', '🔧 执行中...');
 
             try {
-                const response = await fetch(PROXY_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        tool: toolName,
-                        params: params
-                    })
-                });
-                console.log('fetch 响应状态:', response.status);
-                const result = await response.json();
-                if (result.success) {
-                    let displayData = result.data;
-                    if (result.data && result.data.stdout) displayData = result.data.stdout;
-                    else if (result.data && result.data.echo) displayData = JSON.stringify(result.data.echo);
-                    else displayData = JSON.stringify(result.data);
-                    addMessage('assistant', '✅ ' + displayData);
-                    const path = params.path || params.command || '本地';
-                    addMessage('system', '📌 结果已生成，请去 ' + path + ' 审核确认。');
-                } else {
-                    addMessage('system', '❌ 执行失败: ' + (result.error || '未知错误'));
+                const requestBody = {
+                    model: modelName,
+                    messages: apiMessages,
+                    temperature: 0.7,
+                    max_tokens: 800
+                };
+
+                const webSearchEnabled = document.getElementById('webSearchToggle')?.checked;
+                if (webSearchEnabled && selectedModel === 'glm-4.7-flash') {
+                    requestBody.tools = [{
+                        type: "web_search",
+                        web_search: { enable: true, search_engine: "search_std" }
+                    }];
                 }
-                console.log('executeTool 准备返回:', result);
-                return result;
-            } catch (err) {
-                addMessage('system', '❌ 调度失败: ' + err.message);
+
+                const response = await fetch(modelEndpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) throw new Error('HTTP错误 ' + response.status);
+                const data = await response.json();
+                if (!data || !data.choices || !data.choices.length) {
+                    throw new Error('API 返回格式异常');
+                }
+
+                const tokenUsage = data.usage ? data.usage.total_tokens : 0;
+                tokenUsed += tokenUsage;
+                localStorage.setItem('tokenUsed', tokenUsed);
+                const tokenDisplay = document.getElementById('tokenDisplay');
+                if (tokenDisplay) {
+                    tokenDisplay.textContent = '💰 ' + tokenUsed + ' Token';
+                }
+
+                let reply = data.choices[0].message.content;
+
+                const message = data.choices[0].message;
+                if (message.tool_calls && message.tool_calls.length > 0) {
+                    const toolCalls = message.tool_calls;
+                    const searchResults = toolCalls.filter(tc => tc.function && tc.function.name === 'web_search');
+                    if (searchResults.length > 0) {
+                        try {
+                            const args = JSON.parse(searchResults[0].function.arguments);
+                            const sources = args.web_results || args.sources || [];
+                            if (sources.length > 0) {
+                                let sourceText = '\n\n📎 **搜索来源**：\n';
+                                sources.forEach((s, idx) => {
+                                    const title = s.title || s.name || '来源';
+                                    const url = s.url || '#';
+                                    const snippet = s.snippet || s.summary || '';
+                                    sourceText += `${idx + 1}. [${title}](${url}) - ${snippet}\n`;
+                                });
+                                reply += sourceText;
+                            }
+                        } catch (e) {
+                            console.log('解析搜索来源失败:', e);
+                        }
+                    }
+                }
+
+                // 保存记忆
+                memoryManager.save({
+                    role: 'user',
+                    content: userMessage,
+                    modelUsed: selectedModel
+                });
+                memoryManager.save({
+                    role: 'assistant',
+                    content: reply,
+                    modelUsed: selectedModel
+                });
+
+                return reply;
+            } catch (error) {
+                console.error('AI回复错误:', error);
+                return "咻——网络不通，稍后再试。";
             }
         }
 
         // =============================================
-        // 消息处理
+        // 发送消息
         // =============================================
         async function sendMessage() {
+            // 联网时自动清理断网遗留状态
+            if (navigator.onLine) {
+                window._pendingDirection = false;
+                window._pendingIntent = null;
+                window._pendingUserText = null;
+                window._pendingAlternative = false;
+                window._waitingNextStep = false;
+            }
             const input = document.getElementById('userInput');
-            const text = input.value.trim();
-            if (!text) return;
+            const rawText = input.value.trim();
+            if (!rawText) return;
             input.value = '';
 
-            if (!text.startsWith('/tool')) {
-                const intent = parseIntent(text);
-
-                // === 能力询问 ===
-                if (intent.intentType === 'capability_confirm') {
-                    addMessage('system', '📌 会。请提供文件路径。');
-                    return;
-                }
-
-                // === 闲聊拦截 ===
-                if (intent.intentType === 'chat') {
-                    addMessage('system', '📌 我只处理任务类指令。请提供文件路径或任务描述。');
-                    return;
-                }
-
-                // === 追问处理 ===
-                if (intent.intentType === 'follow_up') {
-                    addMessage('system', '📌 请提供文件路径。');
-                    return;
-                }
-
-                if (intent.intentType === 'tool_call') {
-                    if (currentMode !== 'private') {
-                        addMessage('system', '⚠️ 需要进入主权模式。');
-                        return;
-                    }
-                    const validation = validateToolParams(intent.toolId, intent.params);
-                    if (!validation.valid) {
-                        addMessage('system', '📌 ' + validation.message);
-                        return;
-                    }
-                    addMessage('user', text);
+            // ============================================================
+            // 第一步：处理用户确认执行（“是”）
+            // ============================================================
+            if (rawText === '是' || rawText === 'yes' || rawText === '确认' || rawText === '执行') {
+                if (window._pendingIntent) {
+                    const intent = window._pendingIntent;
+                    const userText = window._pendingUserText;
+                    addMessage('user', userText);
                     await executeTool(intent.toolId, intent.params);
-                    const toolMap = { 'T001': 'clean', 'T002': 'contract', 'T003': 'exec', 'T004': 'exec' };
-                    const toolName = toolMap[intent.toolId] || 'unknown';
-                    addSession({
-                        summary: '用户执行了 ' + toolName,
-                        intentHistory: [intent.toolId],
-                        userPreferences: { lastTool: toolName },
-                        compressedHistory: [{ action: toolName, timestamp: Date.now() }]
-                    });
+                    window._pendingIntent = null;
+                    window._pendingUserText = null;
                     return;
-                } else if (intent.intentType === 'clarify') {
-                    const options = getIntentOptions(text);
-                    if (options.length > 0) {
-                        addMessage('system', '📌 请问您指的是以下哪一项？');
-                        options.forEach((opt, idx) => {
-                            addMessage('system', `${idx + 1}. ${opt.label}`);
-                        });
-                        addMessage('system', '请回复数字选择，或提供文件路径。');
-                    } else {
-                        addMessage('system', '📌 请提供文件路径或任务描述。');
-                    }
+                }
+                // 如果没有待执行任务，走正常对话
+                addMessage('user', rawText);
+                addMessage('system', '咻——让我想想...');
+                const reply = await getAIResponse(rawText);
+                document.querySelectorAll('.message.system').forEach(el => {
+                    if (el.textContent.includes('咻——让我想想...')) el.remove();
+                });
+                addMessage('assistant', reply);
+                if (currentMode === 'private') {
+                    messages.push({ role: 'user', text: rawText });
+                    messages.push({ role: 'assistant', text: reply });
+                    localStorage.setItem('ruling_history', JSON.stringify(messages));
+                }
+                return;
+            }
+
+            if (rawText === '否' || rawText === 'no' || rawText === '取消') {
+                if (window._pendingIntent) {
+                    addMessage('system', '📌 已取消执行。');
+                    window._pendingIntent = null;
+                    window._pendingUserText = null;
+                    return;
+                }
+                addMessage('system', '📌 已取消。如需继续，请发送新指令。');
+                return;
+            }
+
+            // ============================================================
+            // 第二步：处理“选择审查方向”（contract 专用）
+            // ============================================================
+            if (window._pendingDirection) {
+                const choice = parseInt(rawText);
+                if (choice === 1) {
+                    window._pendingDirection = false;
+                    window._pendingTaskDirection = 'text_format';
+                    addMessage('system', '📌 请提供文件路径。示例：D:\\\\合同\\\\合作协议.docx');
+                    return;
+                } else if (choice === 2) {
+                    window._pendingDirection = false;
+                    window._pendingTaskDirection = 'legal_risk';
+                    addMessage('system', '📌 请提供文件路径。示例：D:\\\\合同\\\\合作协议.docx');
+                    return;
+                } else {
+                    addMessage('system', '📌 请回复数字 1（文本格式合规）或 2（法律风险核对）。');
                     return;
                 }
             }
 
-            // =============================================
-            // /tool 指令逻辑
-            // =============================================
-            if (text.startsWith('/tool')) {
-                const parts = text.split(' ');
+            // ============================================================
+            // 第三步：处理“下一步选项”（任务完成后）
+            // ============================================================
+            if (window._waitingNextStep) {
+                const choice = parseInt(rawText);
+                if (choice === 1) {
+                    window._waitingNextStep = false;
+                    addMessage('system', '📌 请输入“审查合同”开始新任务。');
+                    return;
+                } else if (choice === 2) {
+                    window._waitingNextStep = false;
+                    addMessage('system', '📌 请输入“数据清洗”开始新任务。');
+                    return;
+                } else if (choice === 3) {
+                    window._waitingNextStep = false;
+                    openAuditPanel();
+                    return;
+                } else if (choice === 4) {
+                    window._waitingNextStep = false;
+                    addMessage('system', '📌 对话结束。如需继续，请发送新指令。');
+                    return;
+                } else {
+                    addMessage('system', '📌 请回复数字 1、2、3 或 4 选择。');
+                    return;
+                }
+            }
+
+            // ============================================================
+            // 第四步：意图识别 + 分步引导
+            // ============================================================
+            // 先检查是否涉及合同相关任务（包含关键词但不以 /tool 开头）
+            const isContractRelated = rawText.includes('合同') || rawText.includes('审查') || rawText.includes('审核');
+            const isDataRelated = rawText.includes('数据') || rawText.includes('清洗') || rawText.includes('去重');
+
+            // ---- 如果是普通对话（无任务关键词）----
+            if (!isContractRelated && !isDataRelated && !rawText.startsWith('/tool')) {
+                addMessage('user', rawText);
+                if (currentMode === 'private') messages.push({ role: 'user', text: rawText });
+                addMessage('system', '咻——让我想想...');
+                const reply = await getAIResponse(rawText);
+                document.querySelectorAll('.message.system').forEach(el => {
+                    if (el.textContent.includes('咻——让我想想...')) el.remove();
+                });
+                addMessage('assistant', reply);
+                if (currentMode === 'private') {
+                    messages.push({ role: 'assistant', text: reply });
+                    localStorage.setItem('ruling_history', JSON.stringify(messages));
+                }
+                return;
+            }
+
+            // ---- 如果是合同相关，但没有任何路径 ----
+            if (isContractRelated && !rawText.includes('D:') && !rawText.includes('C:') && !rawText.includes('\\\\\\\\')) {
+                if (currentMode !== 'private') {
+                    addMessage('system', '⚠️ 需要进入主权模式。');
+                    return;
+                }
+                // 检查是否在询问能力（包含“能”、“可以”、“吗”等词）
+                if (rawText.includes('能') || rawText.includes('可以') || rawText.includes('吗')) {
+                    addMessage('system', '可以。合同审核支持两种方式：\\n1. 文本格式合规（本地规则引擎）\\n2. 法律风险核对（大模型深度分析）\\n请问您需要哪种？请回复数字 1 或 2。');
+                    window._pendingDirection = true;
+                    return;
+                }
+                // 否则直接反问方向
+                addMessage('system', '📌 请问您要审查合同的哪方面？\\n1. 文本格式合规（本地规则引擎）\\n2. 法律风险核对（大模型深度分析）\\n请回复数字 1 或 2。');
+                window._pendingDirection = true;
+                return;
+            }
+
+            // ---- 如果是合同相关，且包含路径 ----
+            if (isContractRelated && (rawText.includes('D:') || rawText.includes('C:') || rawText.includes('\\\\\\\\'))) {
+                if (currentMode !== 'private') {
+                    addMessage('system', '⚠️ 需要进入主权模式。');
+                    return;
+                }
+                // 提取路径
+                const pathMatch = rawText.match(/([A-Za-z]:\\\\[^\\\\s]*)/);
+                const filePath = pathMatch ? pathMatch[1] : '';
+                if (!filePath) {
+                    addMessage('system', '📌 请提供有效文件路径。示例：D:\\\\合同\\\\合作协议.docx');
+                    return;
+                }
+                // 判断方向：如果用户提到了法律或风险
+                let direction = 'text_format';
+                if (rawText.includes('法律') || rawText.includes('风险') || rawText.includes('核对')) {
+                    direction = 'legal_risk';
+                }
+                // 构造待执行任务
+                const intent = {
+                    toolId: 'T002',
+                    params: { path: filePath },
+                    taskDirection: direction
+                };
+                window._pendingIntent = intent;
+                window._pendingUserText = rawText;
+                const summaryMsg = `📋 任务确认：\\n- 操作：合同审查\\n- 方向：${direction === 'text_format' ? '文本格式合规' : '法律风险核对'}\\n- 文件：${filePath}\\n- 结果位置：D:\\\\藏器魂系统\\\\results\\\\\\n\\n请回复“是”确认执行，回复“否”取消。`;
+                addMessage('system', summaryMsg);
+                return;
+            }
+
+            // ---- 如果是数据清洗（简化） ----
+            if (isDataRelated && !rawText.startsWith('/tool')) {
+                if (currentMode !== 'private') {
+                    addMessage('system', '⚠️ 需要进入主权模式。');
+                    return;
+                }
+                const pathMatch = rawText.match(/([A-Za-z]:\\\\[^\\\\s]*)/);
+                if (!pathMatch) {
+                    addMessage('system', '📌 请提供数据文件路径。示例：D:\\\\数据\\\\测试数据.xlsx');
+                    return;
+                }
+                const intent = {
+                    toolId: 'T001',
+                    params: { path: pathMatch[1] },
+                    taskDirection: 'clean'
+                };
+                window._pendingIntent = intent;
+                window._pendingUserText = rawText;
+                const summaryMsg = `📋 任务确认：\\n- 操作：数据清洗\\n- 文件：${pathMatch[1]}\\n- 结果位置：D:\\\\藏器魂系统\\\\results\\\\\\n\\n请回复“是”确认执行，回复“否”取消。`;
+                addMessage('system', summaryMsg);
+                return;
+            }
+
+            // ============================================================
+            // 第五步：/tool 指令（保留原有逻辑）
+            // ============================================================
+            if (rawText.startsWith('/tool')) {
+                const parts = rawText.split(' ');
                 if (parts.length < 2) {
                     addMessage('system', '❌ 格式错误。');
                     return;
@@ -1925,17 +2250,14 @@
                     return;
                 }
 
-                addMessage('user', text);
+                addMessage('user', rawText);
                 addMessage('system', '执行中...');
 
                 try {
                     const response = await fetch(PROXY_URL, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            tool: localTool,
-                            params: nestedParams
-                        })
+                        body: JSON.stringify({ tool: localTool, params: nestedParams })
                     });
                     const result = await response.json();
                     if (result.success) {
@@ -1946,6 +2268,13 @@
                         addMessage('assistant', '✅ ' + displayData);
                         const path = nestedParams.path || nestedParams.command || '本地';
                         addMessage('system', '📌 结果已生成，请去 ' + path + ' 审核确认。');
+                        addMessage('system', '📋 接下来您可以：\\n1. 继续审查另一份合同\\n2. 执行数据清洗\\n3. 查看审计日志\\n4. 结束对话\\n\\n请回复数字 1、2、3 或 4 选择。');
+                        window._waitingNextStep = true;
+                        memoryManager.save({
+                            role: 'assistant',
+                            content: displayData,
+                            toolUsed: localTool
+                        });
                     } else {
                         addMessage('system', '❌ 执行失败: ' + (result.error || '未知错误'));
                     }
@@ -1955,114 +2284,31 @@
                 return;
             }
 
-            // =============================================
-            // 普通对话
-            // =============================================
-            addMessage('user', text);
-            if (currentMode === 'private') messages.push({ role: 'user', text: text });
-            addMessage('system', '咻——让我想想...');
-            const reply = await getAIResponse(text);
-            document.querySelectorAll('.message.system').forEach(el => {
-                if (el.textContent.includes('咻——让我想想...')) el.remove();
-            });
-            addMessage('assistant', reply);
-            if (currentMode === 'private') {
-                messages.push({ role: 'assistant', text: reply });
-                localStorage.setItem('ruling_history', JSON.stringify(messages));
-            }
+            // ============================================================
+            // 兜底：没匹配到任何逻辑
+            // ============================================================
+            addMessage('system', '📌 未识别指令。请尝试“审查合同”或“数据清洗”。');
         }
 
         // =============================================
-        // 打开文件夹功能
+        // 键盘事件
         // =============================================
-        function openFileExplorer() {
-            if (currentMode !== 'private') {
-                addMessage('system', '⚠️ 需要进入主权模式才能打开文件夹。');
-                return;
+        document.getElementById('userInput').addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && e.shiftKey) return;
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                sendMessage();
             }
-            const path = prompt('请输入要打开的文件夹路径：', 'D:\\');
-            if (!path) return;
-            addMessage('system', '📂 正在打开: ' + path);
-            fetch(PROXY_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    tool: 'exec',
-                    params: { command: 'explorer ' + path }
-                })
-            })
-                .then(res => res.json())
-                .then(result => {
-                    if (result.success) {
-                        addMessage('system', '✅ 已打开文件夹: ' + path);
-                    } else {
-                        addMessage('system', '❌ 打开失败: ' + (result.error || '未知错误'));
-                    }
-                })
-                .catch(err => {
-                    addMessage('system', '❌ 请求失败: ' + err.message);
-                });
-        }
+        });
 
-        // 初始化：启动公共模式并渲染对话列表
+        // =============================================
+        // 初始化
+        // =============================================
         localStorage.removeItem('sovereign_verified');
         localStorage.removeItem('sovereign_identity_id');
 
         enterPublic();
         renderConversationList();
-
-        async function useTool(toolId) {
-            closeToolMarket();
-            if (currentMode !== 'private') {
-                addMessage('system', '⚠️ 需要进入主权模式才能调用工具。');
-                return;
-            }
-            fetch('tools.json')
-                .then(res => res.json())
-                .then(async (tools) => {
-                    const tool = tools.find(t => t.toolId === toolId);
-                    if (!tool) {
-                        addMessage('system', '❌ 工具不存在');
-                        return;
-                    }
-                    const toolMap = { 'T001': 'clean', 'T002': 'contract', 'T003': 'exec', 'T004': 'exec' };
-                    const toolName = toolMap[toolId];
-                    if (!toolName) {
-                        addMessage('system', '❌ 未知工具: ' + toolId);
-                        return;
-                    }
-                    // === 统一路径检查 ===
-                    let params = tool.defaultParams ? { ...tool.defaultParams } : {};
-                    const needsPath = toolId === 'T001' || toolId === 'T002';
-                    if (needsPath) {
-                        const file = await selectFile();
-                        if (!file) {
-                            addMessage('system', '📌 已取消操作。');
-                            return;
-                        }
-                        // 保存原始 File 对象，供 confirmTask 使用
-                        window._pendingFile = file.originalFile;
-                        params.path = file.path;
-                        params.fileContent = file.content;
-                        params.fileName = file.path;
-
-                        // === 弹出配置窗口（打勾选择） ===
-                        window._pendingTaskParams = params;
-                        showTaskConfig(toolId, params);
-                    } else {
-                        await executeTool(toolId, params);
-                    }
-                })
-                .catch(err => addMessage('system', '❌ 加载工具数据失败: ' + err.message));
-        }
-        // =============================================
-        // 键盘事件监听
-        // =============================================
-        document.getElementById('userInput').addEventListener('keydown', function (e) {
-            if (e.key === 'Enter' && e.shiftKey) return;
-            if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }
-        });
-
     </script>
 </body>
 
