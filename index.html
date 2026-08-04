@@ -1450,14 +1450,18 @@
                 if (!list) return;
 
                 // ===== 手机端：强制展开侧边栏 =====
-                var sidebar = document.querySelector('.sidebar');
-                if (window.innerWidth <= 640 && sidebar) {
-                    sidebar.style.transform = 'translateX(0)';
-                    sidebar.style.display = 'flex';
-                }
-            }
+    var sidebar = document.querySelector('.sidebar');
+    if (window.innerWidth <= 640 && sidebar) {
+        sidebar.style.transform = 'translateX(0)';
+        sidebar.style.display = 'flex';
+        // 更新主容器边距
+        var container = document.getElementById('appContainer');
+        if (container) {
+            container.style.marginLeft = '240px';
+        }
+    }
 
-            list.innerHTML = '';
+    list.innerHTML = '';
 
             // 主窗口（固定置顶）
             var mainItem = document.createElement('div');
