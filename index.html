@@ -1442,26 +1442,23 @@
         }
         // =============================================
         // [模块7] renderConversationList（支持双击改名）
-        // =============================================
-        function renderConversationList() {
-            var list = document.getElementById('convList');
-            if (!list) return;
-                var list = document.getElementById('convList');
-                if (!list) return;
-
-                // ===== 手机端：强制展开侧边栏 =====
-    var sidebar = document.querySelector('.sidebar');
-    if (window.innerWidth <= 640 && sidebar) {
-        sidebar.style.transform = 'translateX(0)';
-        sidebar.style.display = 'flex';
-        // 更新主容器边距
-        var container = document.getElementById('appContainer');
-        if (container) {
-            container.style.marginLeft = '240px';
-        }
-    }
-
-    list.innerHTML = '';
+        // ========   =====================================
+              function toggleSidebar() {
+                var sidebar = document.querySelector('.sidebar');
+                var mainContainer = document.getElementById('appContainer');
+                if (!sidebar) return;
+            
+                if (sidebar.style.transform === 'translateX(0px)' || sidebar.style.transform === '') {
+                    sidebar.style.transform = 'translateX(-100%)';
+                    if (mainContainer) mainContainer.style.marginLeft = '0';
+                    console.log('📱 侧边栏已收起');
+                } else {
+                    sidebar.style.transform = 'translateX(0)';
+                    if (mainContainer) mainContainer.style.marginLeft = '240px';
+                    console.log('📱 侧边栏已展开');
+                }
+            }
+            
 
             // 主窗口（固定置顶）
             var mainItem = document.createElement('div');
