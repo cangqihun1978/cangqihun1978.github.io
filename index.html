@@ -1223,25 +1223,30 @@
         // [模块5] showSovereignPanel
         // =============================================
         function showSovereignPanel() {
-            // 检查是否已申请身份
-            const isVerified = localStorage.getItem('sovereign_verified');
-            const identityId = localStorage.getItem('sovereign_identity_id');
+            // ===== 检查是否已注册 =====
+            var isVerified = localStorage.getItem('sovereign_verified');
+            var identityId = localStorage.getItem('sovereign_identity_id');
             if (isVerified === 'true' && identityId) {
-                // 已申请，直接进入主权模式
+                // 已注册，直接进入主权模式
                 currentMode = 'private';
                 updateModeBadge();
                 clearChatArea();
                 try {
-                    const saved = localStorage.getItem('ruling_history');
+                    var saved = localStorage.getItem('ruling_history');
                     if (saved) messages = JSON.parse(saved);
                 } catch (e) { }
-                setTimeout(() => {
+                setTimeout(function () {
                     if (messages.length > 0) restoreChatArea();
                     else addMessage('system', '主权模式已恢复。');
                 }, 100);
                 renderConversationList();
+                // 隐藏引导页，显示主界面
+                document.getElementById('introOverlay').style.display = 'none';
+                document.getElementById('appContainer').style.display = 'flex';
                 return;
             }
+
+
             // 未申请，弹出申请面板
             document.getElementById('applyOverlay').classList.add('active');
         }
@@ -1337,8 +1342,14 @@
                     });
                 }
             }, 200);
-        }
 
+            // ===== 注册完成，自动标记主权状态 =====
+            localStorage.setItem('sovereign_verified', 'true');
+            localStorage.setItem('sovereign_identity_id', uid);
+            currentMode = 'private';
+            updateModeBadge();
+            console.log('✅ 主权状态已标记，进入主权模式');
+        }
         function closeApplyPanel() {
             document.getElementById('applyOverlay').classList.remove('active');
             // 标记已申请
@@ -1438,53 +1449,58 @@
 
             list.innerHTML = '';
 
+            // 主窗口（固定置顶）
             var mainItem = document.createElement('div');
             mainItem.className = 'sidebar-item';
             mainItem.style.cssText = 'color:var(--accent);font-weight:bold;border-bottom:2px solid var(--border-color);';
-            mainItem.textContent = '?? 主窗口';
+            mainItem.textContent = '📌 主窗口';
             mainItem.onclick = function () { switchToMain(); };
             list.appendChild(mainItem);
 
-            var fuWangHouItems = [];
-            var sovereignItems = [];
+            // ===== 只有主权模式才显示主权窗口分组 =====
+            if (currentMode === 'private') {
+                var fuWangHouItems = [];
+                var sovereignItems = [];
 
-            for (var id in conversations) {
-                var conv = conversations[id];
-                if (!conv || !conv.messages) continue;
-                if (conv.windowIdentity === 'main') continue;
-                if (conv.windowIdentity === 'FuWangHou') {
-                    fuWangHouItems.push(id);
-                } else {
-                    sovereignItems.push(id);
+                for (var id in conversations) {
+                    var conv = conversations[id];
+                    if (!conv || !conv.messages) continue;
+                    if (conv.windowIdentity === 'main') continue;
+                    if (conv.windowIdentity === 'FuWangHou') {
+                        fuWangHouItems.push(id);
+                    } else {
+                        sovereignItems.push(id);
+                    }
+                }
+
+                if (fuWangHouItems.length > 0) {
+                    var sep1 = document.createElement('div');
+                    sep1.style.cssText = 'padding:4px 16px;font-size:11px;color:var(--text-muted);border-top:1px solid var(--border-color);margin-top:4px;';
+                    sep1.textContent = '🏠 主权窗口';
+                    list.appendChild(sep1);
+                    for (var i = 0; i < fuWangHouItems.length; i++) {
+                        var id1 = fuWangHouItems[i];
+                        var conv1 = conversations[id1];
+                        var item1 = createWindowItem(id1, conv1);
+                        list.appendChild(item1);
+                    }
+                }
+
+                if (sovereignItems.length > 0) {
+                    var sep2 = document.createElement('div');
+                    sep2.style.cssText = 'padding:4px 16px;font-size:11px;color:var(--text-muted);border-top:1px solid var(--border-color);margin-top:4px;';
+                    sep2.textContent = '📝 新主权窗口';
+                    list.appendChild(sep2);
+                    for (var j = 0; j < sovereignItems.length; j++) {
+                        var id2 = sovereignItems[j];
+                        var conv2 = conversations[id2];
+                        var item2 = createWindowItem(id2, conv2);
+                        list.appendChild(item2);
+                    }
                 }
             }
 
-            if (fuWangHouItems.length > 0) {
-                var sep1 = document.createElement('div');
-                sep1.style.cssText = 'padding:4px 16px;font-size:11px;color:var(--text-muted);border-top:1px solid var(--border-color);margin-top:4px;';
-                sep1.textContent = '?? 主权窗口';
-                list.appendChild(sep1);
-                for (var i = 0; i < fuWangHouItems.length; i++) {
-                    var id1 = fuWangHouItems[i];
-                    var conv1 = conversations[id1];
-                    var item1 = createWindowItem(id1, conv1);
-                    list.appendChild(item1);
-                }
-            }
-
-            if (sovereignItems.length > 0) {
-                var sep2 = document.createElement('div');
-                sep2.style.cssText = 'padding:4px 16px;font-size:11px;color:var(--text-muted);border-top:1px solid var(--border-color);margin-top:4px;';
-                sep2.textContent = '?? 新主权窗口';
-                list.appendChild(sep2);
-                for (var j = 0; j < sovereignItems.length; j++) {
-                    var id2 = sovereignItems[j];
-                    var conv2 = conversations[id2];
-                    var item2 = createWindowItem(id2, conv2);
-                    list.appendChild(item2);
-                }
-            }
-
+            // 新对话按钮
             var newBtn = document.createElement('div');
             newBtn.className = 'sidebar-item';
             newBtn.style.cssText = 'color:var(--accent);border-top:1px solid var(--border-color);margin-top:8px;';
@@ -1495,20 +1511,84 @@
         function newConversation() {
             var newId = 'conv-' + Date.now();
             currentConversationId = newId;
+            var identity = currentMode === 'private' ? 'sovereign' : 'main';
+            var defaultTitle = currentMode === 'private' ? '新主权窗口' : '新对话';
             conversations[newId] = {
                 id: newId,
                 messages: [],
-                title: '新主权窗口',
+                title: defaultTitle,
                 timestamp: Date.now(),
-                windowIdentity: 'sovereign'
+                windowIdentity: identity
             };
             messages = [];
             localStorage.setItem('ruling_current_conv_id', currentConversationId);
             localStorage.setItem('ruling_conversations', JSON.stringify(conversations));
             clearChatArea();
             renderConversationList();
-            addMessage('system', '📝 已创建新主权窗口（双击标题可改名）。');
+            addMessage('system', '📝 已创建' + (currentMode === 'private' ? '新主权窗口' : '新对话') + '。');
         }
+        function switchToMain() {
+            var mainId = 'main';
+            if (!conversations[mainId]) {
+                conversations[mainId] = {
+                    id: mainId,
+                    messages: [],
+                    title: '主窗口',
+                    timestamp: Date.now(),
+                    windowIdentity: 'main'
+                };
+                localStorage.setItem('ruling_conversations', JSON.stringify(conversations));
+            }
+            currentConversationId = mainId;
+            messages = conversations[mainId].messages || [];
+            localStorage.setItem('ruling_current_conv_id', currentConversationId);
+            clearChatArea();
+            restoreChatArea();
+            renderConversationList();
+            addMessage('system', '📌 已切换到: 主窗口');
+        }
+        // =============================================
+        // [第二批] 注销账号
+        // =============================================
+        function deleteAccount() {
+            var userId = localStorage.getItem('sovereign_identity_id') || 'zq_main';
+
+            if (!confirm('⚠️ 确认注销账号？\n\n此操作不可逆！\n所有资产（记忆、配置、日志）将被永久删除！')) return;
+            if (!confirm('⚠️ 再次确认：\n\n你确定要删除 "' + userId + '" 的所有数据？')) return;
+
+            var passphrase = prompt('请输入口令确认注销：', '');
+            if (!passphrase) {
+                addMessage('system', '❌ 注销已取消。');
+                return;
+            }
+
+            fetch(PROXY_URL + '/api/account/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: userId, passphrase: passphrase })
+            })
+                .then(function (res) { return res.json(); })
+                .then(function (result) {
+                    if (result.success) {
+                        localStorage.clear();
+                        messages = [];
+                        conversations = {};
+                        currentConversationId = null;
+                        currentMode = 'public';
+                        document.getElementById('appContainer').style.display = 'none';
+                        document.getElementById('introOverlay').style.display = 'flex';
+                        addMessage('system', '🗑️ 账号已注销，所有资产已清除。');
+                    } else {
+                        addMessage('system', '❌ 注销失败: ' + (result.error || '未知错误'));
+                    }
+                })
+                .catch(function (e) {
+                    addMessage('system', '❌ 注销失败: ' + e.message);
+                });
+        }
+        // =============================================
+        // 切换到主窗口
+        // =============================================
         function switchToMain() {
             var mainId = 'main';
             if (!conversations[mainId]) {
@@ -2538,6 +2618,7 @@
         // [模块8] enterPublic（全局）
         // =============================================
         function enterPublic() {
+
             if (document.getElementById('modeMenu')) document.getElementById('modeMenu').style.display = 'none';
             if (document.getElementById('introOverlay')) document.getElementById('introOverlay').style.display = 'none';
             if (document.getElementById('appContainer')) document.getElementById('appContainer').style.display = 'flex';
@@ -2606,17 +2687,38 @@
             const secretTrigger = document.getElementById('secretTrigger');
             if (secretTrigger) {
                 secretTrigger.onclick = function () {
-                    const isVerified = localStorage.getItem('sovereign_verified');
-                    const identityId = localStorage.getItem('sovereign_identity_id');
+                    var userId = localStorage.getItem('sovereign_identity_id') || 'zq_main';
+
+                    // ===== 特殊通道：急急如律令（仅 zq_main） =====
+                    if (userId === 'zq_main') {
+                        var passphrase = prompt('输入主权口令：', '');
+                        if (passphrase === '急急如律令') {
+                            localStorage.setItem('sovereign_verified', 'true');
+                            currentMode = 'private';
+                            updateModeBadge();
+                            clearChatArea();
+                            addMessage('system', '✅ 主权模式已激活（特殊通道）。');
+                            renderConversationList();
+                            document.getElementById('introOverlay').style.display = 'none';
+                            document.getElementById('appContainer').style.display = 'flex';
+                        } else {
+                            addMessage('system', '❌ 口令错误。');
+                        }
+                        return;
+                    }
+
+                    // ===== 正式通道（其他用户） =====
+                    var isVerified = localStorage.getItem('sovereign_verified');
+                    var identityId = localStorage.getItem('sovereign_identity_id');
                     if (isVerified === 'true' && identityId) {
                         currentMode = 'private';
                         updateModeBadge();
                         clearChatArea();
                         try {
-                            const saved = localStorage.getItem('ruling_history');
+                            var saved = localStorage.getItem('ruling_history');
                             if (saved) messages = JSON.parse(saved);
                         } catch (e) { }
-                        setTimeout(() => {
+                        setTimeout(function () {
                             if (messages.length > 0) restoreChatArea();
                             else addMessage('system', '主权模式已恢复。');
                         }, 100);
@@ -2624,50 +2726,11 @@
                         document.getElementById('introOverlay').style.display = 'none';
                         document.getElementById('appContainer').style.display = 'flex';
                     } else {
-                        document.getElementById('applyOverlay').classList.add('active');
+                        // 正式认证流程
+                        addMessage('system', '🔐 正式认证通道开发中...');
                     }
                 };
             }
-
-            const isVerified = localStorage.getItem('sovereign_verified');
-            const identityId = localStorage.getItem('sovereign_identity_id');
-            if (isVerified === 'true' && identityId) {
-                console.log('✅ 已检测到主权身份');
-            } else {
-                localStorage.removeItem('sovereign_verified');
-                localStorage.removeItem('sovereign_identity_id');
-            }
-            document.addEventListener('DOMContentLoaded', function () {
-                // 恢复对话列表
-                var savedConversations = localStorage.getItem('ruling_conversations');
-                if (savedConversations) {
-                    try {
-                        var parsed = JSON.parse(savedConversations);
-                        // 确保每个对话都有 windowIdentity 字段
-                        for (var id in parsed) {
-                            if (!parsed[id].windowIdentity) {
-                                parsed[id].windowIdentity = 'sovereign';
-                            }
-                            // 如果标题包含"傅王侯"，自动升级为 FuWangHou
-                            if (parsed[id].title && parsed[id].title.indexOf('傅王侯') !== -1) {
-                                parsed[id].windowIdentity = 'FuWangHou';
-                            }
-                        }
-                        conversations = parsed;
-                    } catch (e) {
-                        conversations = {};
-                    }
-                }
-                // 恢复当前对话 ID
-                var savedId = localStorage.getItem('ruling_current_conv_id');
-                if (savedId && conversations[savedId]) {
-                    currentConversationId = savedId;
-                    messages = conversations[savedId].messages || [];
-                }
-
-                renderConversationList();
-                // 其他初始化逻辑...
-            });
             // =============================================
             //001--- sovereignDispatch 完整代码
             // =============================================
@@ -2786,6 +2849,20 @@
                     console.error('傅王侯调度失败:', e);
                     addMessage('system', `⚠️ 调度失败: ${e.message}`);
                 }
+            }
+            // =============================================
+            // [第一批] 主权状态恢复 + 模拟模式 + 特殊通道
+            // =============================================
+            var savedVerified = localStorage.getItem('sovereign_verified');
+            var savedIdentity = localStorage.getItem('sovereign_identity_id');
+            if (savedVerified === 'true' && savedIdentity) {
+                currentMode = 'private';
+                updateModeBadge();
+                console.log('✅ 主权状态已恢复:', savedIdentity);
+            } else {
+                currentMode = 'public';
+                updateModeBadge();
+                console.log('📌 当前为普通模式');
             }
 
             // ============================================================
