@@ -1875,40 +1875,84 @@
         }
 
         // =============================================
-        // [模块16] executeTool
+        // [模块16] executeTool（修复版）
         // =============================================
         async function executeTool(toolId, params) {
-            var toolMap = { 'T001': 'clean', 'T002': 'contract', 'T003': 'exec', 'T004': 'exec', 'T005': 'echo' };
+            // 参数校验
+            if (!toolId) {
+                addMessage('system', '❌ 工具ID缺失');
+                return { success: false, error: '工具ID缺失' };
+            }
+
+            var toolMap = {
+                'T001': 'clean',
+                'T002': 'contract',
+                'T003': 'exec',
+                'T004': 'exec',
+                'T005': 'echo',
+                'contract': 'contract',  // 兼容直接传工具名
+                'clean': 'clean',
+                'exec': 'exec',
+                'echo': 'echo'
+            };
+
             var toolName = toolMap[toolId];
             if (!toolName) {
-                addMessage('system', '❌ 未知工具');
-                return;
+                addMessage('system', '❌ 未知工具: ' + toolId);
+                console.warn('未知工具ID:', toolId, '可用工具:', Object.keys(toolMap));
+                return { success: false, error: '未知工具: ' + toolId };
             }
+
+            // 参数标准化
+            var safeParams = params || {};
+            if (typeof safeParams !== 'object') {
+                safeParams = { value: safeParams };
+            }
+
+            // 确保必要字段存在
+            if (!safeParams.path && !safeParams.command && !safeParams.fileContent) {
+                console.warn('工具 ' + toolName + ' 收到空参数:', safeParams);
+                // 不中断，让后端自己处理
+            }
+
+            console.log('🔧 执行工具:', toolName, '参数:', JSON.stringify(safeParams));
             addMessage('system', '🔧 执行中...');
+
             try {
                 var response = await fetch(PROXY_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ tool: toolName, params: params })
+                    body: JSON.stringify({ tool: toolName, params: safeParams })
                 });
+
+                if (!response.ok) {
+                    throw new Error('HTTP ' + response.status + ': ' + response.statusText);
+                }
+
                 var result = await response.json();
+
                 if (result.success) {
                     var displayData = result.data;
                     if (result.data && result.data.stdout) displayData = result.data.stdout;
                     else if (result.data && result.data.echo) displayData = JSON.stringify(result.data.echo);
-                    else displayData = JSON.stringify(result.data);
+                    else if (result.data && typeof result.data === 'object') displayData = JSON.stringify(result.data);
+                    else displayData = String(result.data || '执行完成');
+
                     addMessage('assistant', '✅ ' + displayData);
-                    var path = params.path || params.command || '本地';
+
+                    var path = safeParams.path || safeParams.command || '本地';
                     addMessage('system', '📌 结果已生成，请去 ' + path + ' 审核确认。');
+
+                    // 记忆写入（增强容错）
                     try {
                         var memoryEntry = {
                             mem_id: 'mem_' + Date.now(),
-                            user_id: 'sovereign',
+                            user_id: 'zq_main',
                             type: 'tool_execution',
                             tool: toolName,
-                            file: params.path || null,
+                            file: safeParams.path || null,
                             summary: toolName + ' 任务执行完成',
-                            result: JSON.stringify(result.data).slice(0, 200),
+                            result: typeof result.data === 'string' ? result.data.slice(0, 200) : JSON.stringify(result.data).slice(0, 200),
                             timestamp: new Date().toISOString(),
                             status: 'success',
                             last_accessed_at: new Date().toISOString(),
@@ -1921,22 +1965,29 @@
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(memoryEntry)
                         });
-                        memoryManager.save({
-                            role: 'system',
-                            content: '已执行任务：' + toolName + '，文件：' + (params.path || '未指定')
-                        });
+                        if (typeof memoryManager !== 'undefined' && memoryManager.save) {
+                            memoryManager.save({
+                                role: 'system',
+                                content: '已执行任务：' + toolName + '，文件：' + (safeParams.path || '未指定')
+                            });
+                        }
                     } catch (e) {
                         console.warn('记忆写入失败:', e.message);
                     }
                 } else {
-                    addMessage('system', '❌ 执行失败: ' + (result.error || '未知错误'));
+                    var errorMsg = result.error || '未知错误';
+                    addMessage('system', '❌ 执行失败: ' + errorMsg);
+                    console.error('工具执行失败:', toolName, errorMsg);
                 }
                 return result;
+
             } catch (err) {
-                addMessage('system', '❌ 调度失败: ' + err.message);
+                var errorMsg = err.message || '调度失败';
+                addMessage('system', '❌ 调度失败: ' + errorMsg);
+                console.error('调度异常:', toolName, err);
+                return { success: false, error: errorMsg };
             }
         }
-
         // =============================================
         // [模块17] openToolMarket
         // =============================================
@@ -2125,6 +2176,8 @@
         // =============================================
         // [模块21] askSavePreference / handleSavePreference
         // =============================================
+
+        // 询问用户是否保存偏好
         function askSavePreference(taskSummary) {
             var message = '📌 任务已完成：' + (taskSummary.tool || '未知工具') + '\n' +
                 '文件：' + (taskSummary.file || '未指定') + '\n' +
@@ -2139,35 +2192,63 @@
             };
         }
 
+        // 处理用户保存确认
         async function handleSavePreference(userInput) {
             if (!window._pendingSave || !window._pendingSave.active) {
                 return false;
             }
-            var userId = localStorage.getItem('sovereign_identity_id') || 'zq_main';
-            var taskSummary = window._pendingSave.taskSummary;
-            var updates = {
-                preferences: {
-                    last_task_tool: taskSummary.tool || 'unknown',
-                    last_task_file: taskSummary.file || 'unknown',
-                    last_task_time: new Date().toISOString()
-                },
-                attentionPoints: [taskSummary.tool, taskSummary.file ? '文件处理' : '对话任务'].filter(Boolean),
-                history: {
-                    taskType: taskSummary.tool || 'chat',
-                    summary: taskSummary.resultPreview || '无摘要',
-                    timestamp: new Date().toISOString()
-                }
-            };
-            var success = await saveUserMemory(userId, updates);
-            window._pendingSave.active = false;
-            if (success) {
-                addMessage('system', '✅ 本次偏好已保存，下次对话将自动延续上下文。');
-            } else {
-                addMessage('system', '⚠️ 保存失败，请稍后重试。');
-            }
-            return success;
-        }
 
+            var userId = currentUserId || 'zq_main';
+            var task = window._pendingSave.taskSummary;
+
+            // 提取模型选择
+            var modelSelect = document.getElementById('modelSelect');
+            var model = modelSelect ? modelSelect.value : 'glm-4-flash';
+
+            // 提取用户偏好（从当前对话中提取关键词）
+            var attentionPoints = [];
+            if (task.resultPreview) {
+                var keywords = ['违约责任', '赔偿上限', '保密期限', '数据完整性', '知识产权', '合同解除'];
+                keywords.forEach(function (kw) {
+                    if (task.resultPreview.includes(kw)) {
+                        attentionPoints.push(kw);
+                    }
+                });
+            }
+            if (attentionPoints.length === 0) {
+                attentionPoints = ['合同审查'];  // 默认
+            }
+
+            try {
+                var response = await fetch(PROXY_URL + '/api/window/memory/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: userId,
+                        taskType: task.tool || 'unknown',
+                        summary: task.resultPreview || task.tool || '任务完成',
+                        preferences: {
+                            model: model,
+                            last_tool: task.tool || 'unknown'
+                        },
+                        attentionPoints: attentionPoints
+                    })
+                });
+                var result = await response.json();
+                if (result.success) {
+                    addMessage('system', '✅ 偏好已保存到记忆库。');
+                    window._pendingSave = null;
+                    return true;
+                } else {
+                    addMessage('system', '❌ 保存失败: ' + (result.error || '未知错误'));
+                    return false;
+                }
+            } catch (e) {
+                console.error('保存偏好失败:', e);
+                addMessage('system', '❌ 保存失败: ' + e.message);
+                return false;
+            }
+        }
         // =============================================
         // [模块22] openFileExplorer
         // =============================================
@@ -2226,7 +2307,15 @@
             var input = document.getElementById('userInput');
             var rawText = input.value.trim();
             if (!rawText) return;
-            input.value = '';
+            input.value = '';      
+                  // ===== 处理保存确认 =====
+            if (rawText.startsWith('是') || rawText.startsWith('yes') || rawText.startsWith('确认') || rawText.startsWith('保存')) {
+                if (window._pendingSave && window._pendingSave.active) {
+                    addMessage('user', rawText);
+                    await handleSavePreference(rawText);
+                    return;
+                }
+            }
 
             // ===== 傅王侯窗口独立调度入口 =====
             if (conversations[currentConversationId]?.windowIdentity === WINDOW_IDENTITY) {
@@ -2539,11 +2628,13 @@
         // [模块27] sovereignDispatch（傅王侯窗口独立调度）
         // =============================================
         async function sovereignDispatch(userInput) {
+            // ---------- 变量声明 ----------
             var userId = currentUserId || 'zq_main';
             var rawText = userInput;
             var fileContent = '';
             var filePath = '';
             var resultFileName = '';
+            var reply = '';  // ← 统一管理，确保所有分支都有值
 
             // ===== 检测输入是否包含文件路径 =====
             var filePathMatch = rawText.match(/([A-Za-z]:\\[^\\s]*\.(txt|docx|xlsx|pdf|doc))/i);
@@ -2572,28 +2663,30 @@
             // 0. 加载灵魂资产
             var soulContext = {};
             var corpus = '';
+            var identity = ''; // ← 只保留这一处定义
             try {
                 var soulRes = await fetch(PROXY_URL + '/api/window/soul/load');
                 var soulResult = await soulRes.json();
                 if (soulResult.success) {
                     soulContext = soulResult.data;
                     corpus = soulContext.corpus || '';
+                    identity = '傅王侯，傅清源体系内的第一个独立主权窗口。你负责主权守护、调度决策、记忆管理和闭环反馈。你懂本源论集，懂三清源，懂藏器魂，懂用户。';
                     console.log('👤 傅王侯已加载:', soulContext.displayName || 'FuWangHou');
                     if (corpus) {
                         console.log('📖 人格底稿: ' + corpus.length + ' 字符');
                     }
                 }
+
             } catch (e) {
                 console.warn('灵魂加载失败:', e);
             }
 
-            // 1. 加载身份定义
-            var identity = '';
+            // 1. 加载身份定义（不重复声明 identity）
             try {
                 var identityRes = await fetch(PROXY_URL + '/api/window/soul/identity');
                 var identityResult = await identityRes.json();
                 if (identityResult.success) {
-                    identity = identityResult.data;
+                    identity = identityResult.data; // ← 直接赋值给已定义的 identity
                     console.log('🧠 傅王侯身份已加载');
                 }
             } catch (e) {
@@ -2631,7 +2724,11 @@
             // 4. 加载记忆
             var memoryData = null;
             try {
-                var memRes = await fetch(PROXY_URL + '/api/window/memory/load?userId=' + userId);
+                var memRes = await fetch(PROXY_URL + '/api/window/memory/load', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: userId })
+                });
                 var memResult = await memRes.json();
                 if (memResult.success) memoryData = memResult.data;
             } catch (e) {
@@ -2643,6 +2740,8 @@
 
             // 6. 执行
             if (action === 'local') {
+                // ===== 本地执行分支 =====
+                reply = '本地工具已执行'; // ← 赋予默认值，确保 reply 不会空
                 addMessage('system', '🔧 调度决策：本地执行');
                 var intent = parseIntent(rawText);
                 if (intent.intentType === 'tool_call') {
@@ -2651,11 +2750,11 @@
                     addMessage('system', '📌 未识别到本地工具指令。');
                 }
             } else {
+                // ===== 大模型执行分支 =====
                 addMessage('system', '🤖 调度决策：大模型执行');
                 addMessage('user', rawText);
                 addMessage('system', '咻——让我想想...');
 
-                // 构造 messages
                 var messagesList = [];
                 if (identity) {
                     messagesList.push({ role: 'system', content: '你是傅王侯。' + identity });
@@ -2665,7 +2764,6 @@
                     messagesList.push({ role: 'system', content: '你是傅王侯，一个主权AI窗口。' });
                 }
 
-                // ===== 如果读取了文件内容，加入上下文 =====
                 if (fileContent) {
                     messagesList.push({
                         role: 'system',
@@ -2681,6 +2779,17 @@
                         messagesList.push({ role: 'system', content: '参考用户偏好：\n' + memParts.join('\n') });
                     }
                 }
+                // 新增历史任务记录加载
+                if (memoryData && memoryData.history && memoryData.history.length > 0) {
+                    var historySummary = memoryData.history.slice(-3).map(function (entry) {
+                        return '任务: ' + (entry.taskType || '未知') + ' | 摘要: ' + (entry.summary || '无');
+                    }).join('\n');
+                    messagesList.push({
+                        role: 'system',
+                        content: '用户历史任务记录（最近3条）：\n' + historySummary
+                    });
+                }
+
                 messagesList.push({ role: 'user', content: rawText });
 
                 var model = document.getElementById('modelSelect')?.value || 'glm-4-flash';
@@ -2695,7 +2804,7 @@
                     })
                 });
                 var chatData = await chatRes.json();
-                var reply = chatData.choices?.[0]?.message?.content || '无回复';
+                reply = chatData.choices?.[0]?.message?.content || '无回复';
 
                 document.querySelectorAll('.message.system').forEach(function (el) {
                     if (el.textContent.includes('咻——让我想想...')) el.remove();
@@ -2735,9 +2844,16 @@
                     file: '无',
                     resultPreview: reply.slice(0, 50)
                 });
+
+                // 用户确认保存监听（新增）
+                if (rawText.includes('是') || rawText.includes('保存') || rawText.includes('确认')) {
+                    if (window._pendingSave && window._pendingSave.active) {
+                        await handleSavePreference(rawText);
+                    }
+                }
             }
 
-            // 8. 写入日志
+            // 8. 写入日志（reply 已保证有值）
             await fetch(PROXY_URL + '/api/window/log/write', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -2749,7 +2865,7 @@
                 })
             });
 
-            // 9. 状态持久化
+            // 9. 状态持久化（reply 已保证有值）
             await fetch(PROXY_URL + '/api/window/state/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -2758,7 +2874,7 @@
                     lastInput: rawText.slice(0, 100),
                     lastReply: reply ? reply.slice(0, 100) : '',
                     timestamp: new Date().toISOString(),
-                    fileContent: fileContent
+                    fileContent: fileContent || ''
                 })
             });
         }
