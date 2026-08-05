@@ -1479,6 +1479,7 @@
                 restoreChatArea();
                 renderConversationList();
                 addMessage('system', '🔄 已切换到: ' + (conversations[id]?.title || '窗口'));
+                saveConversationsToServer();
             });
             return item;
         }
@@ -1546,6 +1547,24 @@
             newBtn.onclick = function () { newConversation(); };
             list.appendChild(newBtn);
         }
+        // =============================================
+        // [新增] 保存对话列表到服务器
+        // =============================================
+        async function saveConversationsToServer() {
+            try {
+                await fetch(PROXY_URL + '/api/window/conversations/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: currentUserId || 'zq_main',
+                        conversations: conversations
+                    })
+                });
+                console.log('✅ 对话列表已保存到服务器');
+            } catch (e) {
+                console.warn('对话列表保存失败:', e);
+            }
+        }
 
         // =============================================
         // [模块9] newConversation
@@ -1568,7 +1587,9 @@
             clearChatArea();
             renderConversationList();
             addMessage('system', '📝 已创建' + (currentMode === 'private' ? '新主权窗口' : '新对话') + '。');
+            saveConversationsToServer();
         }
+
 
         // =============================================
         // [模块10] switchToMain
@@ -2307,8 +2328,8 @@
             var input = document.getElementById('userInput');
             var rawText = input.value.trim();
             if (!rawText) return;
-            input.value = '';      
-                  // ===== 处理保存确认 =====
+            input.value = '';
+            // ===== 处理保存确认 =====
             if (rawText.startsWith('是') || rawText.startsWith('yes') || rawText.startsWith('确认') || rawText.startsWith('保存')) {
                 if (window._pendingSave && window._pendingSave.active) {
                     addMessage('user', rawText);
@@ -2623,6 +2644,60 @@
         }
         window._userId = getCurrentUserId();
         console.log('✅ 当前用户ID:', window._userId);
+        // =============================================
+        // 控制层函数（runSovereignControl）
+        // =============================================
+        async function runSovereignControl(params) {
+            var messagesList = [];
+
+            if (params.identity) {
+                messagesList.push({ role: 'system', content: '你是傅王侯。' + params.identity });
+            }
+            if (params.corpus) {
+                messagesList.push({ role: 'system', content: '历史记忆：\n' + params.corpus.slice(0, 500) });
+            }
+            if (params.fileContent) {
+                messagesList.push({ role: 'system', content: '文件内容：\n' + params.fileContent.slice(0, 2000) });
+            }
+            if (params.memoryData && params.memoryData.preferences) {
+                messagesList.push({ role: 'system', content: '用户偏好：' + JSON.stringify(params.memoryData.preferences) });
+            }
+            messagesList.push({ role: 'user', content: '请审查合同，重点：' + (params.requirements || '全部条款') });
+
+            var model = document.getElementById('modelSelect')?.value || 'glm-4-flash';
+            var chatRes = await fetch(PROXY_URL + '/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    messages: messagesList,
+                    model: model,
+                    userId: params.userId,
+                    corpus: params.corpus
+                })
+            });
+            var chatData = await chatRes.json();
+            var reply = chatData.choices?.[0]?.message?.content || '审查完成，无异常。';
+
+            // 写入结果到桌面
+            try {
+                var resultFileName = '审查结果_' + Date.now() + '.txt';
+                var desktopPath = 'C:\\Users\\' + (localStorage.getItem('sovereign_identity_id') || 'zq_main') + '\\Desktop';
+                var resultPath = desktopPath + '\\合同结果\\' + resultFileName;
+                await fetch(PROXY_URL + '/api/file/write', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        filePath: resultPath,
+                        content: reply
+                    })
+                });
+                addMessage('system', '📁 结果已保存到: ' + resultPath);
+            } catch (e) {
+                console.warn('文件写入失败:', e);
+            }
+
+            return { reply: reply };
+        }
 
         // =============================================
         // [模块27] sovereignDispatch（傅王侯窗口独立调度）
@@ -2973,7 +3048,7 @@
         // =============================================
         // [模块31] DOMContentLoaded
         // =============================================
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', async function () {
             if (!window._ruleCache) {
                 fetch(PROXY_URL + '/api/rules/load')
                     .then(function (res) { return res.json(); })
@@ -3015,7 +3090,6 @@
                 secretTrigger.onclick = function () {
                     var userId = localStorage.getItem('sovereign_identity_id') || 'zq_main';
 
-                    // ===== 特殊通道：急急如律令（仅 zq_main） =====
                     if (userId === 'zq_main') {
                         var passphrase = prompt('输入主权口令：', '');
                         if (passphrase === '急急如律令') {
@@ -3033,7 +3107,6 @@
                         return;
                     }
 
-                    // ===== 正式通道（其他用户） =====
                     var isVerified = localStorage.getItem('sovereign_verified');
                     var identityId = localStorage.getItem('sovereign_identity_id');
                     if (isVerified === 'true' && identityId) {
@@ -3069,10 +3142,27 @@
                 updateModeBadge();
                 console.log('📌 当前为普通模式');
             }
+            /// ===== 从服务器加载对话列表（失败不影响主流程） =====
+            try {
+                var convRes = await fetch(PROXY_URL + '/api/window/conversations/load?userId=' + (currentUserId || 'zq_main'));
+                var convData = await convRes.json();
+                if (convData.success && convData.data !== null && typeof convData.data === 'object') {
+                    conversations = convData.data;
+                    localStorage.setItem('ruling_conversations', JSON.stringify(conversations));
+                    console.log('✅ 对话列表已从服务器加载');
+                }
+            } catch (e) {
+                console.warn('从服务器加载对话列表失败，使用本地缓存:', e.message);
+                // 不阻断后续流程，继续使用 localStorage 兜底
+            }
 
-            // ===== 恢复对话列表 =====
+
+
+
+
+            // ===== 恢复对话列表（localStorage 兜底） =====
             var savedConversations = localStorage.getItem('ruling_conversations');
-            if (savedConversations) {
+            if (savedConversations && Object.keys(conversations).length === 0) {
                 try {
                     conversations = JSON.parse(savedConversations);
                 } catch (e) {
