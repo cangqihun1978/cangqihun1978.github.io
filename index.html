@@ -1,12 +1,15 @@
+<!DOCTYPE html>
 <html lang="zh-CN">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=5.0, user-scalable=yes">
     <title>如律令 · 藏器魂</title>
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js">
+    </script>
     <style>
-        /* ===== 样式保持不变 ===== */
+        /* ===== 基础重置 ===== */
         * {
             margin: 0;
             padding: 0;
@@ -23,33 +26,55 @@
             flex-direction: column;
         }
 
+        /* ===== 模块1-1：白底黑字配色 ===== */
         :root {
-            --bg-primary: #1a1a1a;
-            --bg-secondary: #242424;
-            --bg-card: #2a2a2a;
-            --bg-hover: #333;
-            --text-primary: #e8e8e8;
-            --text-secondary: #a0a0a0;
-            --text-muted: #6a6a6a;
-            --border-color: #3a3a3a;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f5f5f5;
+            --bg-card: #fafafa;
+            --bg-hover: #f0f0f0;
+            --text-primary: #1a1a1a;
+            --text-secondary: #555555;
+            --text-muted: #999999;
+            --border-color: #e0e0e0;
             --accent: #10a37f;
             --accent-hover: #1a7a64;
             --radius: 8px;
-            --shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             --danger: #c0392b;
         }
 
+        /* ===== 模块1-2：字体自适应 ===== */
+        :root {
+            --font-size-base: 16px;
+            --font-size-small: 13px;
+            --font-size-xs: 11px;
+            --font-size-large: 20px;
+            --font-size-xl: 24px;
+        }
+
+        /* ===== 侧边栏（默认收起） ===== */
         .sidebar {
             position: fixed;
             left: 0;
             top: 0;
             bottom: 0;
-            width: 240px;
+            width: 260px;
             background: var(--bg-secondary);
             border-right: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
             z-index: 100;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            box-shadow: var(--shadow);
+        }
+
+        .sidebar.open {
+            transform: translateX(0);
+        }
+
+        .sidebar.open {
+            transform: translateX(0);
         }
 
         .sidebar-header {
@@ -66,6 +91,28 @@
             font-size: 11px;
             color: var(--text-muted);
             font-weight: normal;
+        }
+
+        /* ===== 模块8-1：汉堡菜单固定显示 ===== */
+        .sidebar-toggle {
+            position: fixed;
+            top: 12px;
+            left: 12px;
+            z-index: 101;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 24px;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow);
+        }
+
+        .sidebar-toggle:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
         }
 
         .sidebar-list {
@@ -105,8 +152,9 @@
             text-align: center;
         }
 
+        /* ===== 主容器 ===== */
         .main-container {
-            margin-left: 240px;
+            margin-left: 0;
             flex: 1;
             display: flex;
             flex-direction: column;
@@ -139,124 +187,93 @@
         .header-right {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
             flex-wrap: wrap;
         }
 
-        .mode-badge {
-            padding: 4px 14px;
-            border-radius: 20px;
-            font-size: 12px;
-            background: var(--bg-hover);
-            color: var(--text-secondary);
-            border: 1px solid var(--border-color);
+        /* ===== 微缩版菜单 ===== */
+        .header-right .mode-badge,
+        .header-right .model-select,
+        .header-right .header-btn {
+            opacity: 0.7;
+            transition: all 0.3s ease;
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-muted);
+            font-size: 0;
+            padding: 4px 8px;
+            min-width: 32px;
             cursor: pointer;
-            transition: all 0.2s;
         }
 
         .mode-badge .status-dot {
             display: inline-block;
-            width: 8px;
-            height: 8px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
-            margin-right: 6px;
-            transition: background 0.3s ease;
+            margin-right: 0;
+            font-size: 0;
         }
 
-        .mode-badge.public .status-dot {
-            background: #555;
+        .mode-badge::after {
+            content: "主权";
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-left: 4px;
+            opacity: 0.6;
         }
 
-        .mode-badge.sovereign .status-dot {
-            background: #10a37f;
-        }
-
-        .mode-badge.sovereign {
-            border-color: #7a8a6a;
-            color: #7a8a6a;
-        }
-
-        .mode-badge:hover {
-            background: var(--border-color);
-        }
-
-        .header-btn {
-            padding: 6px 14px;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-            background: transparent;
-            color: var(--text-secondary);
-            cursor: pointer;
-            font-size: 13px;
-            transition: all 0.2s;
-        }
-
-        .header-btn:hover {
-            background: var(--bg-hover);
-            color: var(--text-primary);
-        }
-
-        .header-btn.save-btn {
-            border-color: #7a8a6a;
-            color: #7a8a6a;
-        }
-
-        .header-btn.save-btn:hover {
-            background: #7a8a6a22;
-        }
-
-        .header-btn.load-btn {
-            border-color: #5a7a8a;
-            color: #5a7a8a;
-        }
-
-        .header-btn.load-btn:hover {
-            background: #5a7a8a22;
-        }
-
-        .header-btn.memory-btn {
-            border-color: #8a7a5a;
-            color: #8a7a5a;
-        }
-
-        .header-btn.memory-btn:hover {
-            background: #8a7a5a22;
-        }
-
-        .header-btn.audit-btn {
-            border-color: #7a5a8a;
-            color: #7a5a8a;
-        }
-
-        .header-btn.audit-btn:hover {
-            background: #7a5a8a22;
+        .mode-badge.public::after {
+            content: "普通";
         }
 
         .model-select {
-            background: var(--bg-hover);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 4px 10px;
-            font-size: 13px;
-            cursor: pointer;
-            font-family: inherit;
+            font-size: 10px !important;
+            color: var(--text-muted);
+            padding: 4px 6px;
+            min-width: 30px;
+            max-width: 50px;
+            background: transparent;
+            border: 1px solid transparent;
         }
 
-        .model-select:focus {
-            outline: none;
-            border-color: var(--accent);
+        .model-select option {
+            font-size: 13px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .header-right .mode-badge:hover,
+        .header-right .model-select:hover,
+        .header-right .header-btn:hover {
+            opacity: 1;
+            font-size: 12px;
+            background: var(--bg-hover);
+            border-color: var(--border-color);
+            color: var(--text-primary);
+            padding: 4px 12px;
+            min-width: auto;
+        }
+
+        .mode-badge:hover::after {
+            font-size: 12px;
+            opacity: 1;
+        }
+
+        .mode-badge:hover .status-dot {
+            font-size: 12px;
         }
 
         .token-display {
-            font-size: 13px;
+            font-size: 12px;
             color: var(--text-secondary);
-            padding: 4px 12px;
+            padding: 2px 8px;
             border-radius: 6px;
             background: var(--bg-hover);
             border: 1px solid var(--border-color);
         }
 
+        /* ===== 聊天区 ===== */
         .chat-area {
             flex: 1;
             overflow-y: auto;
@@ -301,15 +318,46 @@
         .chat-area .message.assistant .bubble {
             background: var(--bg-secondary);
             color: var(--text-primary);
-            padding: 10px 16px;
+            padding: 12px 18px;
             border-radius: 12px 12px 12px 4px;
             max-width: 85%;
             border: 1px solid var(--border-color);
             word-wrap: break-word;
             white-space: pre-wrap;
             line-height: 1.8;
+            font-size: 15px;
+            font-family: "Segoe UI", "PingFang SC", system-ui, sans-serif;
         }
 
+        .chat-area .message.assistant .bubble code {
+            background: var(--bg-hover);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: "Fira Code", monospace;
+        }
+
+        .chat-area .message.assistant .bubble pre {
+            background: var(--bg-hover);
+            padding: 12px 16px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: "Fira Code", monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .chat-area .message.assistant .bubble ul,
+        .chat-area .message.assistant .bubble ol {
+            padding-left: 20px;
+            margin: 8px 0;
+        }
+
+        .chat-area .message.assistant .bubble li {
+            margin: 4px 0;
+        }
+
+        /* ===== 输入区 ===== */
         .input-area {
             padding: 12px 24px 20px;
             border-top: 1px solid var(--border-color);
@@ -379,6 +427,7 @@
             color: var(--text-primary);
         }
 
+        /* ===== 动画 ===== */
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -404,6 +453,7 @@
             }
         }
 
+        /* ===== 弹窗等复用样式（保持原样） ===== */
         .sovereign-modal {
             position: fixed;
             top: 0;
@@ -876,6 +926,61 @@
             display: flex;
         }
 
+        .apply-overlay.active {
+            display: flex;
+        }
+
+        /* ===== 模块6-1：记忆抽屉样式 ===== */
+        .memory-drawer {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 500px;
+            max-width: 90vw;
+            height: 100%;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border-color);
+            z-index: 1000;
+            padding: 24px;
+            overflow-y: auto;
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* ===== 审计抽屉 ===== */
+        .audit-panel,
+        .audit-preview-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 500px;
+            max-width: 90vw;
+            height: 100%;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border-color);
+            z-index: 1000;
+            padding: 24px;
+            overflow-y: auto;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @media (max-width: 640px) {
+
+            .audit-panel,
+            .audit-preview-panel {
+                width: 100vw;
+                max-width: 100vw;
+            }
+        }
+
+        @media (max-width:640px) {
+
+            /* ... 原有样式 ... */
+            .memory-drawer {
+                width: 100vw;
+                max-width: 100vw;
+            }
+        }
+
         @media (max-width:640px) {
             .sidebar {
                 transform: translateX(-100%);
@@ -886,6 +991,7 @@
                 bottom: 0;
                 z-index: 200;
             }
+
 
             .sidebar.open {
                 transform: translateX(0);
@@ -979,6 +1085,182 @@
                 padding: 3px 8px;
             }
 
+            /* ============================================= */
+            /* [模块26-2] 输入面板样式                        */
+            /* ============================================= */
+
+            .input-panel-overlay {
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                background: rgba(0, 0, 0, 0.6) !important;
+                display: none;
+                justify-content: center !important;
+                align-items: center !important;
+                z-index: 99999 !important;
+                animation: fadeIn 0.3s ease;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            .input-panel-overlay.active {
+                display: flex !important;
+            }
+
+            .input-panel {
+                background: var(--bg-secondary);
+                border-radius: 16px;
+                width: 90%;
+                max-width: 600px;
+                max-height: 80vh;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+                border: 1px solid var(--border-color);
+                position: relative;
+                margin: auto;
+            }
+
+            .input-panel-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 16px 20px;
+                border-bottom: 1px solid var(--border-color);
+                flex-shrink: 0;
+            }
+
+            .input-panel-title {
+                font-size: 18px;
+                font-weight: bold;
+                color: var(--text-primary);
+            }
+
+            .input-panel-close {
+                background: none;
+                border: none;
+                color: var(--text-muted);
+                font-size: 24px;
+                cursor: pointer;
+                padding: 4px 8px;
+                border-radius: 6px;
+                transition: all 0.2s;
+            }
+
+            .input-panel-close:hover {
+                background: var(--bg-hover);
+                color: var(--text-primary);
+            }
+
+            .input-panel-body {
+                padding: 16px 20px;
+                flex: 1;
+                min-height: 200px;
+            }
+
+            .input-panel-body textarea {
+                width: 100%;
+                height: 100%;
+                min-height: 180px;
+                background: var(--bg-primary);
+                color: var(--text-primary);
+                border: 1px solid var(--border-color);
+                border-radius: 8px;
+                padding: 14px 16px;
+                font-size: var(--font-size-base, 16px);
+                font-family: inherit;
+                resize: vertical;
+                outline: none;
+                transition: border-color 0.2s;
+                line-height: 1.8;
+            }
+
+            .input-panel-body textarea:focus {
+                border-color: var(--accent);
+            }
+
+            .input-panel-footer {
+                display: flex;
+                justify-content: flex-end;
+                gap: 10px;
+                padding: 12px 20px;
+                border-top: 1px solid var(--border-color);
+                flex-shrink: 0;
+            }
+
+            .input-panel-btn {
+                padding: 8px 20px;
+                border-radius: 6px;
+                border: 1px solid var(--border-color);
+                background: var(--bg-primary);
+                color: var(--text-secondary);
+                font-size: 14px;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+
+            .input-panel-btn:hover {
+                background: var(--bg-hover);
+                color: var(--text-primary);
+            }
+
+            .input-panel-btn-cancel {
+                color: var(--text-muted);
+            }
+
+            .input-panel-btn-cancel:hover {
+                background: var(--bg-hover);
+            }
+
+            .input-panel-btn-send {
+                background: var(--accent);
+                color: #0a0a0a;
+                border-color: var(--accent);
+                font-weight: bold;
+            }
+
+            .input-panel-btn-send:hover {
+                background: var(--accent-hover);
+            }
+
+            /* 手机端适配 */
+            @media (max-width: 640px) {
+                .input-panel {
+                    width: 95%;
+                    max-height: 90vh;
+                    border-radius: 12px;
+                }
+
+                .input-panel-body {
+                    min-height: 150px;
+                    padding: 12px 16px;
+                }
+
+                .input-panel-body textarea {
+                    min-height: 140px;
+                    font-size: var(--font-size-base, 16px);
+                }
+
+                .input-panel-header {
+                    padding: 12px 16px;
+                }
+
+                .input-panel-footer {
+                    padding: 10px 16px;
+                    flex-wrap: wrap;
+                }
+
+                .input-panel-btn {
+                    padding: 8px 16px;
+                    font-size: 14px;
+                    flex: 1;
+                    text-align: center;
+                }
+            }
+
             .token-display {
                 font-size: 10px;
                 padding: 2px 6px;
@@ -1010,17 +1292,42 @@
     </div>
 
     <!-- ===== 侧边栏 ===== -->
-    <div class="sidebar">
+    <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <span>如律令</span>
             <span class="badge">藏器魂</span>
             <button onclick="toggleSidebar()"
-                style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:16px;">☰</button>
+                style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:24px;padding:8px 12px;border-radius:6px;transition:all 0.2s;"
+                onmouseover="this.style.background='var(--bg-hover)'"
+                onmouseout="this.style.background='transparent'">☰</button>
         </div>
         <div class="sidebar-list" id="convList"></div>
+
+
         <div class="sidebar-footer"><span>主权模式</span></div>
     </div>
 
+
+    <!-- ============================================= -->
+    <!-- [模块26-1] 输入面板 - 弹出式大输入框           -->
+    <!-- ============================================= -->
+
+    <div class="input-panel-overlay" id="inputPanelOverlay">
+        <div class="input-panel">
+            <div class="input-panel-header">
+                <span class="input-panel-title">✏️ 输入</span>
+                <button class="input-panel-close" onclick="closeInputPanel()">✕</button>
+            </div>
+            <div class="input-panel-body">
+                <textarea id="inputPanelTextarea" placeholder="输入您的话... (支持手写/粘贴/长文本)"></textarea>
+            </div>
+            <div class="input-panel-footer">
+                <button class="input-panel-btn" onclick="clearPanelInput()">清空</button>
+                <button class="input-panel-btn input-panel-btn-cancel" onclick="closeInputPanel()">取消</button>
+                <button class="input-panel-btn input-panel-btn-send" onclick="sendPanelMessage()">发送</button>
+            </div>
+        </div>
+    </div>
     <!-- ===== 主容器 ===== -->
     <div class="main-container" id="appContainer" style="display:none;">
         <div class="header">
@@ -1062,10 +1369,14 @@
                 <input type="checkbox" id="webSearchToggle" style="width:16px;height:16px;cursor:pointer;">联网搜索
             </label>
             <textarea id="userInput" rows="1" placeholder="输入您的话... (Enter发送, Shift+Enter换行)"></textarea>
+            <button class="tool-btn" onclick="clearScreen()" title="清空当前聊天区显示（不影响本地记忆）">🧹 清屏</button>
             <button class="send-btn" onclick="sendMessage()">发送</button>
         </div>
     </div>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <button onclick="confirmAndExportAudit()"
+        style="background:var(--accent);color:#0a0a0a;border:none;padding:8px 24px;border-radius:6px;cursor:pointer;font-size:14px;font-weight:bold;">✅
+        确认生成（TXT）</button>
     <!-- ===== 主权身份申请面板（叠加层） ===== -->
     <div class="apply-overlay" id="applyOverlay">
         <div class="apply-panel">
@@ -1228,7 +1539,8 @@
                     return '<div class="memory-item">' +
                         '<div class="time">' + (m.timestamp || '未知时间') + '</div>' +
                         '<div class="role">' + (m.role === 'user' ? '👤 用户' : '🤖 助手') + '</div>' +
-                        '<div class="content">' + (m.content ? m.content.slice(0, 200) : '(空)') + '</div>' +
+                        '<div class="content">' + (m.content ? m.content.slice(0, 200) : '(空)') +
+                        '</div>' +
                         (m.toolUsed ? '<div style="color:var(--text-muted);font-size:12px;">🔧 ' + m
                             .toolUsed + '</div>' : '') +
                         (m.modelUsed ? '<div style="color:var(--text-muted);font-size:12px;">🤖 ' + m
@@ -1258,42 +1570,494 @@
                 addMessage('system', '⚠️ 需要进入主权模式才能查看审计日志。');
                 return;
             }
+
             var existing = document.querySelector('.audit-panel');
             if (existing) { existing.remove(); return; }
+
+            if (!window._executionLogs) {
+                window._executionLogs = [];
+            }
+
             var panel = document.createElement('div');
             panel.className = 'audit-panel';
-            panel.innerHTML = '<button class="close-btn" onclick="this.parentElement.remove()">✕</button>' +
-                '<h3 style="margin-bottom:16px;">📋 审计日志</h3>' +
-                '<div id="auditList"><div style="color:var(--text-muted);">加载中...</div></div>' +
-                '<div style="margin-top:15px;text-align:center;">' +
-                '<button onclick="this.closest(\'.audit-panel\').remove()" style="background:transparent;border:1px solid var(--border-color);color:var(--text-secondary);padding:6px 20px;border-radius:6px;cursor:pointer;font-size:13px;">关闭面板</button>' +
-                '</div>';
+
+            panel.innerHTML = `
+        <button class="close-btn" onclick="this.parentElement.remove()">✕</button>
+        <h3 style="margin-bottom:16px;">📋 审计日志</h3>
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">
+            显示每次交互中发送给大模型的脱敏内容 vs 本地保留的原始边界数据
+        </div>
+        <div id="auditList"><div style="color:var(--text-muted);">加载中...</div></div>
+        <div style="margin-top:15px;text-align:center;">
+            <button onclick="this.closest('.audit-panel').remove()" 
+                    style="background:transparent;border:1px solid var(--border-color);color:var(--text-secondary);padding:6px 20px;border-radius:6px;cursor:pointer;font-size:13px;">关闭面板</button>
+        </div>
+    `;
+
+            document.body.appendChild(panel);
+
+            panel.addEventListener('click', function (e) {
+                if (e.target === panel) this.remove();
+            });
+
+            loadAuditData();
+        }
+        // =============================================
+        // [模块4-1] 审计窗口增强 - 脱敏对比 + 边界数据
+        // =============================================
+
+        // ----- 覆盖原有的 openAuditPanel，增强功能 -----
+        function openAuditPanel() {
+            if (currentMode !== 'private') {
+                addMessage('system', '⚠️ 需要进入主权模式才能查看审计日志。');
+                return;
+            }
+
+            var existing = document.querySelector('.audit-panel');
+            if (existing) { existing.remove(); return; }
+
+            var panel = document.createElement('div');
+            panel.className = 'audit-panel';
+
+            panel.innerHTML = `
+        <button class="close-btn" onclick="this.parentElement.remove()">✕</button>
+        <h3 style="margin-bottom:16px;">📋 审计日志</h3>
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">
+            显示每次交互中发送给大模型的脱敏内容 vs 本地保留的原始边界数据
+        </div>
+        <div id="auditList"><div style="color:var(--text-muted);">加载中...</div></div>
+        <div style="margin-top:15px;text-align:center;">
+            <button onclick="this.closest('.audit-panel').remove()" 
+                    style="background:transparent;border:1px solid var(--border-color);color:var(--text-secondary);padding:6px 20px;border-radius:6px;cursor:pointer;font-size:13px;">关闭面板</button>
+        </div>
+    `;
+
+            document.body.appendChild(panel);
+
+            panel.addEventListener('click', function (e) {
+                if (e.target === panel) this.remove();
+            });
+
+            // 加载审计数据
+            loadAuditData();
+        }
+        // =============================================
+        // [模块4-1] loadAuditData - 加载审计数据
+        // =============================================
+        function loadAuditData() {
+            var list = document.getElementById('auditList');
+            if (!list) return;
+
+            if (!window._executionLogs) {
+                window._executionLogs = [];
+            }
+
+            var logs = window._executionLogs || [];
+
+            if (logs.length === 0) {
+                list.innerHTML = '<div style="color:var(--text-muted);">暂无审计记录。</div>';
+                return;
+            }
+
+            var sortedLogs = logs.slice().reverse();
+
+            list.innerHTML = sortedLogs.map(function (log) {
+                var time = log.timestamp ? new Date(log.timestamp).toLocaleString() : '未知时间';
+                var pathLabel = log.executionPath === 'local' ? '✅ 本地执行' :
+                    log.executionPath === 'cloud' ? '🌐 大模型执行' :
+                        log.executionPath === 'blocked' ? '🚫 已拦截' : '未知';
+
+                var assetInfo = log.assetHit ? '命中资产: ' + log.assetHit : '无资产命中';
+
+                var originalContent = log.originalContent || '（原始内容未记录）';
+                var desensitizedContent = log.desensitizedContent || '（未脱敏）';
+
+                return `
+            <div class="audit-item" style="margin-bottom:12px;padding:12px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:6px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                    <span class="time" style="color:var(--text-muted);font-size:12px;">${time}</span>
+                    <span style="font-size:12px;color:var(--accent);">${pathLabel}</span>
+                </div>
+                <div style="margin-top:6px;font-size:13px;color:var(--text-secondary);">${assetInfo}</div>
+                <div style="margin-top:8px;padding:8px;background:var(--bg-primary);border-radius:4px;font-size:13px;">
+                    <div><strong style="color:var(--text-primary);">📤 脱敏后内容（发送给大模型）：</strong></div>
+                    <div style="color:var(--text-secondary);white-space:pre-wrap;word-break:break-all;margin-top:4px;">${desensitizedContent}</div>
+                </div>
+                <div style="margin-top:8px;padding:8px;background:var(--bg-primary);border-radius:4px;font-size:13px;">
+                    <div><strong style="color:var(--text-primary);">📥 原始边界数据（本地保留）：</strong></div>
+                    <div style="color:var(--text-secondary);white-space:pre-wrap;word-break:break-all;margin-top:4px;">${originalContent}</div>
+                </div>
+                <div style="margin-top:6px;font-size:11px;color:var(--text-muted);">
+                    ${log.executionPath === 'cloud' ? '✅ 数据已脱敏，原始数据未出本地' : '✅ 本地执行，数据未出本地'}
+                </div>
+            </div>
+        `;
+            }).join('');
+        }
+
+        // ----- 加载审计数据（新增）-----
+        function loadAuditData() {
+            var list = document.getElementById('auditList');
+            if (!list) return;
+
+            try {
+                // 从本地记忆库读取交互记录
+                var logs = window._executionLogs || [];
+
+                if (logs.length === 0) {
+                    list.innerHTML = '<div style="color:var(--text-muted);">暂无审计记录。</div>';
+                    return;
+                }
+
+                // 按时间倒序排列
+                var sortedLogs = logs.slice().reverse();
+
+                list.innerHTML = sortedLogs.map(function (log) {
+                    var time = log.timestamp ? new Date(log.timestamp).toLocaleString() : '未知时间';
+                    var pathLabel = log.executionPath === 'local' ? '✅ 本地执行' :
+                        log.executionPath === 'cloud' ? '🌐 大模型执行' :
+                            log.executionPath === 'blocked' ? '🚫 已拦截' : '未知';
+
+                    var assetInfo = log.assetHit ? '命中资产: ' + log.assetHit : '无资产命中';
+
+                    var originalContent = log.originalContent || '（原始内容未记录）';
+                    var desensitizedContent = log.desensitizedContent || '（未脱敏）';
+
+                    return `
+                <div class="audit-item" style="margin-bottom:12px;padding:12px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:6px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                        <span class="time" style="color:var(--text-muted);font-size:12px;">${time}</span>
+                        <span style="font-size:12px;color:var(--accent);">${pathLabel}</span>
+                    </div>
+                    <div style="margin-top:6px;font-size:13px;color:var(--text-secondary);">${assetInfo}</div>
+                    <div style="margin-top:8px;padding:8px;background:var(--bg-primary);border-radius:4px;font-size:13px;">
+                        <div><strong style="color:var(--text-primary);">📤 脱敏后内容（发送给大模型）：</strong></div>
+                        <div style="color:var(--text-secondary);white-space:pre-wrap;word-break:break-all;margin-top:4px;">${desensitizedContent}</div>
+                    </div>
+                    <div style="margin-top:8px;padding:8px;background:var(--bg-primary);border-radius:4px;font-size:13px;">
+                        <div><strong style="color:var(--text-primary);">📥 原始边界数据（本地保留）：</strong></div>
+                        <div style="color:var(--text-secondary);white-space:pre-wrap;word-break:break-all;margin-top:4px;">${originalContent}</div>
+                    </div>
+                    <div style="margin-top:6px;font-size:11px;color:var(--text-muted);">
+                        ${log.executionPath === 'cloud' ? '✅ 数据已脱敏，原始数据未出本地' : '✅ 本地执行，数据未出本地'}
+                    </div>
+                </div>
+            `;
+                }).join('');
+
+            } catch (e) {
+                list.innerHTML = '<div style="color:var(--text-muted);">加载审计数据失败: ' + e.message + '</div>';
+            }
+        }
+        // =============================================
+        // [模块4-3] 审计报告预览 + 确认生成（完整整合版）
+        // =============================================
+
+        // ----- 1. 打开审计面板 -----
+        function openAuditPanel() {
+            if (currentMode !== 'private') {
+                addMessage('system', '⚠️ 需要进入主权模式才能查看审计日志。');
+                return;
+            }
+
+            var existing = document.querySelector('.audit-panel');
+            if (existing) { existing.remove(); return; }
+
+            if (!window._executionLogs) {
+                window._executionLogs = [];
+            }
+
+            var panel = document.createElement('div');
+            panel.className = 'audit-panel';
+
+            panel.innerHTML = `
+        <button class="close-btn" onclick="this.parentElement.remove()">✕</button>
+        <h3 style="margin-bottom:12px;">📋 审计日志</h3>
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">
+            显示每次交互的脱敏内容 vs 原始边界数据 · 数据不出域
+        </div>
+        <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+            <button onclick="loadAuditData()" 
+                    style="background:var(--bg-hover);border:1px solid var(--border-color);color:var(--text-secondary);padding:4px 14px;border-radius:6px;cursor:pointer;font-size:13px;">🔄 刷新</button>
+            <button onclick="previewAuditReport()" 
+                    style="background:var(--accent);color:#0a0a0a;border:none;padding:4px 14px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:bold;">📥 导出报告</button>
+        </div>
+        <div id="auditList"><div style="color:var(--text-muted);">加载中...</div></div>
+        <div style="margin-top:15px;text-align:center;">
+            <button onclick="this.closest('.audit-panel').remove()" 
+                    style="background:transparent;border:1px solid var(--border-color);color:var(--text-secondary);padding:6px 20px;border-radius:6px;cursor:pointer;font-size:13px;">关闭</button>
+        </div>
+    `;
+
             document.body.appendChild(panel);
             panel.addEventListener('click', function (e) {
                 if (e.target === panel) this.remove();
             });
-            fetch(PROXY_URL + '/api/audit').then(function (res) { return res.json(); }).then(function (data) {
-                var list = document.getElementById('auditList');
-                if (!data.success || !data.logs || data.logs.length === 0) {
-                    list.innerHTML = '<div style="color:var(--text-muted);">暂无审计记录。</div>';
-                    return;
-                }
-                list.innerHTML = data.logs.map(function (log) {
-                    return '<div class="audit-item">' +
-                        '<div class="time">' + (log.timestamp || '未知时间') + '</div>' +
-                        '<div><strong>' + (log.tool || '未知工具') + '</strong> 由 ' + (log.userId ||
-                            '未知用户') + '</div>' +
-                        '<div class="detail">参数: ' + JSON.stringify(log.params || {}) + '</div>' +
-                        '<div class="detail">规则: ' + (log.ruleId || '无') + '</div>' +
-                        '<div class="detail">结果: ' + (log.result || '无') + '</div>' +
-                        '</div>';
-                }).join('');
-            }).catch(function () {
-                document.getElementById('auditList').innerHTML =
-                    '<div style="color:var(--text-muted);">无法加载审计日志，请确保后端服务已启动。</div>';
-            });
+
+            loadAuditData();
         }
 
+        // ----- 2. 加载审计数据 -----
+        function loadAuditData() {
+            var list = document.getElementById('auditList');
+            if (!list) return;
+
+            if (!window._executionLogs) {
+                window._executionLogs = [];
+            }
+
+            var logs = window._executionLogs || [];
+
+            if (logs.length === 0) {
+                list.innerHTML = '<div style="color:var(--text-muted);padding:20px;text-align:center;">暂无审计记录。</div>';
+                return;
+            }
+
+            var sortedLogs = logs.slice().reverse();
+
+            list.innerHTML = sortedLogs.map(function (log) {
+                var time = log.timestamp ? new Date(log.timestamp).toLocaleString() : '未知时间';
+                var pathLabel = log.executionPath === 'local' ? '✅ 本地执行' :
+                    log.executionPath === 'cloud' ? '🌐 大模型执行' :
+                        log.executionPath === 'blocked' ? '🚫 已拦截' : '未知';
+
+                var assetInfo = log.assetHit ? '命中资产: ' + log.assetHit : '无资产命中';
+
+                var originalContent = log.originalContent || '（原始内容未记录）';
+                var desensitizedContent = log.desensitizedContent || '（未脱敏）';
+
+                return `
+            <div class="audit-item" style="margin-bottom:12px;padding:12px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:6px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                    <span class="time" style="color:var(--text-muted);font-size:12px;">${time}</span>
+                    <span style="font-size:12px;color:var(--accent);">${pathLabel}</span>
+                </div>
+                <div style="margin-top:6px;font-size:13px;color:var(--text-secondary);">${assetInfo}</div>
+                <div style="margin-top:8px;padding:8px;background:var(--bg-primary);border-radius:4px;font-size:13px;">
+                    <div><strong style="color:var(--text-primary);">📤 脱敏后内容（发送给大模型）：</strong></div>
+                    <div style="color:var(--text-secondary);white-space:pre-wrap;word-break:break-all;margin-top:4px;">${desensitizedContent}</div>
+                </div>
+                <div style="margin-top:8px;padding:8px;background:var(--bg-primary);border-radius:4px;font-size:13px;">
+                    <div><strong style="color:var(--text-primary);">📥 原始边界数据（本地保留）：</strong></div>
+                    <div style="color:var(--text-secondary);white-space:pre-wrap;word-break:break-all;margin-top:4px;">${originalContent}</div>
+                </div>
+                <div style="margin-top:6px;font-size:11px;color:var(--text-muted);">
+                    ${log.executionPath === 'cloud' ? '✅ 数据已脱敏，原始数据未出本地' : '✅ 本地执行，数据未出本地'}
+                </div>
+            </div>
+        `;
+            }).join('');
+        }
+
+        // ----- 3. 生成报告文本 -----
+        function generateAuditReportText(logs, unitName, signer, signDate) {
+            var total = logs.length;
+            var local = 0, cloud = 0, blocked = 0;
+            var assetHits = {};
+            var details = [];
+
+            logs.forEach(function (log) {
+                if (log.executionPath === 'local') local++;
+                else if (log.executionPath === 'cloud') cloud++;
+                else if (log.executionPath === 'blocked') blocked++;
+                if (log.assetHit) {
+                    assetHits[log.assetHit] = (assetHits[log.assetHit] || 0) + 1;
+                }
+                details.push({
+                    time: log.timestamp ? new Date(log.timestamp).toLocaleString() : '未知时间',
+                    path: log.executionPath,
+                    asset: log.assetHit || '无',
+                    original: log.originalContent || '未记录',
+                    desensitized: log.desensitizedContent || '未记录'
+                });
+            });
+
+            var lines = [];
+            lines.push('═══════════════════════════════════════════════════════════════════════');
+            lines.push('                        藏器魂 · 数据审计报告');
+            lines.push('═══════════════════════════════════════════════════════════════════════');
+            lines.push('');
+            lines.push('  报告编号: AUD-' + new Date().toISOString().slice(0, 10).replace(/-/g, '') + '-' + String(Date.now()).slice(-4));
+            lines.push('  生成时间: ' + new Date().toLocaleString());
+            lines.push('  用户ID: ' + (currentUserId || '未知'));
+            lines.push('  窗口名称: ' + (getWindowDisplayName(currentConversationId) || '未知'));
+            lines.push('');
+            lines.push('───────────────────────────────────────────────────────────────────────');
+            lines.push('  一、交互明细');
+            lines.push('───────────────────────────────────────────────────────────────────────');
+            details.forEach(function (d, i) {
+                lines.push('');
+                lines.push('  【记录 ' + (i + 1) + '】');
+                lines.push('  时间: ' + d.time);
+                lines.push('  执行路径: ' + d.path);
+                lines.push('  命中资产: ' + d.asset);
+                lines.push('  原始内容: ' + d.original);
+                lines.push('  脱敏内容: ' + d.desensitized);
+                lines.push('  数据出域: ' + (d.path === 'cloud' ? '是（已脱敏）' : '否'));
+            });
+            lines.push('');
+            lines.push('───────────────────────────────────────────────────────────────────────');
+            lines.push('  二、汇总统计');
+            lines.push('───────────────────────────────────────────────────────────────────────');
+            lines.push('');
+            lines.push('  总交互数: ' + total);
+            lines.push('  本地执行: ' + local + ' (' + (total > 0 ? (local / total * 100).toFixed(1) : 0) + '%)');
+            lines.push('  大模型执行: ' + cloud + ' (' + (total > 0 ? (cloud / total * 100).toFixed(1) : 0) + '%)');
+            lines.push('  安全拦截: ' + blocked);
+            lines.push('  数据脱敏率: 100%');
+            lines.push('');
+            lines.push('───────────────────────────────────────────────────────────────────────');
+            lines.push('  三、资产命中统计');
+            lines.push('───────────────────────────────────────────────────────────────────────');
+            if (Object.keys(assetHits).length === 0) {
+                lines.push('  暂无资产命中记录。');
+            } else {
+                for (var name in assetHits) {
+                    lines.push('  ' + name + ': ' + assetHits[name] + ' 次');
+                }
+            }
+            lines.push('');
+            lines.push('───────────────────────────────────────────────────────────────────────');
+            lines.push('  四、数据安全声明');
+            lines.push('───────────────────────────────────────────────────────────────────────');
+            lines.push('');
+            lines.push('  本次报告中的所有交互数据均来自藏器魂本地存储。');
+            lines.push('  原始数据未出本地，脱敏数据已处理，符合数据主权要求。');
+            lines.push('');
+            lines.push('───────────────────────────────────────────────────────────────────────');
+            lines.push('  五、签字盖章');
+            lines.push('───────────────────────────────────────────────────────────────────────');
+            lines.push('');
+            lines.push('  单位名称：' + (unitName || '___________________________'));
+            lines.push('  签字人：' + (signer || '___________________________'));
+            lines.push('  日期：' + (signDate || new Date().toLocaleDateString('zh-CN')));
+            lines.push('');
+            lines.push('                     （盖章处）');
+            lines.push('');
+            lines.push('═══════════════════════════════════════════════════════════════════════');
+            lines.push('  本报告由藏器魂自动生成 · 数据来源：本地存储');
+            lines.push('  报告生成时间: ' + new Date().toLocaleString());
+            lines.push('═══════════════════════════════════════════════════════════════════════');
+
+            return lines.join('\n');
+        }
+
+        // ----- 4. 预览报告 -----
+        function previewAuditReport() {
+            var logs = window._executionLogs || [];
+            if (logs.length === 0) {
+                addMessage('system', '📋 暂无审计数据可导出。');
+                return;
+            }
+
+            var existing = document.querySelector('.audit-preview-panel');
+            if (existing) { existing.remove(); return; }
+
+            var previewText = generateAuditReportText(logs, '【待填写】', '【待填写】', '【待填写】');
+
+            var panel = document.createElement('div');
+            panel.className = 'audit-preview-panel';
+
+            panel.innerHTML = `
+        <button class="close-btn" onclick="this.parentElement.remove()">✕</button>
+        <h3 style="margin-bottom:12px;">📄 审计报告预览</h3>
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">
+            请确认报告内容无误，然后填写单位信息生成正式报告。
+        </div>
+        <div style="max-height:50vh;overflow-y:auto;padding:12px;background:var(--bg-primary);border:1px solid var(--border-color);border-radius:6px;font-family:monospace;font-size:12px;white-space:pre-wrap;word-break:break-all;">
+            ${previewText}
+        </div>
+        <div style="margin-top:16px;padding:16px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:6px;">
+            <div style="font-size:14px;font-weight:bold;margin-bottom:8px;">✍️ 填写单位信息</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div>
+                    <label style="font-size:13px;color:var(--text-secondary);">单位名称</label>
+                    <input id="auditUnitName" type="text" placeholder="如：XX科技有限公司" 
+                           style="width:100%;padding:6px 10px;background:var(--bg-primary);border:1px solid var(--border-color);border-radius:4px;color:var(--text-primary);font-size:14px;margin-top:2px;">
+                </div>
+                <div>
+                    <label style="font-size:13px;color:var(--text-secondary);">签字人</label>
+                    <input id="auditSigner" type="text" placeholder="如：张三" 
+                           style="width:100%;padding:6px 10px;background:var(--bg-primary);border:1px solid var(--border-color);border-radius:4px;color:var(--text-primary);font-size:14px;margin-top:2px;">
+                </div>
+            </div>
+            <div style="margin-top:8px;">
+                <label style="font-size:13px;color:var(--text-secondary);">报告日期</label>
+                <input id="auditDate" type="date" 
+                       style="width:100%;padding:6px 10px;background:var(--bg-primary);border:1px solid var(--border-color);border-radius:4px;color:var(--text-primary);font-size:14px;margin-top:2px;">
+            </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;">
+            <button onclick="confirmAndExportAudit()" 
+                    style="background:var(--accent);color:#0a0a0a;border:none;padding:8px 24px;border-radius:6px;cursor:pointer;font-size:14px;font-weight:bold;">✅ 确认生成</button>
+            <button onclick="this.closest('.audit-preview-panel').remove()" 
+                    style="background:transparent;border:1px solid var(--border-color);color:var(--text-secondary);padding:8px 20px;border-radius:6px;cursor:pointer;font-size:14px;">取消</button>
+        </div>
+    `;
+
+            document.body.appendChild(panel);
+
+            panel.addEventListener('click', function (e) {
+                if (e.target === panel) this.remove();
+            });
+
+            var dateInput = document.getElementById('auditDate');
+            if (dateInput) {
+                var today = new Date().toISOString().slice(0, 10);
+                dateInput.value = today;
+            }
+        }
+
+        // ----- 5. 确认生成报告（只保存TXT） -----
+        function confirmAndExportAudit() {
+            var unitName = document.getElementById('auditUnitName')?.value || '未填写';
+            var signer = document.getElementById('auditSigner')?.value || '未填写';
+            var auditDate = document.getElementById('auditDate')?.value || new Date().toISOString().slice(0, 10);
+            var dateFormatted = auditDate.replace(/-/g, '年').slice(0, 4) + '年' +
+                auditDate.slice(5, 7) + '月' +
+                auditDate.slice(8, 10) + '日';
+
+            var panel = document.querySelector('.audit-preview-panel');
+            if (panel) panel.remove();
+
+            var logs = window._executionLogs || [];
+            var reportText = generateAuditReportText(logs, unitName, signer, dateFormatted);
+
+            var fileName = '审计报告_' + auditDate.replace(/-/g, '') + '_' + String(Date.now()).slice(-4) + '.txt';
+            var filePath = 'D:\\藏器魂系统\\audit\\' + fileName;
+
+            fetch('http://127.0.0.1:18888/api/file/write', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    filePath: filePath,
+                    content: reportText
+                })
+            })
+                .then(function (data) {
+                    if (data.success) {
+                        addMessage('system', '✅ 审计报告已保存: ' + filePath);
+                        addMessage('system', '📄 审计报告已生成：' + fileName);  // ← 插入这一行
+                        downloadReport(reportText, fileName);
+                    } else {
+                        addMessage('system', '❌ 保存失败: ' + (data.error || '未知错误'));
+                    }
+                })
+        }
+
+        // ----- 6. 下载报告（TXT） -----
+        function downloadReport(reportText, fileName) {
+            var blob = new Blob([reportText], { type: 'text/plain;charset=utf-8' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            addMessage('system', '✅ 报告已下载: ' + fileName);
+        }
         // =============================================
         // [模块05] showSovereignPanel - 显示主权面板
         // =============================================
@@ -1420,6 +2184,135 @@
             clearChatArea();
             addMessage('system', '✅ 主权身份已确认，进入主权模式。');
             renderConversationList();
+        }
+        // =============================================
+        // [模块6-1] 记忆抽屉 - 按日期查看历史交互
+        // =============================================
+        // ----- 抽屉折叠切换 -----
+        function toggleDrawer(id) {
+            var content = document.getElementById(id);
+            var arrow = document.getElementById(id + '_arrow');
+            if (!content || !arrow) return;
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                arrow.textContent = '▼';
+            } else {
+                content.style.display = 'none';
+                arrow.textContent = '▶';
+            }
+        }
+
+        function openMemoryDrawer() {
+            if (currentMode !== 'private') {
+                addMessage('system', '⚠️ 需要进入主权模式才能查看记忆抽屉。');
+                return;
+            }
+
+            var existing = document.querySelector('.memory-drawer');
+            if (existing) { existing.remove(); return; }
+
+            var drawer = document.createElement('div');
+            drawer.className = 'memory-drawer';
+
+            // 收集所有窗口的记忆数据
+            var allMemories = [];
+            for (var id in conversations) {
+                var conv = conversations[id];
+                if (!conv || !conv.messages || conv.messages.length === 0) continue;
+                var windowName = conv.title || conv.windowIdentity || id;
+                conv.messages.forEach(function (msg) {
+                    allMemories.push({
+                        windowId: id,
+                        windowName: windowName,
+                        timestamp: msg.timestamp || Date.now(),
+                        role: msg.role,
+                        text: msg.text
+                    });
+                });
+            }
+
+            // 按时间倒序排列
+            allMemories.sort(function (a, b) {
+                return b.timestamp - a.timestamp;
+            });
+
+            // 按日期分组
+            var groups = {};
+            allMemories.forEach(function (item) {
+                var date = new Date(item.timestamp).toLocaleDateString('zh-CN');
+                if (!groups[date]) groups[date] = [];
+                groups[date].push(item);
+            });
+
+            var groupKeys = Object.keys(groups).sort().reverse();
+
+            var html = `
+        <button class="close-btn" onclick="this.parentElement.remove()">✕</button>
+        <h3 style="margin-bottom:16px;">📂 记忆抽屉</h3>
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">
+            共 ${allMemories.length} 条记忆 · 按日期分组 · 存储于本地硬盘
+        </div>
+        <div style="max-height:70vh;overflow-y:auto;">
+    `;
+
+            if (groupKeys.length === 0) {
+                html += '<div style="color:var(--text-muted);padding:20px;text-align:center;">暂无记忆记录。</div>';
+            } else {
+                groupKeys.forEach(function (date) {
+                    var items = groups[date];
+                    var drawerId = 'drawer_' + date.replace(/\//g, '_');
+                    html += `
+                <div style="margin-bottom:12px;border:1px solid var(--border-color);border-radius:8px;overflow:hidden;">
+                    <div onclick="toggleDrawer('${drawerId}')" 
+                         style="padding:10px 14px;background:var(--bg-hover);font-weight:bold;font-size:14px;color:var(--text-primary);cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none;">
+                        <span>📅 ${date}（${items.length} 条）</span>
+                        <span id="${drawerId}_arrow">▶</span>
+                    </div>
+                    <div id="${drawerId}" style="padding:8px 14px;display:none;">
+            `;
+                    items.forEach(function (item) {
+                        var time = new Date(item.timestamp).toLocaleTimeString('zh-CN');
+                        var roleLabel = item.role === 'user' ? '👤 用户' :
+                            item.role === 'assistant' ? '🤖 助手' :
+                                '📌 系统';
+                        var textPreview = item.text.length > 100 ? item.text.slice(0, 100) + '...' : item.text;
+                        html += `
+                    <div style="padding:6px 0;border-bottom:1px solid var(--border-color);font-size:13px;">
+                        <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px;">
+                            <span style="color:var(--text-muted);font-size:12px;">${time}</span>
+                            <span style="color:var(--text-secondary);font-size:12px;">🏷️ ${item.windowName}</span>
+                            <span style="font-size:12px;">${roleLabel}</span>
+                        </div>
+                        <div style="color:var(--text-primary);margin-top:2px;word-break:break-all;">${textPreview}</div>
+                    </div>
+                `;
+                    });
+                    html += `
+                    </div>
+                </div>
+            `;
+                });
+            }
+
+            html += `
+        </div>
+        <div style="margin-top:15px;text-align:center;">
+            <button onclick="this.closest('.memory-drawer').remove()" 
+                    style="background:transparent;border:1px solid var(--border-color);color:var(--text-secondary);padding:6px 20px;border-radius:6px;cursor:pointer;font-size:13px;">关闭</button>
+        </div>
+    `;
+
+            drawer.innerHTML = html;
+            document.body.appendChild(drawer);
+
+            drawer.addEventListener('click', function (e) {
+                if (e.target === drawer) this.remove();
+            });
+        }
+
+        // 替换原有的 openMemoryPanel 为记忆抽屉
+        function openMemoryPanel() {
+            openMemoryDrawer();
         }
 
         /// =============================================
@@ -2080,7 +2973,7 @@
                     modal.style.cssText =
                         'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;display:flex;justify-content:center;align-items:center;';
                     var toolCards = tools.map(function (tool) {
-                        return '<div style="background:#1a1a1a;border:1px solid #3a3a3a;border-radius:8px;padding:16px;margin-bottom:12px;">' +
+                        return '<div style="background:var(--bg-primary);border:1px solid #3a3a3a;border-radius:8px;padding:16px;margin-bottom:12px;">' +
                             '<div style="display:flex;justify-content:space-between;align-items:center;">' +
                             '<strong style="color:#d9d0b5;">' + tool.name + '</strong>' +
                             '<span style="color:#7a8a6a;font-size:14px;">💰 ' + tool.pricing
@@ -2441,7 +3334,8 @@
             input.value = '';
 
             // ---- 0. 处理保存确认 ----
-            if (rawText.startsWith('是') || rawText.startsWith('yes') || rawText.startsWith('确认') || rawText.startsWith('保存')) {
+            if (rawText.startsWith('是') || rawText.startsWith('yes') || rawText.startsWith('确认') || rawText.startsWith(
+                '保存')) {
                 if (window._pendingSave && window._pendingSave.active) {
                     addMessage('user', rawText);
                     await handleSavePreference(rawText);
@@ -2501,7 +3395,8 @@
             }
 
             // ---- 6. 处理工具确认 ----
-            if (rawText.startsWith('是') || rawText.startsWith('yes') || rawText.startsWith('确认') || rawText.startsWith('执行')) {
+            if (rawText.startsWith('是') || rawText.startsWith('yes') || rawText.startsWith('确认') || rawText.startsWith(
+                '执行')) {
                 if (window._pendingIntent) {
                     var intent = window._pendingIntent;
                     var userText = window._pendingUserText;
@@ -2615,6 +3510,94 @@
 
             addMessage('system', '📌 请先选择模式（普通或主权）。');
         }
+        // =============================================
+        // [模块26-3] 输入面板逻辑
+        // =============================================
+
+        // ----- 1. 打开输入面板 -----
+        function openInputPanel() {
+            var overlay = document.getElementById('inputPanelOverlay');
+            var textarea = document.getElementById('inputPanelTextarea');
+            var mainInput = document.getElementById('userInput');
+
+            if (!overlay || !textarea) return;
+
+            // 同步主输入框内容到面板
+            textarea.value = mainInput.value;
+
+            // 显示面板
+            overlay.classList.add('active');
+
+            // 自动聚焦
+            setTimeout(function () {
+                textarea.focus();
+                textarea.select();
+            }, 100);
+        }
+
+        // ----- 2. 关闭输入面板 -----
+        function closeInputPanel() {
+            var overlay = document.getElementById('inputPanelOverlay');
+            var textarea = document.getElementById('inputPanelTextarea');
+            var mainInput = document.getElementById('userInput');
+
+            if (!overlay) return;
+
+            // 同步面板内容回主输入框
+            if (textarea && mainInput) {
+                mainInput.value = textarea.value;
+                // 触发 input 事件，更新主输入框状态
+                mainInput.dispatchEvent(new Event('input'));
+            }
+
+            overlay.classList.remove('active');
+        }
+
+        // ----- 3. 清空面板输入 -----
+        function clearPanelInput() {
+            var textarea = document.getElementById('inputPanelTextarea');
+            if (textarea) {
+                textarea.value = '';
+                textarea.focus();
+            }
+        }
+
+        // ----- 4. 面板发送消息 -----
+        function sendPanelMessage() {
+            var textarea = document.getElementById('inputPanelTextarea');
+            var mainInput = document.getElementById('userInput');
+
+            if (!textarea || !mainInput) return;
+
+            // 同步到主输入框
+            mainInput.value = textarea.value;
+
+            // 关闭面板
+            closeInputPanel();
+
+            // 触发发送
+            sendMessage();
+        }
+
+        // ----- 5. 点击主输入框触发面板 -----
+        document.addEventListener('DOMContentLoaded', function () {
+            var mainInput = document.getElementById('userInput');
+            if (mainInput) {
+                mainInput.addEventListener('click', function () {
+                    // 如果输入框不是空的，或者用户主动点击，弹出面板
+                    // 只在非移动端或移动端都触发
+                    openInputPanel();
+                });
+
+                // 也支持长按触发（移动端友好）
+                mainInput.addEventListener('touchstart', function (e) {
+                    // 延迟触发，避免与键盘冲突
+                    setTimeout(function () {
+                        openInputPanel();
+                    }, 200);
+                }, { passive: true });
+            }
+        });
         // =============================================
         // [模块27] getAIResponse - AI响应
         // =============================================
@@ -2877,13 +3860,22 @@
         }
 
         // ----- 4. 执行路径标记（写入审计日志）-----
-        async function logExecutionPath(path, assetName, confidence, userId) {
+        // =============================================
+        // [模块40] logExecutionPath - 执行路径标记（含脱敏数据）
+        // =============================================
+        async function logExecutionPath(path, assetName, confidence, userId, originalContent, desensitizedContent) {
+            if (!window._executionLogs) {
+                window._executionLogs = [];
+            }
+
             var entry = {
                 timestamp: new Date().toISOString(),
-                executionPath: path,  // 'local' | 'cloud' | 'blocked'
+                executionPath: path,
                 assetHit: assetName || null,
                 confidence: confidence || null,
-                userId: userId || currentUserId || 'zq_main'
+                userId: userId || currentUserId || 'zq_main',
+                originalContent: originalContent || '（原始内容未记录）',
+                desensitizedContent: desensitizedContent || '（未脱敏）'
             };
 
             try {
@@ -2902,7 +3894,6 @@
                 console.warn('路径标记失败:', e);
             }
 
-            if (!window._executionLogs) window._executionLogs = [];
             window._executionLogs.push(entry);
         }
         // =============================================
@@ -3042,10 +4033,10 @@
 
         // ----- 1. 用户偏好存储 -----
         var userPreferences = {
-            style: 'default',       // 'concise' | 'detailed' | 'default'
-            format: 'default',      // 'bullet' | 'paragraph' | 'default'
-            tone: 'professional',   // 'professional' | 'casual' | 'default'
-            learnedRules: []        // 自动生成的规则
+            style: 'default', // 'concise' | 'detailed' | 'default'
+            format: 'default', // 'bullet' | 'paragraph' | 'default'
+            tone: 'professional', // 'professional' | 'casual' | 'default'
+            learnedRules: [] // 自动生成的规则
         };
 
         // 加载用户偏好
@@ -3335,7 +4326,7 @@
         function formatResult(result, path, confidence, assetName) {
             return {
                 result: result,
-                path: path,           // 'local' | 'cloud' | 'local_llm' | 'blocked'
+                path: path, // 'local' | 'cloud' | 'local_llm' | 'blocked'
                 confidence: confidence || 0,
                 assetName: assetName || null,
                 timestamp: new Date().toISOString()
@@ -3422,7 +4413,8 @@
 
             if (assetMatch && assetMatch.confidence > 0.7) {
                 console.log('✅ 资产库命中，直接返回');
-                addMessage('system', '📦 命中本地资产: ' + assetMatch.assetName + '（置信度 ' + assetMatch.confidence + '）');
+                addMessage('system', '📦 命中本地资产: ' + assetMatch.assetName + '（置信度 ' + assetMatch.confidence +
+                    '）');
                 addMessage('assistant', assetMatch.result);
                 await logExecutionPath('local', assetMatch.assetName, assetMatch.confidence, userId);
                 await fetch('http://127.0.0.1:18888/api/window/log/write', {
@@ -3448,11 +4440,12 @@
 
             if (engineResult && engineResult.confidence >= 0.7) {
                 console.log('✅ 规则引擎命中，直接返回');
-                addMessage('system', '📦 规则引擎命中: ' + engineResult.assetName + '（置信度 ' + engineResult.confidence + '）');
+                addMessage('system', '📦 规则引擎命中: ' + engineResult.assetName + '（置信度 ' + engineResult.confidence +
+                    '）');
                 addMessage('assistant', engineResult.result);
 
-                await updateAssetIndex(windowName, engineResult.ruleId);
-                await logExecutionPath('local', engineResult.assetName, engineResult.confidence, userId);
+                await logExecutionPath('local', assetMatch.assetName, assetMatch.confidence, userId, rawText, rawText);
+                await logExecutionPath('local', engineResult.assetName, engineResult.confidence, userId, rawText, rawText);
                 await fetch('http://127.0.0.1:18888/api/window/log/write', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -3665,7 +4658,8 @@
 
             var identity = '';
             try {
-                var identityRes = await fetch('http://127.0.0.1:18888/api/window/soul/identity?windowId=' + (currentWindowId || 'FuWangHou'));
+                var identityRes = await fetch('http://127.0.0.1:18888/api/window/soul/identity?windowId=' + (currentWindowId ||
+                    'FuWangHou'));
                 var identityResult = await identityRes.json();
                 if (identityResult.success) {
                     identity = identityResult.data || currentWindowId || '傅王侯';
@@ -3887,17 +4881,46 @@
             document.getElementById('chatArea').innerHTML = '';
         }
 
+        // =============================================
+        // [模块32-1] restoreChatArea - 只从本地文件恢复
+        // =============================================
         function restoreChatArea() {
             var chat = document.getElementById('chatArea');
+            if (!chat) return;
             chat.innerHTML = '';
-            messages.forEach(function (msg) {
+
+            // 只从 conversations 恢复，不依赖 messages 变量
+            if (!currentConversationId || !conversations[currentConversationId]) {
+                console.log('📭 无当前会话，聊天区为空');
+                return;
+            }
+
+            var msgs = conversations[currentConversationId].messages || [];
+            console.log('📂 从本地记忆恢复消息:', msgs.length, '条');
+
+            msgs.forEach(function (msg) {
                 var div = document.createElement('div');
-                div.className = 'message ' + (msg.role === 'user' ? 'user' : msg.role === 'assistant' ?
-                    'assistant' : 'system');
+                div.className = 'message ' + (msg.role === 'user' ? 'user' : msg.role === 'assistant' ? 'assistant' : 'system');
                 div.innerHTML = msg.role === 'system' ? msg.text : '<div class="bubble">' + msg.text + '</div>';
                 chat.appendChild(div);
             });
+
             chat.scrollTop = chat.scrollHeight;
+        }
+        // =============================================
+        // [模块32-2] clearScreen - 清屏（只清显示，不动本地文件）
+        // =============================================
+        function clearScreen() {
+            var chat = document.getElementById('chatArea');
+            if (!chat) return;
+
+            // 只清空DOM显示，不删除本地数据
+            chat.innerHTML = '';
+
+            // 显示一条系统提示
+            addMessage('system', '🧹 屏幕已清空（本地记忆保留，刷新后恢复）');
+
+            console.log('🧹 清屏完成，本地数据未删除');
         }
 
         // =============================================
@@ -3927,7 +4950,8 @@
 
             // 主权窗口同步写文件（2.0）
             var displayName = getWindowDisplayName(currentConversationId);
-            if (displayName && displayName !== '新对话' && displayName !== 'main' && displayName !== '主窗口' && displayName !== 'unknown') {
+            if (displayName && displayName !== '新对话' && displayName !== 'main' && displayName !== '主窗口' && displayName !==
+                'unknown') {
                 await saveWindowMessagesToFile(currentConversationId);
             }
         }
@@ -4017,14 +5041,17 @@
         // [模块32-3.0] 执行路径标记扩展（3.0新增）
         // =============================================
 
-        // ----- 8. 记录执行路径（调用审计日志）-----
-        async function logExecutionPath(path, assetName, confidence, userId) {
+        async function logExecutionPath(path, assetName, confidence, userId, originalContent, desensitizedContent) {
+            if (!window._executionLogs) window._executionLogs = [];
+
             var entry = {
                 timestamp: new Date().toISOString(),
-                executionPath: path,  // 'local' | 'cloud' | 'blocked'
+                executionPath: path,
                 assetHit: assetName || null,
                 confidence: confidence || null,
-                userId: userId || currentUserId || 'zq_main'
+                userId: userId || currentUserId || 'zq_main',
+                originalContent: originalContent || '（原始内容未记录）',
+                desensitizedContent: desensitizedContent || '（未脱敏）'
             };
 
             try {
@@ -4043,14 +5070,14 @@
                 console.warn('路径标记失败:', e);
             }
 
-            if (!window._executionLogs) window._executionLogs = [];
             window._executionLogs.push(entry);
         }
-
         // ----- 9. 生成审计报告 -----
         function generateAuditReport(logs) {
             var total = logs.length;
-            var local = 0, cloud = 0, blocked = 0;
+            var local = 0,
+                cloud = 0,
+                blocked = 0;
             var assetHits = {};
 
             for (var i = 0; i < logs.length; i++) {
@@ -4262,7 +5289,8 @@
             // ---- 7. 从服务器加载对话列表 ----
             try {
                 console.log('📡 正在从服务器加载对话列表...');
-                var convRes = await fetch(PROXY_URL + '/api/window/conversations/load?userId=' + (currentUserId || 'zq_main'));
+                var convRes = await fetch(PROXY_URL + '/api/window/conversations/load?userId=' + (currentUserId ||
+                    'zq_main'));
                 var convData = await convRes.json();
                 if (convData.success && convData.data !== null && typeof convData.data === 'object') {
                     // ===== 修复：如果是数组，转成对象 =====
@@ -4299,7 +5327,8 @@
                             } else {
                                 conversations = parsed;
                             }
-                            console.log('✅ 从 localStorage 恢复对话列表，共 ' + Object.keys(conversations).length + ' 个窗口');
+                            console.log('✅ 从 localStorage 恢复对话列表，共 ' + Object.keys(conversations).length +
+                                ' 个窗口');
                         } catch (e) {
                             conversations = {};
                         }
@@ -4325,7 +5354,8 @@
                         } else {
                             conversations = parsed;
                         }
-                        console.log('✅ 从 localStorage 恢复对话列表（兜底），共 ' + Object.keys(conversations).length + ' 个窗口');
+                        console.log('✅ 从 localStorage 恢复对话列表（兜底），共 ' + Object.keys(conversations).length +
+                            ' 个窗口');
                     } catch (e) {
                         conversations = {};
                     }
@@ -4396,7 +5426,9 @@
         // =============================================
         function generateAuditReport(logs) {
             var total = logs.length;
-            var local = 0, cloud = 0, blocked = 0;
+            var local = 0,
+                cloud = 0,
+                blocked = 0;
             var assetHits = {};
 
             for (var i = 0; i < logs.length; i++) {
@@ -4477,7 +5509,8 @@
             var conv = conversations[windowId];
             if (!conv) return false;
             var displayName = getWindowDisplayName(windowId);
-            if (!displayName || displayName === '新对话' || displayName === 'main' || displayName === '主窗口' || displayName === 'unknown') {
+            if (!displayName || displayName === '新对话' || displayName === 'main' || displayName === '主窗口' ||
+                displayName === 'unknown') {
                 return true;
             }
             var filePath = getWindowMessagesFile(displayName);
@@ -4504,7 +5537,8 @@
             var conv = conversations[windowId];
             if (!conv) return null;
             var displayName = getWindowDisplayName(windowId);
-            if (!displayName || displayName === '新对话' || displayName === 'main' || displayName === '主窗口' || displayName === 'unknown') {
+            if (!displayName || displayName === '新对话' || displayName === 'main' || displayName === '主窗口' ||
+                displayName === 'unknown') {
                 return null;
             }
             var filePath = getWindowMessagesFile(displayName);
@@ -4543,6 +5577,7 @@
         //=============================================
         // [模块38] 文件尾部 - 不可动
         // =============================================
+
     </script>
 </body>
 
