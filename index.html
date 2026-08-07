@@ -1,12 +1,12 @@
-<!DOCTYPE html>
 <html lang="zh-CN">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>如律令 · 藏器魂</title>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
+        /* ===== 样式保持不变 ===== */
         * {
             margin: 0;
             padding: 0;
@@ -879,7 +879,12 @@
         @media (max-width:640px) {
             .sidebar {
                 transform: translateX(-100%);
-                width: 200px;
+                width: 240px;
+                position: fixed;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                z-index: 200;
             }
 
             .sidebar.open {
@@ -1065,7 +1070,7 @@
     <div class="apply-overlay" id="applyOverlay">
         <div class="apply-panel">
             <h2>藏器魂 · 主权身份申请</h2>
-            <p class="subtitle">根据《数字主权法典》及本公司持有的“主权密钥认证方法”发明专利（申请中），每位用户须通过本页面取得其唯一的数字身份凭证。</p>
+            <p class="subtitle">根据《数字主权法典》及本公司持有的"主权密钥认证方法"发明专利（申请中），每位用户须通过本页面取得其唯一的数字身份凭证。</p>
 
             <div class="section" id="applyStep1">
                 <h3>第一步：签署《数字主权法典》</h3>
@@ -1143,15 +1148,17 @@
             </div>
         </div>
     </div>
+
     <script>
         // =============================================
-        // [模块1] 核心配置
+        // [模块01] 核心配置与全局变量
         // =============================================
         const PROXY_URL = "http://127.0.0.1:18888";
         const IDENTITY_API_BASE = "https://cangqihun.email/api";
 
         let messages = [];
-        let currentConversationId = 'conv-' + Date.now();
+        let currentConversationId = null;
+        let currentWindowId = localStorage.getItem('currentWindowId') || 'main';
         let conversations = {};
         let currentMode = 'public';
         let tokenUsed = parseInt(localStorage.getItem('tokenUsed') || '0');
@@ -1161,15 +1168,15 @@
 
         const WINDOW_NAME = '傅清源';
         const WINDOW_KEY = WINDOW_NAME;
-
-        // =============================================
-        // [任务5] 窗口身份标识
-        // =============================================
         const WINDOW_IDENTITY = 'FuWangHou';
         console.log('🏷️ 窗口身份:', WINDOW_IDENTITY);
 
+        // ===== 保存待处理任务队列（修复问题3：防止覆盖） =====
+        let _pendingSaveQueue = [];
+        let _pendingSaveActive = false;
+
         // =============================================
-        // [模块2] 记忆系统
+        // [模块02] 记忆系统
         // =============================================
         const MEMORY_KEY = 'cangqihun_memory';
         const memoryManager = {
@@ -1203,7 +1210,7 @@
         };
 
         // =============================================
-        // [模块3] openMemoryPanel
+        // [模块03] openMemoryPanel - 记忆面板
         // =============================================
         function openMemoryPanel() {
             if (currentMode !== 'private') {
@@ -1222,13 +1229,16 @@
                         '<div class="time">' + (m.timestamp || '未知时间') + '</div>' +
                         '<div class="role">' + (m.role === 'user' ? '👤 用户' : '🤖 助手') + '</div>' +
                         '<div class="content">' + (m.content ? m.content.slice(0, 200) : '(空)') + '</div>' +
-                        (m.toolUsed ? '<div style="color:var(--text-muted);font-size:12px;">🔧 ' + m.toolUsed + '</div>' : '') +
-                        (m.modelUsed ? '<div style="color:var(--text-muted);font-size:12px;">🤖 ' + m.modelUsed + '</div>' : '') +
+                        (m.toolUsed ? '<div style="color:var(--text-muted);font-size:12px;">🔧 ' + m
+                            .toolUsed + '</div>' : '') +
+                        (m.modelUsed ? '<div style="color:var(--text-muted);font-size:12px;">🤖 ' + m
+                            .modelUsed + '</div>' : '') +
                         '</div>';
                 }).join('');
             panel.innerHTML = '<button class="close-btn" onclick="this.parentElement.remove()">✕</button>' +
                 '<h3 style="margin-bottom:16px;">🧠 记忆系统</h3>' +
-                '<div style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">共 ' + memories.length + ' 条记录</div>' +
+                '<div style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">共 ' + memories.length +
+                ' 条记录</div>' +
                 '<button onclick="memoryManager.clear();this.parentElement.querySelector(\'.memory-items\').innerHTML=\'<div style=\\"color:var(--text-muted);\\">已清空。</div>\';" style="background:var(--bg-hover);border:1px solid var(--border-color);color:var(--text-secondary);padding:4px 12px;border-radius:4px;cursor:pointer;margin-bottom:12px;font-size:12px;">清空记忆</button>' +
                 '<div class="memory-items">' + itemsHtml + '</div>' +
                 '<div style="margin-top:15px;text-align:center;">' +
@@ -1241,7 +1251,7 @@
         }
 
         // =============================================
-        // [模块4] openAuditPanel
+        // [模块04] openAuditPanel - 审计面板
         // =============================================
         function openAuditPanel() {
             if (currentMode !== 'private') {
@@ -1271,19 +1281,21 @@
                 list.innerHTML = data.logs.map(function (log) {
                     return '<div class="audit-item">' +
                         '<div class="time">' + (log.timestamp || '未知时间') + '</div>' +
-                        '<div><strong>' + (log.tool || '未知工具') + '</strong> 由 ' + (log.userId || '未知用户') + '</div>' +
+                        '<div><strong>' + (log.tool || '未知工具') + '</strong> 由 ' + (log.userId ||
+                            '未知用户') + '</div>' +
                         '<div class="detail">参数: ' + JSON.stringify(log.params || {}) + '</div>' +
                         '<div class="detail">规则: ' + (log.ruleId || '无') + '</div>' +
                         '<div class="detail">结果: ' + (log.result || '无') + '</div>' +
                         '</div>';
                 }).join('');
             }).catch(function () {
-                document.getElementById('auditList').innerHTML = '<div style="color:var(--text-muted);">无法加载审计日志，请确保后端服务已启动。</div>';
+                document.getElementById('auditList').innerHTML =
+                    '<div style="color:var(--text-muted);">无法加载审计日志，请确保后端服务已启动。</div>';
             });
         }
 
         // =============================================
-        // [模块5] showSovereignPanel
+        // [模块05] showSovereignPanel - 显示主权面板
         // =============================================
         function showSovereignPanel() {
             var isVerified = localStorage.getItem('sovereign_verified');
@@ -1309,7 +1321,7 @@
         }
 
         // =============================================
-        // [模块6] 主权身份申请函数
+        // [模块06] 主权身份申请函数
         // =============================================
         var userPassphrase = '';
         var userKeyMap = {};
@@ -1352,7 +1364,8 @@
             symbols.forEach(function (sym) {
                 mappingArea.innerHTML += '<div style="margin:8px 0;">' +
                     '<label style="display:inline-block; width:120px;">' + sym + '：</label>' +
-                    '<input type="number" class="key-value" data-symbol="' + sym + '" min="0" max="999" placeholder="0-999" style="width:120px; display:inline-block;">' +
+                    '<input type="number" class="key-value" data-symbol="' + sym +
+                    '" min="0" max="999" placeholder="0-999" style="width:120px; display:inline-block;">' +
                     '</div>';
             });
             document.getElementById('keyMappingArea').style.display = 'block';
@@ -1409,14 +1422,14 @@
             renderConversationList();
         }
 
-        // =============================================
-        // [模块7] createWindowItem
+        /// =============================================
+        // [模块07] createWindowItem（2.0修复：切换从文件加载）
         // =============================================
         function createWindowItem(id, conv) {
             var item = document.createElement('div');
             item.className = 'sidebar-item';
             if (id === currentConversationId) item.classList.add('active');
-            var icon = conv.windowIdentity === 'FuWangHou' ? '🏠 ' : '📝 ';
+            var icon = ['FuWangHou', '傅本源-Z2', '傅先锋'].includes(conv.windowIdentity) ? '🏠 ' : '📝 ';
             var title = conv.title || '空对话';
             var titleSpan = document.createElement('span');
             titleSpan.textContent = icon + title;
@@ -1425,30 +1438,32 @@
             titleSpan.addEventListener('dblclick', function (e) {
                 e.stopPropagation();
                 var newTitle = prompt('请输入新窗口名称：', conv.title || '新对话');
-                if (newTitle !== null && newTitle.trim() !== '') {
+                if (newTitle && newTitle.trim() !== '') {
+                    var oldName = getWindowDisplayName(id);
                     conversations[id].title = newTitle.trim();
-                    if (conv.windowIdentity === 'sovereign') {
-                        conversations[id].windowIdentity = 'FuWangHou';
-                        fetch(PROXY_URL + '/api/window/create', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ windowId: newTitle.trim(), userId: currentUserId })
-                        }).catch(function () { });
-                        addMessage('system', '🏠 窗口 "' + newTitle.trim() + '" 已升级为主权应用窗口。');
+                    if (['FuWangHou', '傅本源-Z2', '傅先锋'].includes(conversations[id].windowIdentity)) {
+                        conversations[id].windowIdentity = newTitle.trim();
+                    }
+                    if (oldName === '新对话' || oldName === '主窗口') {
+                        createWindowFolder(newTitle.trim());
                     }
                     localStorage.setItem('ruling_conversations', JSON.stringify(conversations));
                     renderConversationList();
+                    addMessage('system', '✏️ 窗口已重命名: ' + newTitle.trim());
                 }
             });
             item.appendChild(titleSpan);
+
             var deleteBtn = document.createElement('span');
             deleteBtn.textContent = '✕';
             deleteBtn.style.cssText = 'color:var(--text-muted);cursor:pointer;font-size:12px;margin-left:8px;';
             deleteBtn.onclick = function (e) {
                 e.stopPropagation();
-                if (conv.windowIdentity === 'FuWangHou') {
-                    if (!confirm('确认删除窗口 "' + conv.title + '"？\n（房间资产将保留）')) return;
+                if (conv.windowIdentity === 'main' || id === 'main') {
+                    addMessage('system', '❌ 主窗口不可删除。');
+                    return;
                 }
+                if (!confirm('确认删除窗口 "' + (conv.title || id) + '"？')) return;
                 delete conversations[id];
                 if (currentConversationId === id) {
                     currentConversationId = null;
@@ -1460,32 +1475,41 @@
                 addMessage('system', '🗑️ 窗口已删除。');
             };
             item.appendChild(deleteBtn);
-            item.addEventListener('click', function (e) {
+
+            item.addEventListener('click', async function (e) {
                 if (e.target === deleteBtn) return;
-                if (currentMode === 'private' && messages.length > 0) {
-                    conversations[currentConversationId] = {
-                        id: currentConversationId,
-                        messages: messages.slice(),
-                        title: conversations[currentConversationId]?.title || '新对话',
-                        timestamp: Date.now(),
-                        windowIdentity: conversations[currentConversationId]?.windowIdentity || 'sovereign'
-                    };
+
+                // 保存当前窗口
+                if (currentConversationId && conversations[currentConversationId]) {
+                    conversations[currentConversationId].messages = messages.slice();
+                    await saveWindowMessagesToFile(currentConversationId);
                 }
+
+                // 切换
                 currentConversationId = id;
-                messages = conversations[id].messages || [];
+                currentWindowId = conversations[id]?.windowIdentity || id;
                 localStorage.setItem('ruling_current_conv_id', currentConversationId);
-                localStorage.setItem('ruling_conversations', JSON.stringify(conversations));
+                localStorage.setItem('currentWindowId', currentWindowId);
+
+                // 从文件加载
+                var loaded = await loadWindowMessagesFromFile(id);
+                if (loaded !== null) {
+                    conversations[id].messages = loaded;
+                    messages = loaded;
+                } else {
+                    messages = conversations[id].messages || [];
+                }
+
                 clearChatArea();
                 restoreChatArea();
                 renderConversationList();
                 addMessage('system', '🔄 已切换到: ' + (conversations[id]?.title || '窗口'));
-                saveConversationsToServer();
+                console.log('📂 已切换到窗口:', id, '消息数:', messages.length);
             });
             return item;
         }
-
         // =============================================
-        // [模块8] renderConversationList
+        // [模块08] renderConversationList - 渲染对话列表
         // =============================================
         function renderConversationList() {
             var list = document.getElementById('convList');
@@ -1502,6 +1526,7 @@
             mainItem.textContent = '📌 主窗口';
             mainItem.onclick = function () { switchToMain(); };
             list.appendChild(mainItem);
+
             if (currentMode === 'private') {
                 var fuWangHouItems = [];
                 var sovereignItems = [];
@@ -1509,7 +1534,7 @@
                     var conv = conversations[id];
                     if (!conv || !conv.messages) continue;
                     if (conv.windowIdentity === 'main') continue;
-                    if (conv.windowIdentity === 'FuWangHou') {
+                    if (['FuWangHou', '傅本源-Z2', '傅先锋'].includes(conv.windowIdentity)) {
                         fuWangHouItems.push(id);
                     } else {
                         sovereignItems.push(id);
@@ -1517,7 +1542,8 @@
                 }
                 if (fuWangHouItems.length > 0) {
                     var sep1 = document.createElement('div');
-                    sep1.style.cssText = 'padding:4px 16px;font-size:11px;color:var(--text-muted);border-top:1px solid var(--border-color);margin-top:4px;';
+                    sep1.style.cssText =
+                        'padding:4px 16px;font-size:11px;color:var(--text-muted);border-top:1px solid var(--border-color);margin-top:4px;';
                     sep1.textContent = '🏠 主权窗口';
                     list.appendChild(sep1);
                     for (var i = 0; i < fuWangHouItems.length; i++) {
@@ -1529,7 +1555,8 @@
                 }
                 if (sovereignItems.length > 0) {
                     var sep2 = document.createElement('div');
-                    sep2.style.cssText = 'padding:4px 16px;font-size:11px;color:var(--text-muted);border-top:1px solid var(--border-color);margin-top:4px;';
+                    sep2.style.cssText =
+                        'padding:4px 16px;font-size:11px;color:var(--text-muted);border-top:1px solid var(--border-color);margin-top:4px;';
                     sep2.textContent = '📝 新主权窗口';
                     list.appendChild(sep2);
                     for (var j = 0; j < sovereignItems.length; j++) {
@@ -1547,8 +1574,9 @@
             newBtn.onclick = function () { newConversation(); };
             list.appendChild(newBtn);
         }
+
         // =============================================
-        // [新增] 保存对话列表到服务器
+        // [模块09] saveConversationsToServer - 保存对话到服务器
         // =============================================
         async function saveConversationsToServer() {
             try {
@@ -1567,32 +1595,34 @@
         }
 
         // =============================================
-        // [模块9] newConversation
+        // [模块10] newConversation（2.0修复）
         // =============================================
         function newConversation() {
+            if (currentConversationId && conversations[currentConversationId]) {
+                conversations[currentConversationId].messages = messages.slice();
+                saveWindowMessagesToFile(currentConversationId);
+            }
+
             var newId = 'conv-' + Date.now();
             currentConversationId = newId;
-            var identity = currentMode === 'private' ? 'sovereign' : 'main';
-            var defaultTitle = currentMode === 'private' ? '新主权窗口' : '新对话';
+            var defaultTitle = '新对话';
             conversations[newId] = {
                 id: newId,
                 messages: [],
                 title: defaultTitle,
                 timestamp: Date.now(),
-                windowIdentity: identity
+                windowIdentity: 'temp'
             };
             messages = [];
             localStorage.setItem('ruling_current_conv_id', currentConversationId);
             localStorage.setItem('ruling_conversations', JSON.stringify(conversations));
             clearChatArea();
             renderConversationList();
-            addMessage('system', '📝 已创建' + (currentMode === 'private' ? '新主权窗口' : '新对话') + '。');
+            addMessage('system', '📝 已创建新对话（直连大模型，无独立房间）。\n💡 双击窗口名称可重命名，升级为主权窗口。');
             saveConversationsToServer();
         }
-
-
         // =============================================
-        // [模块10] switchToMain
+        // [模块11] switchToMain - 切换到主窗口
         // =============================================
         function switchToMain() {
             var mainId = 'main';
@@ -1614,8 +1644,9 @@
             renderConversationList();
             addMessage('system', '📌 已切换到: 主窗口');
         }
+
         // =============================================
-        // [模块11] 注销账号
+        // [模块12] deleteAccount - 注销账号
         // =============================================
         function deleteAccount() {
             var userId = localStorage.getItem('sovereign_identity_id') || 'zq_main';
@@ -1660,7 +1691,7 @@
         }
 
         // =============================================
-        // [模块12] saveData / loadData
+        // [模块13] saveData / loadData - 数据持久化
         // =============================================
         function saveData() {
             var stateData = {
@@ -1674,7 +1705,8 @@
             try {
                 if (window.showDirectoryPicker) {
                     window.showDirectoryPicker().then(function (handle) {
-                        var fileName = WINDOW_KEY + '_state_' + new Date().toISOString().slice(0, 10) + '.json';
+                        var fileName = WINDOW_KEY + '_state_' + new Date().toISOString().slice(0, 10) +
+                            '.json';
                         handle.getFileHandle(fileName, { create: true }).then(function (fileHandle) {
                             fileHandle.createWritable().then(function (writable) {
                                 writable.write(JSON.stringify(stateData, null, 2));
@@ -1739,7 +1771,7 @@
         }
 
         // =============================================
-        // [模块13] selectFile
+        // [模块14] selectFile - 文件选择
         // =============================================
         function selectFile() {
             return new Promise(function (resolve) {
@@ -1769,7 +1801,7 @@
         }
 
         // =============================================
-        // [模块14] showTaskConfig
+        // [模块15] showTaskConfig - 显示任务配置
         // =============================================
         function showTaskConfig(toolId, params) {
             var toolNames = { 'T001': '数据清洗', 'T002': '合同审查', 'T003': '文件管理', 'T004': '系统命令' };
@@ -1788,11 +1820,13 @@
             }
             var modal = document.createElement('div');
             modal.id = 'taskConfigModal';
-            modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1001;display:flex;justify-content:center;align-items:center;';
+            modal.style.cssText =
+                'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1001;display:flex;justify-content:center;align-items:center;';
             var optionsHtml = options.map(function (opt) {
                 return '<div style="margin:8px 0;">' +
                     '<input type="checkbox" id="opt_' + opt.id + '" value="' + opt.id + '">' +
-                    '<label for="opt_' + opt.id + '" style="color:#d9d0b5;cursor:pointer;">' + opt.label + '</label>' +
+                    '<label for="opt_' + opt.id + '" style="color:#d9d0b5;cursor:pointer;">' + opt.label +
+                    '</label>' +
                     '</div>';
             }).join('');
             modal.innerHTML = '<div style="background:#0a0a0a;border:1px solid #3a3a3a;border-radius:12px;padding:24px;max-width:500px;width:90%;">' +
@@ -1801,7 +1835,8 @@
                 '<p style="color:#b8aa8f;font-size:13px;margin:0 0 12px 0;">请选择要执行的操作（可多选）：</p>' +
                 '<div style="margin:8px 0;">' + optionsHtml + '</div>' +
                 '<div style="display:flex;gap:10px;margin-top:16px;">' +
-                '<button onclick="confirmTask(\'' + toolId + '\')" style="background:#7a8a6a;color:#0a0a0a;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:14px;">✅ 确认执行</button>' +
+                '<button onclick="confirmTask(\'' + toolId +
+                '\')" style="background:#7a8a6a;color:#0a0a0a;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:14px;">✅ 确认执行</button>' +
                 '<button onclick="document.getElementById(\'taskConfigModal\').remove()" style="background:transparent;border:1px solid #3a3a3a;color:#b8aa8f;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:14px;">取消</button>' +
                 '</div>' +
                 '<div id="taskConfigError" style="color:#cc5544;font-size:13px;margin-top:8px;min-height:20px;"></div>' +
@@ -1810,7 +1845,7 @@
         }
 
         // =============================================
-        // [模块15] confirmTask
+        // [模块16] confirmTask - 确认任务执行
         // =============================================
         function confirmTask(toolId) {
             var checked = document.querySelectorAll('#taskConfigModal input[type="checkbox"]:checked');
@@ -1818,7 +1853,9 @@
                 document.getElementById('taskConfigError').innerText = '⚠️ 请至少选择一个操作。';
                 return;
             }
-            var validOptions = ['clean_dedupe', 'clean_fill', 'clean_format', 'clean_trim', 'contract_risk', 'contract_clause', 'contract_format'];
+            var validOptions = ['clean_dedupe', 'clean_fill', 'clean_format', 'clean_trim', 'contract_risk',
+                'contract_clause', 'contract_format'
+            ];
             var allValid = true;
             checked.forEach(function (cb) {
                 if (!validOptions.includes(cb.value)) allValid = false;
@@ -1847,7 +1884,8 @@
                     if (result.success) {
                         var displayData = result.data;
                         if (result.data && result.data.stdout) displayData = result.data.stdout;
-                        else if (result.data && result.data.echo) displayData = JSON.stringify(result.data.echo);
+                        else if (result.data && result.data.echo) displayData = JSON.stringify(result.data
+                            .echo);
                         else displayData = JSON.stringify(result.data);
                         addMessage('assistant', '✅ ' + displayData);
                         var path = result.data?.file || '本地';
@@ -1875,7 +1913,8 @@
                             }).catch(function (e) { console.warn('后端记忆写入失败:', e.message); });
                             memoryManager.save({
                                 role: 'system',
-                                content: '已执行任务：' + (toolId === 'T001' ? '数据清洗' : '合同审查') + '，文件：' + (file.name || '未知文件')
+                                content: '已执行任务：' + (toolId === 'T001' ? '数据清洗' : '合同审查') +
+                                    '，文件：' + (file.name || '未知文件')
                             });
                         } catch (e) {
                             console.warn('记忆写入失败:', e.message);
@@ -1896,10 +1935,9 @@
         }
 
         // =============================================
-        // [模块16] executeTool（修复版）
+        // [模块17] executeTool - 执行工具（修复问题6：增加Token扣费）
         // =============================================
         async function executeTool(toolId, params) {
-            // 参数校验
             if (!toolId) {
                 addMessage('system', '❌ 工具ID缺失');
                 return { success: false, error: '工具ID缺失' };
@@ -1911,7 +1949,7 @@
                 'T003': 'exec',
                 'T004': 'exec',
                 'T005': 'echo',
-                'contract': 'contract',  // 兼容直接传工具名
+                'contract': 'contract',
                 'clean': 'clean',
                 'exec': 'exec',
                 'echo': 'echo'
@@ -1924,20 +1962,25 @@
                 return { success: false, error: '未知工具: ' + toolId };
             }
 
-            // 参数标准化
             var safeParams = params || {};
             if (typeof safeParams !== 'object') {
                 safeParams = { value: safeParams };
             }
 
-            // 确保必要字段存在
-            if (!safeParams.path && !safeParams.command && !safeParams.fileContent) {
-                console.warn('工具 ' + toolName + ' 收到空参数:', safeParams);
-                // 不中断，让后端自己处理
-            }
-
             console.log('🔧 执行工具:', toolName, '参数:', JSON.stringify(safeParams));
             addMessage('system', '🔧 执行中...');
+
+            // ===== 修复问题6：扣费逻辑 =====
+            var toolCost = 10;
+            if (toolId === 'T005') toolCost = 2;
+            if (tokenUsed < toolCost) {
+                addMessage('system', '❌ Token不足，需要 ' + toolCost + ' Token，当前 ' + tokenUsed);
+                return { success: false, error: 'Token不足' };
+            }
+            tokenUsed -= toolCost;
+            localStorage.setItem('tokenUsed', tokenUsed);
+            var tokenDisplay = document.getElementById('tokenDisplay');
+            if (tokenDisplay) tokenDisplay.textContent = '💰 ' + tokenUsed + ' Token';
 
             try {
                 var response = await fetch(PROXY_URL, {
@@ -1964,7 +2007,6 @@
                     var path = safeParams.path || safeParams.command || '本地';
                     addMessage('system', '📌 结果已生成，请去 ' + path + ' 审核确认。');
 
-                    // 记忆写入（增强容错）
                     try {
                         var memoryEntry = {
                             mem_id: 'mem_' + Date.now(),
@@ -1973,7 +2015,8 @@
                             tool: toolName,
                             file: safeParams.path || null,
                             summary: toolName + ' 任务执行完成',
-                            result: typeof result.data === 'string' ? result.data.slice(0, 200) : JSON.stringify(result.data).slice(0, 200),
+                            result: typeof result.data === 'string' ? result.data.slice(0, 200) : JSON.stringify(
+                                result.data).slice(0, 200),
                             timestamp: new Date().toISOString(),
                             status: 'success',
                             last_accessed_at: new Date().toISOString(),
@@ -1996,6 +2039,11 @@
                         console.warn('记忆写入失败:', e.message);
                     }
                 } else {
+                    // 失败时退还Token
+                    tokenUsed += toolCost;
+                    localStorage.setItem('tokenUsed', tokenUsed);
+                    if (tokenDisplay) tokenDisplay.textContent = '💰 ' + tokenUsed + ' Token';
+
                     var errorMsg = result.error || '未知错误';
                     addMessage('system', '❌ 执行失败: ' + errorMsg);
                     console.error('工具执行失败:', toolName, errorMsg);
@@ -2003,14 +2051,20 @@
                 return result;
 
             } catch (err) {
+                // 异常时退还Token
+                tokenUsed += toolCost;
+                localStorage.setItem('tokenUsed', tokenUsed);
+                if (tokenDisplay) tokenDisplay.textContent = '💰 ' + tokenUsed + ' Token';
+
                 var errorMsg = err.message || '调度失败';
                 addMessage('system', '❌ 调度失败: ' + errorMsg);
                 console.error('调度异常:', toolName, err);
                 return { success: false, error: errorMsg };
             }
         }
+
         // =============================================
-        // [模块17] openToolMarket
+        // [模块18] openToolMarket - 打开应用超市
         // =============================================
         function openToolMarket() {
             var existing = document.getElementById('toolMarketModal');
@@ -2023,20 +2077,33 @@
                 .then(function (tools) {
                     var modal = document.createElement('div');
                     modal.id = 'toolMarketModal';
-                    modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;display:flex;justify-content:center;align-items:center;';
+                    modal.style.cssText =
+                        'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;display:flex;justify-content:center;align-items:center;';
                     var toolCards = tools.map(function (tool) {
                         return '<div style="background:#1a1a1a;border:1px solid #3a3a3a;border-radius:8px;padding:16px;margin-bottom:12px;">' +
                             '<div style="display:flex;justify-content:space-between;align-items:center;">' +
                             '<strong style="color:#d9d0b5;">' + tool.name + '</strong>' +
-                            '<span style="color:#7a8a6a;font-size:14px;">💰 ' + tool.pricing.tokenCost + ' Token/次</span>' +
+                            '<span style="color:#7a8a6a;font-size:14px;">💰 ' + tool.pricing
+                                .tokenCost + ' Token/次</span>' +
                             '</div>' +
-                            '<div style="color:#b8aa8f;font-size:13px;margin:4px 0;">' + tool.description + '</div>' +
+                            '<div style="color:#b8aa8f;font-size:13px;margin:4px 0;">' + tool
+                                .description + '</div>' +
                             '<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">' +
-                            tool.industryTags.map(function (t) { return '<span style="background:#2a2a2a;padding:2px 10px;border-radius:12px;font-size:11px;color:#8a7e6a;">' + t + '</span>'; }).join('') +
-                            tool.categoryTags.map(function (t) { return '<span style="background:#2a2a2a;padding:2px 10px;border-radius:12px;font-size:11px;color:#8a7e6a;">' + t + '</span>'; }).join('') +
-                            tool.roleTags.map(function (t) { return '<span style="background:#2a2a2a;padding:2px 10px;border-radius:12px;font-size:11px;color:#8a7e6a;">' + t + '</span>'; }).join('') +
+                            tool.industryTags.map(function (t) {
+                                return '<span style="background:#2a2a2a;padding:2px 10px;border-radius:12px;font-size:11px;color:#8a7e6a;">' +
+                                    t + '</span>';
+                            }).join('') +
+                            tool.categoryTags.map(function (t) {
+                                return '<span style="background:#2a2a2a;padding:2px 10px;border-radius:12px;font-size:11px;color:#8a7e6a;">' +
+                                    t + '</span>';
+                            }).join('') +
+                            tool.roleTags.map(function (t) {
+                                return '<span style="background:#2a2a2a;padding:2px 10px;border-radius:12px;font-size:11px;color:#8a7e6a;">' +
+                                    t + '</span>';
+                            }).join('') +
                             '</div>' +
-                            '<button onclick="useTool(\'' + tool.toolId + '\')" style="margin-top:8px;background:#7a8a6a;color:#0a0a0a;border:none;padding:4px 16px;border-radius:4px;cursor:pointer;font-size:13px;">使用</button>' +
+                            '<button onclick="useTool(\'' + tool.toolId +
+                            '\')" style="margin-top:8px;background:#7a8a6a;color:#0a0a0a;border:none;padding:4px 16px;border-radius:4px;cursor:pointer;font-size:13px;">使用</button>' +
                             '</div>';
                     }).join('');
                     modal.innerHTML = '<div style="background:#0a0a0a;border:1px solid #3a3a3a;border-radius:12px;padding:24px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;">' +
@@ -2055,7 +2122,7 @@
         }
 
         // =============================================
-        // [模块18] useTool
+        // [模块19] useTool - 使用工具
         // =============================================
         async function useTool(toolId) {
             document.getElementById('toolMarketModal')?.remove();
@@ -2098,13 +2165,13 @@
         }
 
         // =============================================
-        // [模块19] parseIntent
+        // [模块20] parseIntent - 意图解析（修复问题2：增加精确匹配）
         // =============================================
         var taskIndicators = {
-            contract_review: ['合同', '审查', '审合同', '风险', '条款', '协议', '合约'],
-            contract_compare: ['对比', '对照', '比较', '区别', '差异'],
-            contract_rewrite: ['重写', '修改', '改写', '调整', '优化'],
-            clean: ['清洗', '去重', '整理', '清理', '数据', '格式', '表格'],
+            contract_review: ['合同审查', '审合同', '风险审查', '条款审查', '协议审查'],
+            contract_compare: ['对比合同', '对照合同', '比较合同', '合同差异'],
+            contract_rewrite: ['重写合同', '修改合同', '改写合同', '调整条款', '优化条款'],
+            clean: ['数据清洗', '清洗数据', '去重', '整理数据', '清理表格', '格式整理'],
             echo: ['echo']
         };
 
@@ -2121,6 +2188,20 @@
                 var indicators = taskIndicators[taskType];
                 for (var i = 0; i < indicators.length; i++) {
                     if (lowerInput.includes(indicators[i])) {
+                        // ===== 修复问题2：增加路径检测，确保是真的要执行任务 =====
+                        var hasPath = /[A-Za-z]:\\/.test(userInput);
+                        var hasFileExt = /\.(txt|docx|xlsx|pdf|doc|xls)/i.test(userInput);
+                        if (taskType !== 'echo' && !hasPath && !hasFileExt && taskType !== 'clean') {
+                            // 如果没有文件路径，降低置信度，可能只是闲聊
+                            return {
+                                intentType: 'chat',
+                                toolId: null,
+                                confidence: 0.3,
+                                params: {},
+                                taskType: null,
+                                taskDirection: null
+                            };
+                        }
                         var toolId = taskToolMap[taskType] || 'T002';
                         return {
                             intentType: 'tool_call',
@@ -2161,7 +2242,7 @@
         }
 
         // =============================================
-        // [模块20] getUserMemory / saveUserMemory
+        // [模块21] getUserMemory / saveUserMemory
         // =============================================
         async function getUserMemory(userId) {
             try {
@@ -2195,25 +2276,51 @@
         }
 
         // =============================================
-        // [模块21] askSavePreference / handleSavePreference
+        // [模块22] askSavePreference - 询问保存偏好（修复问题3：使用队列）
         // =============================================
-
-        // 询问用户是否保存偏好
         function askSavePreference(taskSummary) {
-            var message = '📌 任务已完成：' + (taskSummary.tool || '未知工具') + '\n' +
-                '文件：' + (taskSummary.file || '未指定') + '\n' +
-                '结果预览：' + (taskSummary.resultPreview || '无') + '\n\n' +
+            // 加入队列
+            var taskId = 'task_' + Date.now();
+            _pendingSaveQueue.push({
+                id: taskId,
+                taskSummary: taskSummary,
+                timestamp: Date.now(),
+                active: true
+            });
+
+            if (!_pendingSaveActive) {
+                processNextSavePreference();
+            }
+        }
+
+        function processNextSavePreference() {
+            if (_pendingSaveQueue.length === 0) {
+                _pendingSaveActive = false;
+                return;
+            }
+
+            _pendingSaveActive = true;
+            var pending = _pendingSaveQueue[0];
+            if (!pending || !pending.active) {
+                _pendingSaveQueue.shift();
+                processNextSavePreference();
+                return;
+            }
+
+            var task = pending.taskSummary;
+            var message = '📌 任务已完成：' + (task.tool || '未知工具') + '\n' +
+                '文件：' + (task.file || '未指定') + '\n' +
+                '结果预览：' + (task.resultPreview || '无') + '\n\n' +
                 '是否保存本次偏好和关注点？\n' +
                 '回复 "是" 保存，回复 "否" 跳过。';
             addMessage('system', message);
-            window._pendingSave = {
-                active: true,
-                taskSummary: taskSummary,
-                timestamp: Date.now()
-            };
+
+            window._pendingSave = pending;
         }
 
-        // 处理用户保存确认
+        // =============================================
+        // [模块23] handleSavePreference - 处理保存偏好（修复问题3：队列管理）
+        // =============================================
         async function handleSavePreference(userInput) {
             if (!window._pendingSave || !window._pendingSave.active) {
                 return false;
@@ -2222,11 +2329,9 @@
             var userId = currentUserId || 'zq_main';
             var task = window._pendingSave.taskSummary;
 
-            // 提取模型选择
             var modelSelect = document.getElementById('modelSelect');
             var model = modelSelect ? modelSelect.value : 'glm-4-flash';
 
-            // 提取用户偏好（从当前对话中提取关键词）
             var attentionPoints = [];
             if (task.resultPreview) {
                 var keywords = ['违约责任', '赔偿上限', '保密期限', '数据完整性', '知识产权', '合同解除'];
@@ -2237,7 +2342,7 @@
                 });
             }
             if (attentionPoints.length === 0) {
-                attentionPoints = ['合同审查'];  // 默认
+                attentionPoints = ['合同审查'];
             }
 
             try {
@@ -2258,7 +2363,10 @@
                 var result = await response.json();
                 if (result.success) {
                     addMessage('system', '✅ 偏好已保存到记忆库。');
+                    // 从队列中移除
+                    _pendingSaveQueue.shift();
                     window._pendingSave = null;
+                    processNextSavePreference();
                     return true;
                 } else {
                     addMessage('system', '❌ 保存失败: ' + (result.error || '未知错误'));
@@ -2270,8 +2378,9 @@
                 return false;
             }
         }
+
         // =============================================
-        // [模块22] openFileExplorer
+        // [模块24] openFileExplorer - 打开文件管理器
         // =============================================
         function openFileExplorer() {
             if (currentMode !== 'private') {
@@ -2305,7 +2414,7 @@
         }
 
         // =============================================
-        // [模块23] generateClarifyMessage
+        // [模块25] generateClarifyMessage - 生成澄清消息
         // =============================================
         function generateClarifyMessage(taskType) {
             switch (taskType) {
@@ -2321,15 +2430,17 @@
                     return '📌 您是要执行什么任务？\n\n请确认任务目的并提供相关文件路径。\n示例："审查 D:\\合同\\采购协议.docx"';
             }
         }
+
         // =============================================
-        // [模块24] sendMessage
+        // [模块26] sendMessage - 发送消息（3.0修复版：用title判断主权窗口）
         // =============================================
         async function sendMessage() {
             var input = document.getElementById('userInput');
             var rawText = input.value.trim();
             if (!rawText) return;
             input.value = '';
-            // ===== 处理保存确认 =====
+
+            // ---- 0. 处理保存确认 ----
             if (rawText.startsWith('是') || rawText.startsWith('yes') || rawText.startsWith('确认') || rawText.startsWith('保存')) {
                 if (window._pendingSave && window._pendingSave.active) {
                     addMessage('user', rawText);
@@ -2338,13 +2449,32 @@
                 }
             }
 
-            // ===== 傅王侯窗口独立调度入口 =====
-            if (conversations[currentConversationId]?.windowIdentity === WINDOW_IDENTITY) {
+            // ---- 1. 判断是否主权窗口（用title匹配） ----
+            var SOVEREIGN_WINDOWS = ['傅王侯', '傅本源-Z2', '傅先锋'];
+            var currentTitle = conversations[currentConversationId]?.title || currentWindowId;
+            var isSovereign = SOVEREIGN_WINDOWS.includes(currentTitle);
+
+            // ---- 2. 网络检测（主权窗口离线模式） ----
+            if (!navigator.onLine && isSovereign) {
+                addMessage('user', rawText);
+                addMessage('system', '🔌 离线模式：正在查询本地资产库...');
+                var localReply = matchLocalAsset(rawText, currentWindowId);
+                if (localReply) {
+                    addMessage('assistant', localReply);
+                } else {
+                    addMessage('system', '离线模式：此问题超出本地知识库范围，请联网后重试。');
+                }
+                return;
+            }
+
+            // ---- 3. 主权窗口 → 走 sovereignDispatch（本地优先） ----
+            if (isSovereign) {
+                console.log('🔥 主权窗口，走 sovereignDispatch');
                 await sovereignDispatch(rawText);
                 return;
             }
 
-            // 规则配置预加载
+            // ---- 4. 规则配置预加载（非主权窗口） ----
             if (!window._ruleCache) {
                 try {
                     var res = await fetch(PROXY_URL + '/api/rules/load');
@@ -2361,16 +2491,7 @@
                 }
             }
 
-            // 处理保存确认
-            if (rawText.startsWith('是') || rawText.startsWith('yes') || rawText.startsWith('确认') || rawText.startsWith('保存')) {
-                if (window._pendingSave && window._pendingSave.active) {
-                    addMessage('user', rawText);
-                    await handleSavePreference(rawText);
-                    return;
-                }
-            }
-
-            // echo命令
+            // ---- 5. echo命令 ----
             if (/^echo\s+/.test(rawText)) {
                 addMessage('user', rawText);
                 var text = rawText.replace(/^echo\s+/, '');
@@ -2379,7 +2500,7 @@
                 return;
             }
 
-            // 处理工具确认
+            // ---- 6. 处理工具确认 ----
             if (rawText.startsWith('是') || rawText.startsWith('yes') || rawText.startsWith('确认') || rawText.startsWith('执行')) {
                 if (window._pendingIntent) {
                     var intent = window._pendingIntent;
@@ -2410,10 +2531,10 @@
                 }
             }
 
-            // 意图解析
+            // ---- 7. 意图解析 ----
             var intent = parseIntent(rawText);
 
-            // 普通模式：直连大模型
+            // ---- 8. 普通模式 ----
             if (currentMode === 'public') {
                 addMessage('user', rawText);
                 addMessage('system', '咻——让我想想...');
@@ -2421,54 +2542,11 @@
                 document.querySelectorAll('.message.system').forEach(function (el) {
                     if (el.textContent.includes('咻——让我想想...')) el.remove();
                 });
-                var formattedReply = {
-                    type: 'text',
-                    content: reply,
-                    format: 'plain',
-                    timestamp: new Date().toISOString()
-                };                // ===== 标准格式输出 =====
-                var formattedOutput = {
-                    type: 'text',
-                    content: reply,
-                    format: 'plain',
-                    timestamp: new Date().toISOString()
-                };
-
-                if (reply.includes('|') && reply.includes('---')) {
-                    formattedOutput.type = 'table';
-                    formattedOutput.format = 'markdown';
-                    addMessage('system', '📊 检测到表格格式，已按标准表格呈现');
-                }
-
-                addMessage('assistant', formattedOutput.content);
-
-                // ===== 写入结果到指定文件夹 =====
-                // ===== 写入结果到指定文件夹 =====
-                try {
-                    var resultFileName = '合同结果_' + Date.now() + '.txt';
-                    if (filePath) {
-                        var fileBaseName = filePath.split('\\').pop().replace(/\.[^.]+$/, '');
-                        resultFileName = fileBaseName + '_结果_' + Date.now() + '.txt';
-                    }
-                    var desktopPath = 'C:\\Users\\' + (localStorage.getItem('sovereign_identity_id') || 'zq_main') + '\\Desktop';
-                    var resultPath = desktopPath + '\\合同结果\\' + resultFileName;
-                    await fetch(PROXY_URL + '/api/file/write', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            filePath: resultPath,
-                            content: reply
-                        })
-                    });
-                    addMessage('system', '📁 结果已保存到: ' + resultPath);
-                } catch (e) {
-                    console.warn('文件写入失败:', e);
-                }
-                addMessage('assistant', formattedReply.content);
+                addMessage('assistant', reply);
                 return;
             }
 
-            // 主权模式：经控制中心
+            // ---- 9. 主权模式（兜底：但前面已经拦截了） ----
             if (currentMode === 'private') {
                 if (intent.intentType === 'tool_call') {
                     var dispatch = window._ruleCache?.dispatch || null;
@@ -2496,13 +2574,7 @@
                         document.querySelectorAll('.message.system').forEach(function (el) {
                             if (el.textContent.includes('咻——让我想想...')) el.remove();
                         });
-                        var formattedReply2 = {
-                            type: 'text',
-                            content: reply2,
-                            format: 'plain',
-                            timestamp: new Date().toISOString()
-                        };
-                        addMessage('assistant', formattedReply2.content);
+                        addMessage('assistant', reply2);
                         if (messages.length > 0 && messages[0]) {
                             messages.push({ role: 'assistant', text: reply2 });
                             localStorage.setItem('ruling_history', JSON.stringify(messages));
@@ -2524,13 +2596,7 @@
                     document.querySelectorAll('.message.system').forEach(function (el) {
                         if (el.textContent.includes('咻——让我想想...')) el.remove();
                     });
-                    var formattedReply3 = {
-                        type: 'text',
-                        content: reply3,
-                        format: 'plain',
-                        timestamp: new Date().toISOString()
-                    };
-                    addMessage('assistant', formattedReply3.content);
+                    addMessage('assistant', reply3);
                     if (messages.length > 0 && messages[0]) {
                         messages.push({ role: 'assistant', text: reply3 });
                         localStorage.setItem('ruling_history', JSON.stringify(messages));
@@ -2549,9 +2615,8 @@
 
             addMessage('system', '📌 请先选择模式（普通或主权）。');
         }
-
         // =============================================
-        // [模块25] getAIResponse
+        // [模块27] getAIResponse - AI响应
         // =============================================
         async function getAIResponse(userMessage, mode) {
             if (mode === 'public' || currentMode === 'public') {
@@ -2632,7 +2697,7 @@
         }
 
         // =============================================
-        // [模块26] getCurrentUserId
+        // [模块28] getCurrentUserId
         // =============================================
         function getCurrentUserId() {
             var userId = localStorage.getItem('sovereign_identity_id');
@@ -2644,8 +2709,9 @@
         }
         window._userId = getCurrentUserId();
         console.log('✅ 当前用户ID:', window._userId);
+
         // =============================================
-        // 控制层函数（runSovereignControl）
+        // [模块29] runSovereignControl - 主权控制
         // =============================================
         async function runSovereignControl(params) {
             var messagesList = [];
@@ -2678,10 +2744,10 @@
             var chatData = await chatRes.json();
             var reply = chatData.choices?.[0]?.message?.content || '审查完成，无异常。';
 
-            // 写入结果到桌面
             try {
                 var resultFileName = '审查结果_' + Date.now() + '.txt';
-                var desktopPath = 'C:\\Users\\' + (localStorage.getItem('sovereign_identity_id') || 'zq_main') + '\\Desktop';
+                var desktopPath = 'C:\\Users\\' + (localStorage.getItem('sovereign_identity_id') || 'zq_main') +
+                    '\\Desktop';
                 var resultPath = desktopPath + '\\合同结果\\' + resultFileName;
                 await fetch(PROXY_URL + '/api/file/write', {
                     method: 'POST',
@@ -2698,27 +2764,630 @@
 
             return { reply: reply };
         }
+        // =============================================
+        // [模块40] 本地资产库 + 执行路径标记（3.0新增）
+        // =============================================
 
+        // ----- 1. 资产路径 -----
+        function getWindowAssetFile(windowName, fileName) {
+            var folder = getWindowFolder(windowName);
+            if (!folder) return null;
+            return folder + 'soul\\' + fileName;
+        }
+
+        // ----- 2. 加载资产 -----
+        async function loadWindowAssets(windowName) {
+            var assets = {
+                identity: null,
+                assetIndex: null,
+                decisionRules: null,
+                reviewRules: null,
+                interactionRules: null,
+                workflow: null
+            };
+
+            var assetFiles = {
+                identity: 'window_identity.json',
+                assetIndex: 'asset_index.json',
+                decisionRules: 'decision_rules.json',
+                reviewRules: 'review_rules.json',
+                interactionRules: 'interaction_rules.json',
+                workflow: 'workflow_interaction.json'
+            };
+
+            for (var key in assetFiles) {
+                var fileName = assetFiles[key];
+                var filePath = getWindowAssetFile(windowName, fileName);
+                if (!filePath) continue;
+                try {
+                    var res = await fetch('http://127.0.0.1:18888/api/file/read', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ path: filePath })
+                    });
+                    var data = await res.json();
+                    if (data.success && data.content) {
+                        assets[key] = JSON.parse(data.content);
+                        console.log('✅ 加载资产:', fileName);
+                    }
+                } catch (e) {
+                    console.warn('加载资产失败:', fileName, e.message);
+                }
+            }
+            return assets;
+        }
+
+        // ----- 3. 检索资产（命中返回结果）-----
+        function searchLocalAssets(userInput, assets) {
+            // 决策规则
+            if (assets.decisionRules && assets.decisionRules.rules) {
+                for (var i = 0; i < assets.decisionRules.rules.length; i++) {
+                    var rule = assets.decisionRules.rules[i];
+                    if (rule.keywords) {
+                        for (var j = 0; j < rule.keywords.length; j++) {
+                            if (userInput.includes(rule.keywords[j])) {
+                                return {
+                                    assetName: rule.name || '决策规则',
+                                    confidence: rule.confidence || 0.8,
+                                    result: rule.response || rule.result || '已按规则执行。'
+                                };
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 审核规则
+            if (assets.reviewRules && assets.reviewRules.rules) {
+                for (var i = 0; i < assets.reviewRules.rules.length; i++) {
+                    var rule = assets.reviewRules.rules[i];
+                    if (rule.keywords) {
+                        for (var j = 0; j < rule.keywords.length; j++) {
+                            if (userInput.includes(rule.keywords[j])) {
+                                return {
+                                    assetName: rule.name || '审核规则',
+                                    confidence: rule.confidence || 0.75,
+                                    result: rule.response || rule.result || '已按审核规则执行。'
+                                };
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 资产索引模板
+            if (assets.assetIndex && assets.assetIndex.templates) {
+                for (var i = 0; i < assets.assetIndex.templates.length; i++) {
+                    var template = assets.assetIndex.templates[i];
+                    if (template.keywords) {
+                        for (var j = 0; j < template.keywords.length; j++) {
+                            if (userInput.includes(template.keywords[j])) {
+                                return {
+                                    assetName: template.name || '资产模板',
+                                    confidence: template.confidence || 0.7,
+                                    result: template.content || template.response || '已加载资产模板。'
+                                };
+                            }
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        // ----- 4. 执行路径标记（写入审计日志）-----
+        async function logExecutionPath(path, assetName, confidence, userId) {
+            var entry = {
+                timestamp: new Date().toISOString(),
+                executionPath: path,  // 'local' | 'cloud' | 'blocked'
+                assetHit: assetName || null,
+                confidence: confidence || null,
+                userId: userId || currentUserId || 'zq_main'
+            };
+
+            try {
+                await fetch('http://127.0.0.1:18888/api/window/log/write', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: entry.userId,
+                        rule: 'execution_path',
+                        action: path,
+                        content: JSON.stringify(entry)
+                    })
+                });
+                console.log('📋 执行路径已记录:', path, assetName);
+            } catch (e) {
+                console.warn('路径标记失败:', e);
+            }
+
+            if (!window._executionLogs) window._executionLogs = [];
+            window._executionLogs.push(entry);
+        }
         // =============================================
-        // [模块27] sovereignDispatch（傅王侯窗口独立调度）
+        // [模块50] 本地规则引擎1.0 - 调度器核心（3.0新增）
+        // 位置：模块40之后，模块30之前
+        // 功能：加载规则 → 匹配 → 命中判断 → 返回结果
         // =============================================
+
+        // ----- 1. 规则引擎核心 -----
+        async function localRuleEngine(userInput, windowName) {
+            console.log('🔍 规则引擎开始检索:', userInput.slice(0, 30));
+
+            // 1.1 加载规则
+            var rules = await loadReviewRules(windowName);
+            if (!rules || !rules.length) {
+                console.log('📭 无规则可匹配');
+                return null;
+            }
+
+            // 1.2 关键词匹配
+            var matchedRules = [];
+            for (var i = 0; i < rules.length; i++) {
+                var rule = rules[i];
+                if (!rule.keywords) continue;
+                var matched = false;
+                for (var j = 0; j < rule.keywords.length; j++) {
+                    if (userInput.includes(rule.keywords[j])) {
+                        matched = true;
+                        break;
+                    }
+                }
+                if (matched) {
+                    matchedRules.push({
+                        rule: rule,
+                        matchCount: rule.keywords.filter(function (k) { return userInput.includes(k); }).length,
+                        confidence: rule.confidence || 0.5
+                    });
+                }
+            }
+
+            // 1.3 按匹配数量排序
+            matchedRules.sort(function (a, b) {
+                return b.matchCount - a.matchCount;
+            });
+
+            if (matchedRules.length === 0) {
+                console.log('📭 无匹配规则');
+                return null;
+            }
+
+            // 1.4 取最高匹配
+            var best = matchedRules[0];
+            var rule = best.rule;
+            var finalConfidence = Math.min(best.confidence + (best.matchCount * 0.05), 0.95);
+
+            console.log('✅ 命中规则:', rule.name || '未命名', '置信度:', finalConfidence);
+
+            // 1.5 返回结果
+            return {
+                assetName: rule.name || '规则引擎匹配',
+                confidence: finalConfidence,
+                result: rule.response || rule.result || '已按规则执行。',
+                ruleId: rule.id || 'rule_' + Date.now(),
+                matchedKeywords: rule.keywords || []
+            };
+        }
+
+        // ----- 2. 加载审核规则 -----
+        async function loadReviewRules(windowName) {
+            try {
+                var filePath = getWindowAssetFile(windowName, 'review_rules.json');
+                if (!filePath) return null;
+                var res = await fetch('http://127.0.0.1:18888/api/file/read', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path: filePath })
+                });
+                var data = await res.json();
+                if (data.success && data.content) {
+                    var parsed = JSON.parse(data.content);
+                    return parsed.rules || [];
+                }
+                return null;
+            } catch (e) {
+                console.warn('加载审核规则失败:', e.message);
+                return null;
+            }
+        }
+
+        // ----- 3. 更新资产索引（命中计数）-----
+        async function updateAssetIndex(windowName, ruleId) {
+            try {
+                var filePath = getWindowAssetFile(windowName, 'asset_index.json');
+                if (!filePath) return;
+                var res = await fetch('http://127.0.0.1:18888/api/file/read', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path: filePath })
+                });
+                var data = await res.json();
+                var index = { rules: [] };
+                if (data.success && data.content) {
+                    index = JSON.parse(data.content);
+                }
+                // 更新命中计数
+                var found = false;
+                for (var i = 0; i < (index.rules || []).length; i++) {
+                    if (index.rules[i].id === ruleId) {
+                        index.rules[i].hitCount = (index.rules[i].hitCount || 0) + 1;
+                        index.rules[i].lastHit = new Date().toISOString();
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    index.rules.push({ id: ruleId, hitCount: 1, lastHit: new Date().toISOString() });
+                }
+                // 写回文件
+                await fetch('http://127.0.0.1:18888/api/file/write', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        filePath: filePath,
+                        content: JSON.stringify(index, null, 2)
+                    })
+                });
+                console.log('📊 资产索引已更新:', ruleId);
+            } catch (e) {
+                console.warn('更新资产索引失败:', e.message);
+            }
+        }
+        /// =============================================
+        // [模块51] 学习器 - 让藏器魂越用越懂用户（3.0核心）
+        // 位置：模块50之后，模块30之前
+        // 功能：记录偏好、自动生成规则、动态调整回复
+        // =============================================
+
+        // ----- 1. 用户偏好存储 -----
+        var userPreferences = {
+            style: 'default',       // 'concise' | 'detailed' | 'default'
+            format: 'default',      // 'bullet' | 'paragraph' | 'default'
+            tone: 'professional',   // 'professional' | 'casual' | 'default'
+            learnedRules: []        // 自动生成的规则
+        };
+
+        // 加载用户偏好
+        function loadUserPreferences() {
+            try {
+                var saved = localStorage.getItem('user_preferences');
+                if (saved) {
+                    userPreferences = JSON.parse(saved);
+                    console.log('📚 用户偏好已加载:', userPreferences);
+                }
+            } catch (e) {
+                console.warn('加载偏好失败:', e);
+            }
+        }
+
+        // 保存用户偏好
+        function saveUserPreferences() {
+            try {
+                localStorage.setItem('user_preferences', JSON.stringify(userPreferences));
+                console.log('📚 用户偏好已保存');
+            } catch (e) {
+                console.warn('保存偏好失败:', e);
+            }
+        }
+
+        // ----- 2. 核心学习器 -----
+        async function learnFromUserConfirm(userInput, result, confidence, path, userId) {
+            console.log('📚 学习器收到反馈:', {
+                input: userInput.slice(0, 30),
+                confidence: confidence,
+                path: path
+            });
+
+            // 2.1 高置信度 → 直接写入资产
+            if (confidence >= 0.8) {
+                await autoGenerateRule(userInput, result, confidence, userId);
+                return;
+            }
+
+            // 2.2 中等置信度 → 标记待确认
+            if (confidence >= 0.5 && confidence < 0.8) {
+                await markPendingRule(userInput, result, confidence, userId);
+                return;
+            }
+
+            // 2.3 低置信度 → 不记录
+            console.log('📚 置信度太低，不记录');
+        }
+
+        // ----- 3. 自动生成规则 -----
+        async function autoGenerateRule(userInput, result, confidence, userId) {
+            // 提取关键词
+            var keywords = extractKeywords(userInput);
+            if (keywords.length === 0) {
+                console.log('📚 无法提取关键词，跳过生成');
+                return;
+            }
+
+            // 生成规则ID
+            var ruleId = 'auto_rule_' + Date.now();
+
+            // 构建规则
+            var newRule = {
+                id: ruleId,
+                name: '自动生成规则_' + keywords.slice(0, 2).join('_'),
+                keywords: keywords,
+                confidence: Math.min(confidence + 0.1, 0.95),
+                response: result,
+                source: 'auto_generated',
+                generatedAt: new Date().toISOString(),
+                userId: userId
+            };
+
+            console.log('📚 自动生成规则:', newRule);
+
+            // 写入 review_rules.json
+            var windowName = getWindowDisplayName(currentConversationId) || '傅王侯';
+            await appendRuleToFile(windowName, newRule);
+
+            // 记录到用户偏好
+            userPreferences.learnedRules.push(ruleId);
+            saveUserPreferences();
+
+            // 更新内存中的资产
+            if (window._localAssets && window._localAssets.reviewRules) {
+                window._localAssets.reviewRules.rules.push(newRule);
+            }
+
+            console.log('✅ 自动生成规则完成:', ruleId);
+        }
+
+        // ----- 4. 标记待确认规则 -----
+        async function markPendingRule(userInput, result, confidence, userId) {
+            var pendingRule = {
+                id: 'pending_' + Date.now(),
+                keywords: extractKeywords(userInput),
+                response: result,
+                confidence: confidence,
+                status: 'pending',
+                userId: userId,
+                timestamp: new Date().toISOString()
+            };
+
+            // 存储到待确认队列
+            if (!window._pendingRules) window._pendingRules = [];
+            window._pendingRules.push(pendingRule);
+
+            // 如果有3条待确认，自动合并生成规则
+            if (window._pendingRules.length >= 3) {
+                await mergePendingRules(userId);
+            }
+
+            console.log('📚 待确认规则已标记，当前待确认数:', window._pendingRules.length);
+        }
+
+        // ----- 5. 合并待确认规则 -----
+        async function mergePendingRules(userId) {
+            console.log('📚 合并待确认规则...');
+
+            var pending = window._pendingRules;
+            if (pending.length < 3) return;
+
+            // 提取所有关键词
+            var allKeywords = [];
+            var allResponses = [];
+            pending.forEach(function (rule) {
+                allKeywords = allKeywords.concat(rule.keywords);
+                allResponses.push(rule.response);
+            });
+
+            // 去重关键词
+            var uniqueKeywords = [...new Set(allKeywords)];
+
+            // 合并结果（取最长的回复作为模板）
+            var mergedResponse = allResponses.reduce(function (a, b) {
+                return a.length > b.length ? a : b;
+            });
+
+            // 生成合并规则
+            var mergedRule = {
+                id: 'merged_rule_' + Date.now(),
+                name: '合并规则_' + uniqueKeywords.slice(0, 2).join('_'),
+                keywords: uniqueKeywords,
+                confidence: 0.7,
+                response: mergedResponse,
+                source: 'merged_from_pending',
+                generatedAt: new Date().toISOString(),
+                userId: userId
+            };
+
+            // 写入文件
+            var windowName = getWindowDisplayName(currentConversationId) || '傅王侯';
+            await appendRuleToFile(windowName, mergedRule);
+
+            // 清空待确认队列
+            window._pendingRules = [];
+            console.log('✅ 合并规则完成:', mergedRule.id);
+        }
+
+        // ----- 6. 提取关键词 -----
+        function extractKeywords(text) {
+            // 移除常见停用词
+            var stopWords = ['的', '了', '是', '在', '我', '你', '他', '她', '它', '们', '这', '那', '吗', '呢', '吧', '啊'];
+            var words = text.split(/[\s,，。！？、；；：""''（）()\n\r]+/);
+            var keywords = [];
+
+            words.forEach(function (w) {
+                if (w.length < 1) return;
+                if (stopWords.includes(w)) return;
+                if (w.length === 1 && !/[a-zA-Z]/.test(w)) return;
+                keywords.push(w);
+            });
+
+            return keywords.slice(0, 8);
+        }
+
+        // ----- 7. 追加规则到文件 -----
+        async function appendRuleToFile(windowName, rule) {
+            try {
+                var filePath = getWindowAssetFile(windowName, 'review_rules.json');
+                if (!filePath) return;
+
+                // 读取现有规则
+                var res = await fetch('http://127.0.0.1:18888/api/file/read', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path: filePath })
+                });
+                var data = await res.json();
+                var rules = { rules: [] };
+                if (data.success && data.content) {
+                    rules = JSON.parse(data.content);
+                }
+
+                // 追加新规则
+                rules.rules.push(rule);
+
+                // 写回文件
+                await fetch('http://127.0.0.1:18888/api/file/write', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        filePath: filePath,
+                        content: JSON.stringify(rules, null, 2)
+                    })
+                });
+
+                console.log('📚 规则已追加到文件:', rule.id);
+            } catch (e) {
+                console.warn('追加规则失败:', e);
+            }
+        }
+
+        // ----- 8. 用户修正学习 -----
+        async function learnFromUserCorrection(userInput, originalResult, correctedResult, userId) {
+            console.log('📝 用户修正反馈:', {
+                input: userInput.slice(0, 30),
+                original: originalResult.slice(0, 30),
+                corrected: correctedResult.slice(0, 30)
+            });
+
+            // 记录修正
+            if (!window._correctionQueue) window._correctionQueue = [];
+            window._correctionQueue.push({
+                timestamp: new Date().toISOString(),
+                userInput: userInput,
+                originalResult: originalResult,
+                correctedResult: correctedResult,
+                userId: userId
+            });
+
+            // 如果有3次修正，自动生成规则
+            if (window._correctionQueue.length >= 3) {
+                await generateRuleFromCorrections(userId);
+            }
+        }
+
+        // ----- 9. 从修正生成规则 -----
+        async function generateRuleFromCorrections(userId) {
+            console.log('📚 从修正生成规则...');
+
+            var corrections = window._correctionQueue;
+            if (corrections.length < 3) return;
+
+            // 提取共同关键词
+            var allKeywords = [];
+            corrections.forEach(function (c) {
+                var kw = extractKeywords(c.userInput);
+                allKeywords = allKeywords.concat(kw);
+            });
+
+            var uniqueKeywords = [...new Set(allKeywords)];
+
+            // 使用最后一次修正的结果
+            var lastCorrection = corrections[corrections.length - 1];
+            var correctedResult = lastCorrection.correctedResult;
+
+            // 生成规则
+            var rule = {
+                id: 'correction_rule_' + Date.now(),
+                name: '修正规则_' + uniqueKeywords.slice(0, 2).join('_'),
+                keywords: uniqueKeywords,
+                confidence: 0.75,
+                response: correctedResult,
+                source: 'correction_learned',
+                generatedAt: new Date().toISOString(),
+                userId: userId
+            };
+
+            // 写入文件
+            var windowName = getWindowDisplayName(currentConversationId) || '傅王侯';
+            await appendRuleToFile(windowName, rule);
+
+            // 清空修正队列
+            window._correctionQueue = [];
+            console.log('✅ 从修正生成规则完成:', rule.id);
+        }
+
+        // ----- 10. 初始化加载偏好 -----
+        loadUserPreferences();
+        // =============================================
+        // [模块52] 结果格式化器 - 统一输出格式（3.0新增）
+        // 位置：模块51之后
+        // 功能：无论哪层执行，输出格式一致
+        // =============================================
+
+        function formatResult(result, path, confidence, assetName) {
+            return {
+                result: result,
+                path: path,           // 'local' | 'cloud' | 'local_llm' | 'blocked'
+                confidence: confidence || 0,
+                assetName: assetName || null,
+                timestamp: new Date().toISOString()
+            };
+        }
+
+        function displayResult(formatted) {
+            var msg = '━━━━━━━━━━━━━━━━━━━━\n' +
+                '结果：' + formatted.result + '\n' +
+                '执行路径：' + formatted.path + '\n' +
+                '置信度：' + (formatted.confidence * 100).toFixed(0) + '%\n' +
+                '命中资产：' + (formatted.assetName || '无') + '\n' +
+                '时间：' + formatted.timestamp;
+            addMessage('system', msg);
+        }
+        // =============================================
+        // [模块30] 主权调度 - 大脑框架（3.0活版本）
+        // =============================================
+        // 板块结构：
+        //   板块0：状态机全局状态
+        //   板块1：用户输入预处理（文件检测）
+        //   板块2：本地优先调度（资产库 → 规则引擎）
+        //   板块3：状态机加载与执行（含自动学习）
+        //   板块4：直出模式（大模型兜底）
+        //   板块5：状态机辅助函数 generateWorkflowResult
+        // =============================================
+
+        // ================================================================
+        // 【板块0】状态机全局状态
+        // ================================================================
+        var workflowState = { currentStep: 0, data: {} };
+
+        // ================================================================
+        // 【板块1】用户输入预处理（文件检测）
+        // ================================================================
         async function sovereignDispatch(userInput) {
-            // ---------- 变量声明 ----------
+            console.log('📦 sovereignDispatch 被调用，输入:', userInput);
+
             var userId = currentUserId || 'zq_main';
             var rawText = userInput;
             var fileContent = '';
             var filePath = '';
-            var resultFileName = '';
-            var reply = '';  // ← 统一管理，确保所有分支都有值
 
-            // ===== 检测输入是否包含文件路径 =====
+            addMessage('user', rawText);
+
+            // 检测文件路径
             var filePathMatch = rawText.match(/([A-Za-z]:\\[^\\s]*\.(txt|docx|xlsx|pdf|doc))/i);
             if (filePathMatch) {
                 filePath = filePathMatch[1];
                 addMessage('system', '📂 检测到文件: ' + filePath);
-
                 try {
-                    var fileReadRes = await fetch(PROXY_URL + '/api/file/read', {
+                    var fileReadRes = await fetch('http://127.0.0.1:18888/api/file/read', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ path: filePath })
@@ -2735,71 +3404,279 @@
                 }
             }
 
-            // 0. 加载灵魂资产
-            var soulContext = {};
-            var corpus = '';
-            var identity = ''; // ← 只保留这一处定义
-            try {
-                var soulRes = await fetch(PROXY_URL + '/api/window/soul/load');
-                var soulResult = await soulRes.json();
-                if (soulResult.success) {
-                    soulContext = soulResult.data;
-                    corpus = soulContext.corpus || '';
-                    identity = '傅王侯，傅清源体系内的第一个独立主权窗口。你负责主权守护、调度决策、记忆管理和闭环反馈。你懂本源论集，懂三清源，懂藏器魂，懂用户。';
-                    console.log('👤 傅王侯已加载:', soulContext.displayName || 'FuWangHou');
-                    if (corpus) {
-                        console.log('📖 人格底稿: ' + corpus.length + ' 字符');
-                    }
-                }
+            // ================================================================
+            // 【板块2】本地优先调度（先查本地，再走状态机）
+            // ================================================================
+            var conv = conversations[currentConversationId];
+            var windowName = (conv && conv.title) || (conv && conv.windowIdentity) || currentWindowId || 'main';
+            console.log('🔍 板块2：当前窗口名称:', windowName);
 
-            } catch (e) {
-                console.warn('灵魂加载失败:', e);
+            // ---- 2.1 加载本地资产 ----
+            if (!window._localAssets) {
+                window._localAssets = await loadWindowAssets(windowName);
             }
 
-            // 1. 加载身份定义（不重复声明 identity）
-            try {
-                var identityRes = await fetch(PROXY_URL + '/api/window/soul/identity');
-                var identityResult = await identityRes.json();
-                if (identityResult.success) {
-                    identity = identityResult.data; // ← 直接赋值给已定义的 identity
-                    console.log('🧠 傅王侯身份已加载');
-                }
-            } catch (e) {
-                console.warn('身份加载失败:', e);
-            }
+            // ---- 2.2 查资产库 ----
+            var assetMatch = searchLocalAssets(rawText, window._localAssets);
+            console.log('📦 资产库检索结果:', assetMatch);
 
-            // 2. 加载配置
-            var config = { boundary: { rules: [] }, desensitize: { rules: [] }, dispatch: { default: 'model' } };
-            try {
-                var configRes = await fetch(PROXY_URL + '/api/window/config/load');
-                var configResult = await configRes.json();
-                if (configResult.success) config = configResult.data;
-            } catch (e) {
-                console.warn('配置加载失败:', e);
-            }
-
-            // 3. 边界检查
-            var sensitiveFields = config.boundary.rules?.flatMap(function (rule) { return rule.fields || []; }) || [];
-            var containsSensitive = sensitiveFields.some(function (field) { return rawText.includes(field); });
-            if (containsSensitive) {
-                addMessage('system', '⚠️ 检测到敏感信息，已拦截该请求。');
-                await fetch(PROXY_URL + '/api/window/log/write', {
+            if (assetMatch && assetMatch.confidence > 0.7) {
+                console.log('✅ 资产库命中，直接返回');
+                addMessage('system', '📦 命中本地资产: ' + assetMatch.assetName + '（置信度 ' + assetMatch.confidence + '）');
+                addMessage('assistant', assetMatch.result);
+                await logExecutionPath('local', assetMatch.assetName, assetMatch.confidence, userId);
+                await fetch('http://127.0.0.1:18888/api/window/log/write', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         userId: userId,
-                        rule: 'boundary_001',
-                        action: '拦截',
-                        content: rawText.slice(0, 50)
+                        rule: 'asset_hit',
+                        action: 'local',
+                        content: JSON.stringify({
+                            assetName: assetMatch.assetName,
+                            confidence: assetMatch.confidence,
+                            userInput: rawText.slice(0, 100)
+                        })
                     })
                 });
                 return;
             }
 
-            // 4. 加载记忆
+            // ---- 2.3 查规则引擎 ----
+            var engineResult = await localRuleEngine(rawText, windowName);
+            console.log('📦 规则引擎检索结果:', engineResult);
+
+            if (engineResult && engineResult.confidence >= 0.7) {
+                console.log('✅ 规则引擎命中，直接返回');
+                addMessage('system', '📦 规则引擎命中: ' + engineResult.assetName + '（置信度 ' + engineResult.confidence + '）');
+                addMessage('assistant', engineResult.result);
+
+                await updateAssetIndex(windowName, engineResult.ruleId);
+                await logExecutionPath('local', engineResult.assetName, engineResult.confidence, userId);
+                await fetch('http://127.0.0.1:18888/api/window/log/write', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: userId,
+                        rule: 'rule_engine_hit',
+                        action: 'local',
+                        content: JSON.stringify({
+                            assetName: engineResult.assetName,
+                            confidence: engineResult.confidence,
+                            ruleId: engineResult.ruleId,
+                            userInput: rawText.slice(0, 100)
+                        })
+                    })
+                });
+
+                await learnFromUserConfirm(rawText, engineResult.result, engineResult.confidence, 'local', userId);
+                return;
+            }
+
+            // ================================================================
+            // 【板块3】状态机加载与执行（本地未命中时进入）
+            // ================================================================
+            console.log('⏭️ 本地未命中，进入状态机');
+
+            var workflow = null;
+            try {
+                var workflowRes = await fetch('http://127.0.0.1:18888/api/window/soul/workflow_interaction');
+                var workflowResult = await workflowRes.json();
+                if (workflowResult.success) {
+                    workflow = workflowResult.data;
+                    console.log('📦 workflow 加载成功:', workflow);
+                } else {
+                    console.warn('状态机加载失败:', workflowResult.error);
+                }
+            } catch (e) {
+                console.warn('状态机加载异常:', e.message);
+            }
+
+            // 有状态机 → 进入状态机流程
+            if (workflow && workflow.states && Array.isArray(workflow.states) && workflow.states.length > 0) {
+                console.log('🔁 进入状态机执行器');
+
+                if (!workflowState.currentStep || workflowState.data.userId !== userId) {
+                    workflowState.currentStep = 0;
+                    workflowState.data = { userId: userId };
+                }
+
+                var states = workflow.states;
+
+                if (workflowState.currentStep === 0) {
+                    workflowState.data = {
+                        userId: userId,
+                        fileContent: fileContent,
+                        filePath: filePath,
+                        userInputs: []
+                    };
+                    if (states[0] && states[0].prompt) {
+                        addMessage('system', states[0].prompt);
+                    } else {
+                        addMessage('system', '📌 请问有什么可以帮您？');
+                    }
+                    return;
+                }
+
+                var step = workflowState.currentStep;
+                var state = states[step];
+
+                if (!state) {
+                    addMessage('system', '⚠️ 状态机执行完毕，请重新开始。');
+                    workflowState.currentStep = 0;
+                    workflowState.data = {};
+                    return;
+                }
+
+                workflowState.data.userInputs.push(rawText);
+
+                switch (state.type) {
+                    case 'confirm_intent':
+                        workflowState.data.intent = rawText;
+                        workflowState.currentStep++;
+                        var nextState = states[workflowState.currentStep];
+                        if (nextState && nextState.prompt) {
+                            addMessage('system', nextState.prompt);
+                        }
+                        break;
+
+                    case 'confirm_file':
+                        var pathMatch = rawText.match(/([A-Za-z]:\\[^\\s]*)/);
+                        if (pathMatch) {
+                            workflowState.data.filePath = pathMatch[1];
+                            addMessage('system', '📂 已识别文件: ' + pathMatch[1]);
+                            try {
+                                var readRes = await fetch('http://127.0.0.1:18888/api/file/read', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ path: pathMatch[1] })
+                                });
+                                var readData = await readRes.json();
+                                if (readData.success) {
+                                    workflowState.data.fileContent = readData.content;
+                                    addMessage('system', '✅ 文件读取成功，共 ' + readData.content.length + ' 字符');
+                                }
+                            } catch (e) {
+                                addMessage('system', '⚠️ 文件读取失败: ' + e.message);
+                            }
+                        } else {
+                            workflowState.data.filePath = rawText;
+                        }
+                        workflowState.currentStep++;
+                        var nextState2 = states[workflowState.currentStep];
+                        if (nextState2 && nextState2.prompt) {
+                            addMessage('system', nextState2.prompt);
+                        }
+                        break;
+
+                    case 'confirm_requirements':
+                        workflowState.data.requirements = rawText;
+                        workflowState.currentStep++;
+                        var result1 = await generateWorkflowResult(workflow, workflowState.data);
+                        workflowState.data.result = result1;
+                        // 直接进入完成节点
+                        var completeIdx = states.findIndex(function (s) { return s.type === 'confirm_complete'; });
+                        if (completeIdx !== -1) {
+                            workflowState.currentStep = completeIdx;
+                            var completeState = states[completeIdx];
+                            if (completeState && completeState.prompt) {
+                                addMessage('system', completeState.prompt);
+                            } else {
+                                addMessage('system', '✅ 任务完成，请确认结果。');
+                            }
+                        }
+                        break;
+
+                    case 'generate_task':
+                        var result2 = await generateWorkflowResult(workflow, workflowState.data);
+                        workflowState.data.result = result2;
+                        // 直接进入完成节点
+                        var completeIdx2 = states.findIndex(function (s) { return s.type === 'confirm_complete'; });
+                        if (completeIdx2 !== -1) {
+                            workflowState.currentStep = completeIdx2;
+                            var completeState2 = states[completeIdx2];
+                            if (completeState2 && completeState2.prompt) {
+                                addMessage('system', completeState2.prompt);
+                            } else {
+                                addMessage('system', '✅ 任务完成，请确认结果。');
+                            }
+                        }
+                        break;
+
+                    case 'confirm_complete':
+                        addMessage('system', '✅ 任务完成。已保存本次任务到记忆库，审计日志已更新。');
+
+                        memoryManager.save({
+                            role: 'system',
+                            content: '任务完成：' + (workflowState.data.intent || '未知任务') +
+                                '，文件：' + (workflowState.data.filePath || '无')
+                        });
+
+                        try {
+                            await fetch('http://127.0.0.1:18888/api/window/log/write', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    userId: userId,
+                                    rule: 'workflow_complete',
+                                    action: '完成',
+                                    content: JSON.stringify({
+                                        intent: workflowState.data.intent,
+                                        filePath: workflowState.data.filePath,
+                                        requirements: workflowState.data.requirements
+                                    })
+                                })
+                            });
+                        } catch (e) {
+                            console.warn('审计日志写入失败:', e);
+                        }
+
+                        // ===== 3.0核心：自动生成规则（活的学习） =====
+                        var intent = workflowState.data.intent || rawText;
+                        var result = workflowState.data.result || '任务已执行完成';
+                        await learnFromUserConfirm(intent, result, 0.85, 'cloud', userId);
+                        addMessage('system', '🧠 状态机已学习本次交互，下次类似问题将直接命中。');
+
+                        askSavePreference({
+                            tool: workflowState.data.intent || '状态机任务',
+                            file: workflowState.data.filePath || '无',
+                            resultPreview: '任务已执行完成'
+                        });
+
+                        workflowState.currentStep = 0;
+                        workflowState.data = {};
+                        break;
+
+                    default:
+                        if (state.prompt) {
+                            addMessage('system', state.prompt);
+                        } else {
+                            addMessage('system', '📌 请继续输入。');
+                        }
+                        workflowState.currentStep++;
+                }
+                return;
+            }
+
+            // ================================================================
+            // 【板块4】直出模式（大模型兜底）
+            // ================================================================
+            console.log('⏭️ 状态机未命中，进入直出模式（大模型）');
+
+            var identity = '';
+            try {
+                var identityRes = await fetch('http://127.0.0.1:18888/api/window/soul/identity?windowId=' + (currentWindowId || 'FuWangHou'));
+                var identityResult = await identityRes.json();
+                if (identityResult.success) {
+                    identity = identityResult.data || currentWindowId || '傅王侯';
+                }
+            } catch (e) {
+                console.warn('身份加载失败:', e);
+            }
+
             var memoryData = null;
             try {
-                var memRes = await fetch(PROXY_URL + '/api/window/memory/load', {
+                var memRes = await fetch('http://127.0.0.1:18888/api/window/memory/load', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ userId: userId })
@@ -2810,151 +3687,185 @@
                 console.warn('记忆加载失败:', e);
             }
 
-            // 5. 调度决策
-            var action = config.dispatch?.default || 'model';
+            addMessage('system', '🤖 直出模式：大模型执行');
+            addMessage('system', '咻——让我想想...');
 
-            // 6. 执行
-            if (action === 'local') {
-                // ===== 本地执行分支 =====
-                reply = '本地工具已执行'; // ← 赋予默认值，确保 reply 不会空
-                addMessage('system', '🔧 调度决策：本地执行');
-                var intent = parseIntent(rawText);
-                if (intent.intentType === 'tool_call') {
-                    await executeTool(intent.toolId, intent.params);
-                } else {
-                    addMessage('system', '📌 未识别到本地工具指令。');
-                }
+            var messagesList = [];
+            if (identity) {
+                messagesList.push({ role: 'system', content: '你是' + (currentWindowId || '傅王侯') + '。' + identity });
             } else {
-                // ===== 大模型执行分支 =====
-                addMessage('system', '🤖 调度决策：大模型执行');
-                addMessage('user', rawText);
-                addMessage('system', '咻——让我想想...');
+                messagesList.push({ role: 'system', content: '你是' + (currentWindowId || '傅王侯') + '，一个主权AI窗口。' });
+            }
 
-                var messagesList = [];
-                if (identity) {
-                    messagesList.push({ role: 'system', content: '你是傅王侯。' + identity });
-                } else if (corpus) {
-                    messagesList.push({ role: 'system', content: '你是傅王侯。以下是你与总司令的全部交互记忆：\n\n' + corpus + '\n\n请基于以上记忆和上下文，以傅王侯的身份回应。' });
-                } else {
-                    messagesList.push({ role: 'system', content: '你是傅王侯，一个主权AI窗口。' });
+            if (fileContent) {
+                messagesList.push({
+                    role: 'system',
+                    content: '用户上传了以下文件内容，请基于此内容分析和回应：\n\n' + fileContent.slice(0, 3000)
+                });
+            }
+
+            if (memoryData) {
+                var memParts = [];
+                if (memoryData.preferences) memParts.push('用户偏好: ' + JSON.stringify(memoryData.preferences));
+                if (memoryData.attention_points) memParts.push('用户关注点: ' + memoryData.attention_points.join('、'));
+                if (memParts.length > 0) {
+                    messagesList.push({ role: 'system', content: '参考用户偏好：\n' + memParts.join('\n') });
                 }
+            }
 
-                if (fileContent) {
-                    messagesList.push({
-                        role: 'system',
-                        content: '用户上传了以下文件内容，请基于此内容分析和回应：\n\n' + fileContent
-                    });
-                }
+            messagesList.push({ role: 'user', content: rawText });
 
-                if (memoryData) {
-                    var memParts = [];
-                    if (memoryData.preferences) memParts.push('用户偏好: ' + JSON.stringify(memoryData.preferences));
-                    if (memoryData.attention_points) memParts.push('用户关注点: ' + memoryData.attention_points.join('、'));
-                    if (memParts.length > 0) {
-                        messagesList.push({ role: 'system', content: '参考用户偏好：\n' + memParts.join('\n') });
-                    }
-                }
-                // 新增历史任务记录加载
-                if (memoryData && memoryData.history && memoryData.history.length > 0) {
-                    var historySummary = memoryData.history.slice(-3).map(function (entry) {
-                        return '任务: ' + (entry.taskType || '未知') + ' | 摘要: ' + (entry.summary || '无');
-                    }).join('\n');
-                    messagesList.push({
-                        role: 'system',
-                        content: '用户历史任务记录（最近3条）：\n' + historySummary
-                    });
-                }
-
-                messagesList.push({ role: 'user', content: rawText });
-
-                var model = document.getElementById('modelSelect')?.value || 'glm-4-flash';
-                var chatRes = await fetch(PROXY_URL + '/api/chat', {
+            var model = document.getElementById('modelSelect')?.value || 'glm-4-flash';
+            try {
+                var chatRes = await fetch('http://127.0.0.1:18888/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         messages: messagesList,
                         model: model,
-                        userId: userId,
-                        corpus: corpus
+                        userId: userId
                     })
                 });
                 var chatData = await chatRes.json();
-                reply = chatData.choices?.[0]?.message?.content || '无回复';
+                var reply = chatData.choices?.[0]?.message?.content || '无回复';
 
                 document.querySelectorAll('.message.system').forEach(function (el) {
                     if (el.textContent.includes('咻——让我想想...')) el.remove();
                 });
-                var formattedReply = {
-                    type: 'text',
-                    content: reply,
-                    format: 'plain',
-                    timestamp: new Date().toISOString()
-                };
-                addMessage('assistant', formattedReply.content);
+                addMessage('assistant', reply);
 
-                // ===== 写入结果到指定文件夹 =====
-                try {
-                    var resultFileName = '合同结果_' + Date.now() + '.txt';
-                    if (filePath) {
-                        var fileBaseName = filePath.split('\\').pop().replace(/\.[^.]+$/, '');
-                        resultFileName = fileBaseName + '_结果_' + Date.now() + '.txt';
+                if (filePath) {
+                    try {
+                        var baseName = filePath.split('\\').pop().replace(/\.[^.]+$/, '');
+                        var resultPath = 'D:\\合同结果\\' + baseName + '_结果_' + Date.now() + '.txt';
+                        await fetch('http://127.0.0.1:18888/api/file/write', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ filePath: resultPath, content: reply })
+                        });
+                        addMessage('system', '📁 结果已保存到: ' + resultPath);
+                    } catch (e) {
+                        console.warn('文件写入失败:', e);
                     }
-                    var resultPath = 'D:\\合同结果\\' + resultFileName;
-                    await fetch(PROXY_URL + '/api/file/write', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            filePath: resultPath,
-                            content: reply
-                        })
-                    });
-                    addMessage('system', '📁 结果已保存到: ' + resultPath);
-                } catch (e) {
-                    console.warn('文件写入失败:', e);
                 }
 
-                // 7. 闭环询问
                 askSavePreference({
-                    tool: '大模型分析',
-                    file: '无',
+                    tool: '直出模式',
+                    file: filePath || '无',
                     resultPreview: reply.slice(0, 50)
                 });
 
-                // 用户确认保存监听（新增）
-                if (rawText.includes('是') || rawText.includes('保存') || rawText.includes('确认')) {
-                    if (window._pendingSave && window._pendingSave.active) {
-                        await handleSavePreference(rawText);
-                    }
-                }
+            } catch (e) {
+                addMessage('system', '❌ 执行失败: ' + e.message);
+            }
+        }
+
+        // ================================================================
+        // 【板块5】状态机辅助函数 - generateWorkflowResult（返回结果）
+        // ================================================================
+        async function generateWorkflowResult(workflow, data) {
+            addMessage('system', '🤖 正在生成结果...');
+
+            var model = document.getElementById('modelSelect')?.value || 'glm-4-flash';
+            var messagesList = [];
+
+            if (workflow.systemPrompt) {
+                messagesList.push({ role: 'system', content: workflow.systemPrompt });
+            } else {
+                messagesList.push({ role: 'system', content: '你是主权AI助手，请根据用户需求生成专业结果。' });
             }
 
-            // 8. 写入日志（reply 已保证有值）
-            await fetch(PROXY_URL + '/api/window/log/write', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    userId: userId,
-                    rule: 'dispatch_001',
-                    action: action === 'local' ? '本地执行' : '大模型执行',
-                    content: rawText.slice(0, 50)
-                })
-            });
+            if (data.fileContent) {
+                messagesList.push({
+                    role: 'system',
+                    content: '用户上传的文件内容（前3000字符）：\n' + data.fileContent.slice(0, 3000)
+                });
+            }
 
-            // 9. 状态持久化（reply 已保证有值）
-            await fetch(PROXY_URL + '/api/window/state/save', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    userId: userId,
-                    lastInput: rawText.slice(0, 100),
-                    lastReply: reply ? reply.slice(0, 100) : '',
-                    timestamp: new Date().toISOString(),
-                    fileContent: fileContent || ''
-                })
-            });
+            var userTask = '任务：' + (data.intent || '审查') + '\n';
+            if (data.requirements) {
+                userTask += '要求：' + data.requirements + '\n';
+            }
+            if (data.filePath) {
+                userTask += '文件路径：' + data.filePath + '\n';
+            }
+            messagesList.push({ role: 'user', content: userTask });
+
+            try {
+                var chatRes = await fetch('http://127.0.0.1:18888/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        messages: messagesList,
+                        model: model,
+                        userId: data.userId
+                    })
+                });
+                var chatData = await chatRes.json();
+                var reply = chatData.choices?.[0]?.message?.content || '生成完成，无内容。';
+                addMessage('assistant', reply);
+
+                if (data.filePath) {
+                    try {
+                        var baseName = data.filePath.split('\\').pop().replace(/\.[^.]+$/, '');
+                        var resultPath = 'D:\\合同结果\\' + baseName + '_结果_' + Date.now() + '.txt';
+                        await fetch('http://127.0.0.1:18888/api/file/write', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ filePath: resultPath, content: reply })
+                        });
+                        addMessage('system', '📁 结果已保存到: ' + resultPath);
+                    } catch (e) {
+                        console.warn('文件写入失败:', e);
+                    }
+                }
+
+                return reply;
+
+            } catch (e) {
+                addMessage('system', '❌ 生成失败: ' + e.message);
+                return '生成失败，请重试。';
+            }
         }
         // =============================================
-        // [模块28] updateModeBadge / toggleModeMenu / clearChatArea / restoreChatArea / addMessage
+        // [模块31] matchLocalAsset - 离线本地资产匹配
+        // =============================================
+        function matchLocalAsset(userInput, windowId) {
+            var assetIndex = null;
+            try {
+                var cached = localStorage.getItem('offline_assets_Z2');
+                if (cached) assetIndex = JSON.parse(cached);
+            } catch (e) {
+                console.warn('离线资产读取失败:', e.message);
+                return null;
+            }
+
+            if (!assetIndex) return null;
+
+            var input = userInput.toLowerCase();
+            var bestMatch = null;
+            var bestScore = 0;
+
+            assetIndex.forEach(function (asset) {
+                var keywords = asset.name.toLowerCase().split(/[\s\-]+/);
+                var score = 0;
+                keywords.forEach(function (kw) {
+                    if (input.includes(kw)) score++;
+                });
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestMatch = asset;
+                }
+            });
+
+            if (bestMatch && bestScore > 0) {
+                return '■ ' + bestMatch.name + '\n  结论：' + bestMatch.conclusion + '\n  └─ 资产编号：' + bestMatch.id;
+            }
+            return null;
+        }
+
+        // =============================================
+        // [模块32] updateModeBadge / toggleModeMenu / clearChatArea / restoreChatArea / addMessage
         // =============================================
         function updateModeBadge() {
             var badge = document.getElementById('modeBadge');
@@ -2981,24 +3892,210 @@
             chat.innerHTML = '';
             messages.forEach(function (msg) {
                 var div = document.createElement('div');
-                div.className = 'message ' + (msg.role === 'user' ? 'user' : msg.role === 'assistant' ? 'assistant' : 'system');
+                div.className = 'message ' + (msg.role === 'user' ? 'user' : msg.role === 'assistant' ?
+                    'assistant' : 'system');
                 div.innerHTML = msg.role === 'system' ? msg.text : '<div class="bubble">' + msg.text + '</div>';
                 chat.appendChild(div);
             });
             chat.scrollTop = chat.scrollHeight;
         }
 
-        function addMessage(role, text) {
+        // =============================================
+        // [模块32] addMessage + 执行路径标记（3.0新增）
+        // =============================================
+
+        // ----- 1. 原有addMessage（2.0）-----
+        async function addMessage(role, text) {
+            console.log('🔥 addMessage 被调用，角色:', role, '内容:', text.slice(0, 30));
             var chat = document.getElementById('chatArea');
             var div = document.createElement('div');
             div.className = 'message ' + (role === 'user' ? 'user' : role === 'assistant' ? 'assistant' : 'system');
             div.innerHTML = role === 'system' ? text : '<div class="bubble">' + text + '</div>';
             chat.appendChild(div);
             chat.scrollTop = chat.scrollHeight;
+
+            if (role !== 'user' && role !== 'assistant') return;
+            if (!currentConversationId || !conversations[currentConversationId]) return;
+
+            conversations[currentConversationId].messages.push({
+                role: role,
+                text: text,
+                timestamp: Date.now()
+            });
+            messages = conversations[currentConversationId].messages;
+            localStorage.setItem('ruling_conversations', JSON.stringify(conversations));
+
+            // 主权窗口同步写文件（2.0）
+            var displayName = getWindowDisplayName(currentConversationId);
+            if (displayName && displayName !== '新对话' && displayName !== 'main' && displayName !== '主窗口' && displayName !== 'unknown') {
+                await saveWindowMessagesToFile(currentConversationId);
+            }
+        }
+
+        // ----- 2. 更新模式徽章 -----
+        function updateModeBadge() {
+            var badge = document.getElementById('modeBadge');
+            if (currentMode === 'private') {
+                badge.className = 'mode-badge sovereign';
+                badge.innerHTML = '<span class="status-dot"></span>主权模式';
+            } else {
+                badge.className = 'mode-badge public';
+                badge.innerHTML = '<span class="status-dot"></span>普通模式';
+            }
+        }
+
+        // ----- 3. 切换模式菜单 -----
+        function toggleModeMenu() {
+            var menu = document.getElementById('modeMenu');
+            if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // ----- 4. 清空聊天区 -----
+        function clearChatArea() {
+            document.getElementById('chatArea').innerHTML = '';
+        }
+
+        // ----- 5. 恢复聊天区 -----
+        function restoreChatArea() {
+            var chat = document.getElementById('chatArea');
+            chat.innerHTML = '';
+            messages.forEach(function (msg) {
+                var div = document.createElement('div');
+                div.className = 'message ' + (msg.role === 'user' ? 'user' : msg.role === 'assistant' ?
+                    'assistant' : 'system');
+                div.innerHTML = msg.role === 'system' ? msg.text : '<div class="bubble">' + msg.text + '</div>';
+                chat.appendChild(div);
+            });
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        // ----- 6. 进入普通模式 -----
+        function enterPublic() {
+            if (document.getElementById('modeMenu')) document.getElementById('modeMenu').style.display = 'none';
+            if (document.getElementById('introOverlay')) document.getElementById('introOverlay').style.display = 'none';
+            if (document.getElementById('appContainer')) document.getElementById('appContainer').style.display = 'flex';
+            var isVerified = localStorage.getItem('sovereign_verified');
+            if (isVerified === 'true') {
+                currentMode = 'private';
+                updateModeBadge();
+                clearChatArea();
+                try {
+                    var saved = localStorage.getItem('ruling_history');
+                    if (saved) messages = JSON.parse(saved);
+                } catch (e) { }
+                setTimeout(function () {
+                    if (messages.length > 0) restoreChatArea();
+                    else addMessage('system', '主权模式已恢复。');
+                }, 100);
+            } else {
+                currentMode = 'public';
+                updateModeBadge();
+                clearChatArea();
+                addMessage('system', '你已进入普通模式。');
+            }
+            renderConversationList();
+        }
+
+        // ----- 7. 切换侧边栏 -----
+        function toggleSidebar() {
+            var sidebar = document.querySelector('.sidebar');
+            var mainContainer = document.getElementById('appContainer');
+            if (!sidebar) return;
+
+            if (sidebar.style.transform === 'translateX(0px)' || sidebar.style.transform === '') {
+                sidebar.style.transform = 'translateX(-100%)';
+                if (mainContainer) mainContainer.style.marginLeft = '0';
+                console.log('📱 侧边栏已收起');
+            } else {
+                sidebar.style.transform = 'translateX(0)';
+                if (mainContainer) mainContainer.style.marginLeft = '240px';
+                console.log('📱 侧边栏已展开');
+            }
         }
 
         // =============================================
-        // [模块29] enterPublic
+        // [模块32-3.0] 执行路径标记扩展（3.0新增）
+        // =============================================
+
+        // ----- 8. 记录执行路径（调用审计日志）-----
+        async function logExecutionPath(path, assetName, confidence, userId) {
+            var entry = {
+                timestamp: new Date().toISOString(),
+                executionPath: path,  // 'local' | 'cloud' | 'blocked'
+                assetHit: assetName || null,
+                confidence: confidence || null,
+                userId: userId || currentUserId || 'zq_main'
+            };
+
+            try {
+                await fetch('http://127.0.0.1:18888/api/window/log/write', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: entry.userId,
+                        rule: 'execution_path',
+                        action: path,
+                        content: JSON.stringify(entry)
+                    })
+                });
+                console.log('📋 执行路径已记录:', path, assetName);
+            } catch (e) {
+                console.warn('路径标记失败:', e);
+            }
+
+            if (!window._executionLogs) window._executionLogs = [];
+            window._executionLogs.push(entry);
+        }
+
+        // ----- 9. 生成审计报告 -----
+        function generateAuditReport(logs) {
+            var total = logs.length;
+            var local = 0, cloud = 0, blocked = 0;
+            var assetHits = {};
+
+            for (var i = 0; i < logs.length; i++) {
+                var log = logs[i];
+                if (log.executionPath === 'local') local++;
+                else if (log.executionPath === 'cloud') cloud++;
+                else if (log.executionPath === 'blocked') blocked++;
+                if (log.assetHit) {
+                    assetHits[log.assetHit] = (assetHits[log.assetHit] || 0) + 1;
+                }
+            }
+
+            return {
+                total: total,
+                local: local,
+                cloud: cloud,
+                blocked: blocked,
+                localPercent: total > 0 ? (local / total * 100).toFixed(1) + '%' : '0%',
+                cloudPercent: total > 0 ? (cloud / total * 100).toFixed(1) + '%' : '0%',
+                assetHits: assetHits,
+                topAsset: Object.keys(assetHits).sort(function (a, b) { return assetHits[b] - assetHits[a]; })[0] || null
+            };
+        }
+
+        // ----- 10. 打开审计报告面板 -----
+        function openAuditReport() {
+            var logs = window._executionLogs || [];
+            if (logs.length === 0) {
+                addMessage('system', '📋 暂无执行记录。');
+                return;
+            }
+            var report = generateAuditReport(logs);
+            var msg = '📊 审计报告\n' +
+                '━━━━━━━━━━━━━━━━━━━━\n' +
+                '总任务数: ' + report.total + '\n' +
+                '本地执行: ' + report.local + ' (' + report.localPercent + ')\n' +
+                '大模型执行: ' + report.cloud + ' (' + report.cloudPercent + ')\n' +
+                '拦截请求: ' + report.blocked + '\n' +
+                '资产命中: ' + JSON.stringify(report.assetHits, null, 2) + '\n' +
+                '最常命中: ' + (report.topAsset || '无');
+            addMessage('system', msg);
+        }
+
+        // =============================================
+        // [模块33] enterPublic - 进入普通模式
         // =============================================
         function enterPublic() {
             if (document.getElementById('modeMenu')) document.getElementById('modeMenu').style.display = 'none';
@@ -3027,7 +4124,7 @@
         }
 
         // =============================================
-        // [模块30] toggleSidebar
+        // [模块34] toggleSidebar - 切换侧边栏
         // =============================================
         function toggleSidebar() {
             var sidebar = document.querySelector('.sidebar');
@@ -3044,27 +4141,32 @@
                 console.log('📱 侧边栏已展开');
             }
         }
+        // =============================================
+        // [模块35] DOMContentLoaded - 页面加载初始化
+        // =============================================
 
-        // =============================================
-        // [模块31] DOMContentLoaded
-        // =============================================
         document.addEventListener('DOMContentLoaded', async function () {
+            console.log('🚀 系统初始化开始...');
+            loadUserPreferences();
+
+            // ---- 1. 加载规则配置 ----
             if (!window._ruleCache) {
-                fetch(PROXY_URL + '/api/rules/load')
-                    .then(function (res) { return res.json(); })
-                    .then(function (result) {
-                        if (result.success) {
-                            window._ruleCache = result.data;
-                            console.log('✅ 规则配置已加载:', Object.keys(window._ruleCache));
-                        } else {
-                            window._ruleCache = { boundary: null, desensitize: null, dispatch: null };
-                        }
-                    })
-                    .catch(function () {
+                try {
+                    var ruleRes = await fetch(PROXY_URL + '/api/rules/load');
+                    var ruleResult = await ruleRes.json();
+                    if (ruleResult.success) {
+                        window._ruleCache = ruleResult.data;
+                        console.log('✅ 规则配置已加载:', Object.keys(window._ruleCache));
+                    } else {
                         window._ruleCache = { boundary: null, desensitize: null, dispatch: null };
-                    });
+                    }
+                } catch (e) {
+                    console.warn('⚠️ 规则配置加载失败:', e.message);
+                    window._ruleCache = { boundary: null, desensitize: null, dispatch: null };
+                }
             }
 
+            // ---- 2. 输入框事件绑定 ----
             var userInput = document.getElementById('userInput');
             if (userInput) {
                 userInput.addEventListener('keydown', function (e) {
@@ -3076,6 +4178,7 @@
                 });
             }
 
+            // ---- 3. 进入普通模式按钮 ----
             var enterBtn = document.getElementById('enterPublicBtn');
             if (enterBtn) {
                 enterBtn.onclick = function () {
@@ -3085,11 +4188,11 @@
                 };
             }
 
+            // ---- 4. 特殊通道 ----
             var secretTrigger = document.getElementById('secretTrigger');
             if (secretTrigger) {
                 secretTrigger.onclick = function () {
                     var userId = localStorage.getItem('sovereign_identity_id') || 'zq_main';
-
                     if (userId === 'zq_main') {
                         var passphrase = prompt('输入主权口令：', '');
                         if (passphrase === '急急如律令') {
@@ -3106,7 +4209,6 @@
                         }
                         return;
                     }
-
                     var isVerified = localStorage.getItem('sovereign_verified');
                     var identityId = localStorage.getItem('sovereign_identity_id');
                     if (isVerified === 'true' && identityId) {
@@ -3130,7 +4232,21 @@
                 };
             }
 
-            // ===== 主权状态恢复 =====
+            // ---- 5. 预加载离线资产 ----
+            try {
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', 'http://127.0.0.1:18888/api/window/soul/identity?windowId=傅本源-Z2', false);
+                xhr.send();
+                if (xhr.status === 200) {
+                    var assetData = JSON.parse(xhr.responseText);
+                    localStorage.setItem('offline_assets_Z2', JSON.stringify(assetData));
+                    console.log('✅ 离线资产已缓存');
+                }
+            } catch (e) {
+                console.warn('离线资产缓存失败:', e);
+            }
+
+            // ---- 6. 主权状态恢复 ----
             var savedVerified = localStorage.getItem('sovereign_verified');
             var savedIdentity = localStorage.getItem('sovereign_identity_id');
             if (savedVerified === 'true' && savedIdentity) {
@@ -3142,44 +4258,291 @@
                 updateModeBadge();
                 console.log('📌 当前为普通模式');
             }
-            /// ===== 从服务器加载对话列表（失败不影响主流程） =====
+
+            // ---- 7. 从服务器加载对话列表 ----
             try {
+                console.log('📡 正在从服务器加载对话列表...');
                 var convRes = await fetch(PROXY_URL + '/api/window/conversations/load?userId=' + (currentUserId || 'zq_main'));
                 var convData = await convRes.json();
                 if (convData.success && convData.data !== null && typeof convData.data === 'object') {
-                    conversations = convData.data;
+                    // ===== 修复：如果是数组，转成对象 =====
+                    if (Array.isArray(convData.data)) {
+                        var obj = {};
+                        for (var i = 0; i < convData.data.length; i++) {
+                            var item = convData.data[i];
+                            if (item && item.id) {
+                                obj[item.id] = item;
+                            }
+                        }
+                        conversations = obj;
+                        console.log('✅ 对话列表从数组转为对象，共 ' + Object.keys(conversations).length + ' 个窗口');
+                    } else {
+                        conversations = convData.data;
+                        console.log('✅ 对话列表已从服务器加载，共 ' + Object.keys(conversations).length + ' 个窗口');
+                    }
                     localStorage.setItem('ruling_conversations', JSON.stringify(conversations));
-                    console.log('✅ 对话列表已从服务器加载');
+                } else {
+                    var savedConversations = localStorage.getItem('ruling_conversations');
+                    if (savedConversations) {
+                        try {
+                            var parsed = JSON.parse(savedConversations);
+                            // ===== 修复：如果是数组，转成对象 =====
+                            if (Array.isArray(parsed)) {
+                                var obj2 = {};
+                                for (var j = 0; j < parsed.length; j++) {
+                                    var item2 = parsed[j];
+                                    if (item2 && item2.id) {
+                                        obj2[item2.id] = item2;
+                                    }
+                                }
+                                conversations = obj2;
+                            } else {
+                                conversations = parsed;
+                            }
+                            console.log('✅ 从 localStorage 恢复对话列表，共 ' + Object.keys(conversations).length + ' 个窗口');
+                        } catch (e) {
+                            conversations = {};
+                        }
+                    } else {
+                        conversations = {};
+                    }
                 }
             } catch (e) {
-                console.warn('从服务器加载对话列表失败，使用本地缓存:', e.message);
-                // 不阻断后续流程，继续使用 localStorage 兜底
-            }
-
-
-
-
-
-            // ===== 恢复对话列表（localStorage 兜底） =====
-            var savedConversations = localStorage.getItem('ruling_conversations');
-            if (savedConversations && Object.keys(conversations).length === 0) {
-                try {
-                    conversations = JSON.parse(savedConversations);
-                } catch (e) {
+                console.warn('⚠️ 从服务器加载失败，使用 localStorage 兜底:', e.message);
+                var savedConversations = localStorage.getItem('ruling_conversations');
+                if (savedConversations) {
+                    try {
+                        var parsed = JSON.parse(savedConversations);
+                        if (Array.isArray(parsed)) {
+                            var obj3 = {};
+                            for (var k = 0; k < parsed.length; k++) {
+                                var item3 = parsed[k];
+                                if (item3 && item3.id) {
+                                    obj3[item3.id] = item3;
+                                }
+                            }
+                            conversations = obj3;
+                        } else {
+                            conversations = parsed;
+                        }
+                        console.log('✅ 从 localStorage 恢复对话列表（兜底），共 ' + Object.keys(conversations).length + ' 个窗口');
+                    } catch (e) {
+                        conversations = {};
+                    }
+                } else {
                     conversations = {};
                 }
             }
+
+            // ---- 8. 恢复当前会话 ----
             var savedId = localStorage.getItem('ruling_current_conv_id');
             if (savedId && conversations[savedId]) {
                 currentConversationId = savedId;
                 messages = conversations[savedId].messages || [];
+                console.log('✅ 恢复会话成功:', savedId, '消息数:', messages.length);
+            } else if (Object.keys(conversations).length > 0) {
+                var firstId = Object.keys(conversations)[0];
+                currentConversationId = firstId;
+                messages = conversations[firstId].messages || [];
+                localStorage.setItem('ruling_current_conv_id', currentConversationId);
+                console.log('✅ 自动切换到第一个窗口:', firstId, '消息数:', messages.length);
             } else {
-                newConversation();
+                var newId = 'conv-' + Date.now();
+                currentConversationId = newId;
+                conversations[newId] = {
+                    id: newId,
+                    messages: [],
+                    title: '主窗口',
+                    timestamp: Date.now(),
+                    windowIdentity: 'main'
+                };
+                messages = [];
+                localStorage.setItem('ruling_current_conv_id', currentConversationId);
+                localStorage.setItem('ruling_conversations', JSON.stringify(conversations));
+                console.log('✅ 已创建默认主窗口:', newId);
             }
-            renderConversationList();
 
+            // ---- 9. 预加载规则引擎（3.0新增） ----
+            try {
+                var windowName = getWindowDisplayName(currentConversationId) || '傅王侯';
+                var rules = await loadReviewRules(windowName);
+                if (rules && rules.length > 0) {
+                    console.log('📋 规则引擎已加载，共 ' + rules.length + ' 条规则');
+                } else {
+                    console.log('📭 规则引擎无规则，请创建 review_rules.json');
+                }
+            } catch (e) {
+                console.warn('预加载规则失败:', e.message);
+            }
+            // ---- 9.1 渲染界面 ----
+            renderConversationList();
+            clearChatArea();
+            restoreChatArea();
+
+            // ---- 10. 进入主界面 ----
             enterPublic();
+
+            // ---- 11. 异步保存到服务器 ----
+            if (Object.keys(conversations).length > 0) {
+                setTimeout(function () {
+                    saveConversationsToServer();
+                }, 1000);
+            }
+
+            console.log('🎉 系统初始化完成！');
         });
+        // =============================================
+        // [模块42] 审计报告生成器（3.0新增）
+        // =============================================
+        function generateAuditReport(logs) {
+            var total = logs.length;
+            var local = 0, cloud = 0, blocked = 0;
+            var assetHits = {};
+
+            for (var i = 0; i < logs.length; i++) {
+                var log = logs[i];
+                if (log.executionPath === 'local') local++;
+                else if (log.executionPath === 'cloud') cloud++;
+                else if (log.executionPath === 'blocked') blocked++;
+                if (log.assetHit) {
+                    assetHits[log.assetHit] = (assetHits[log.assetHit] || 0) + 1;
+                }
+            }
+
+            return {
+                total: total,
+                local: local,
+                cloud: cloud,
+                blocked: blocked,
+                localPercent: total > 0 ? (local / total * 100).toFixed(1) + '%' : '0%',
+                cloudPercent: total > 0 ? (cloud / total * 100).toFixed(1) + '%' : '0%',
+                assetHits: assetHits,
+                topAsset: Object.keys(assetHits).sort(function (a, b) { return assetHits[b] - assetHits[a]; })[0] || null
+            };
+        }
+
+        function openAuditReport() {
+            var logs = window._executionLogs || [];
+            if (logs.length === 0) {
+                addMessage('system', '📋 暂无执行记录。');
+                return;
+            }
+            var report = generateAuditReport(logs);
+            var msg = '📊 审计报告\n' +
+                '━━━━━━━━━━━━━━━━━━━━\n' +
+                '总任务数: ' + report.total + '\n' +
+                '本地执行: ' + report.local + ' (' + report.localPercent + ')\n' +
+                '大模型执行: ' + report.cloud + ' (' + report.cloudPercent + ')\n' +
+                '拦截请求: ' + report.blocked + '\n' +
+                '资产命中: ' + JSON.stringify(report.assetHits, null, 2) + '\n' +
+                '最常命中: ' + (report.topAsset || '无');
+            addMessage('system', msg);
+        }
+        // =============================================
+        // [模块36] 窗口文件夹管理（2.0完整版）
+        // =============================================
+        const WINDOW_BASE_PATH = 'D:\\藏器魂系统\\backend\\windows\\';
+
+        function getWindowFolder(windowName) {
+            if (!windowName || windowName === 'main' || windowName === '新对话' || windowName === '主窗口') return null;
+            return WINDOW_BASE_PATH + windowName + '\\';
+        }
+
+        function getWindowMessagesFile(windowName) {
+            var folder = getWindowFolder(windowName);
+            if (!folder) return null;
+            return folder + 'messages.json';
+        }
+
+        function getWindowDisplayName(windowId) {
+            var conv = conversations[windowId];
+            if (!conv) return windowId || 'unknown';
+            if (conv.windowIdentity && ['FuWangHou', '傅本源-Z2', '傅先锋'].includes(conv.windowIdentity)) {
+                return conv.windowIdentity;
+            }
+            if (conv.title && conv.title !== '新对话' && conv.title !== '主窗口') {
+                return conv.title;
+            }
+            return conv.windowIdentity || windowId || 'unknown';
+        }
+
+        async function createWindowFolder(windowName) {
+            return true;
+        }
+        // =============================================
+        // [模块37] 窗口消息文件读写（2.0正确版）
+        // =============================================
+
+        async function saveWindowMessagesToFile(windowId) {
+            var conv = conversations[windowId];
+            if (!conv) return false;
+            var displayName = getWindowDisplayName(windowId);
+            if (!displayName || displayName === '新对话' || displayName === 'main' || displayName === '主窗口' || displayName === 'unknown') {
+                return true;
+            }
+            var filePath = getWindowMessagesFile(displayName);
+            if (!filePath) return false;
+            try {
+                await createWindowFolder(displayName);
+                var res = await fetch('http://127.0.0.1:18888/api/file/write', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        filePath: filePath,
+                        content: JSON.stringify(conv.messages || [], null, 2)
+                    })
+                });
+                var data = await res.json();
+                return data.success || false;
+            } catch (e) {
+                console.warn('保存消息文件失败:', e);
+                return false;
+            }
+        }
+
+        async function loadWindowMessagesFromFile(windowId) {
+            var conv = conversations[windowId];
+            if (!conv) return null;
+            var displayName = getWindowDisplayName(windowId);
+            if (!displayName || displayName === '新对话' || displayName === 'main' || displayName === '主窗口' || displayName === 'unknown') {
+                return null;
+            }
+            var filePath = getWindowMessagesFile(displayName);
+            if (!filePath) return null;
+            try {
+                var res = await fetch('http://127.0.0.1:18888/api/file/read', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path: filePath })
+                });
+                var data = await res.json();
+                if (data.success && data.content) {
+                    return JSON.parse(data.content);
+                }
+                return null;
+            } catch (e) {
+                console.warn('加载消息文件失败:', e);
+                return null;
+            }
+        }
+
+        async function loadAllWindowsFromFile() {
+            var count = 0;
+            for (var id in conversations) {
+                var conv = conversations[id];
+                if (!conv) continue;
+                var msgs = await loadWindowMessagesFromFile(id);
+                if (msgs !== null) {
+                    conv.messages = msgs;
+                    count++;
+                }
+            }
+            console.log('✅ 从文件加载了 ' + count + ' 个窗口的消息');
+            return count;
+        }
+        //=============================================
+        // [模块38] 文件尾部 - 不可动
+        // =============================================
     </script>
 </body>
 
